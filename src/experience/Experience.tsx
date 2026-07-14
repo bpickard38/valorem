@@ -5,12 +5,16 @@ import { ScrollRig } from "./ScrollRig";
 import { GrayboxPlates } from "./GrayboxPlates";
 import { Overlay } from "./Overlay";
 import { DebugHud } from "./DebugHud";
+import { SequenceCanvas } from "@/sequence/SequenceCanvas";
+import { Loader } from "@/ui/Loader";
 
 /*
  * Composition root for the cinematic journey. Layer order (bottom → top):
- *   z-0   GrayboxPlates → (M2+) SequenceCanvas — the baked film
+ *   z-0   GrayboxPlates — graybox fallback under the film (hero keeps it)
+ *   z-5   SequenceCanvas — the baked film
  *   z-10  (M3+) R3F Stage — clouds, pegasus, particles, grain
  *   z-30  Overlay — DOM copy · StatueHotspots · ProductReveal
+ *   z-40  Loader (until T0 fetched)
  *   z-50  SkipToShop
  *   z-60  DebugHud (dev)
  */
@@ -18,7 +22,9 @@ export default function Experience() {
   return (
     <ScrollRig>
       <GrayboxPlates />
+      <SequenceCanvas />
       <Overlay />
+      <Loader />
       <SkipToShop />
       <DebugHud />
     </ScrollRig>

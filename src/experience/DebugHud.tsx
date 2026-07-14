@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { experienceStore } from "./state";
+import { decodePool } from "@/sequence/decodePool";
 
 /* Dev-only readout: phase / local % / global % / velocity. Writes textContent
  * directly from the ticker — zero React re-renders. */
@@ -13,12 +14,15 @@ export function DebugHud() {
     const tick = () => {
       const s = experienceStore.getState();
       if (el.current) {
+        const pool = decodePool().stats();
         el.current.textContent =
           `phase   ${s.phase}\n` +
           `local   ${(s.phaseProgress * 100).toFixed(1)}%\n` +
           `global  ${(s.progress * 100).toFixed(1)}%\n` +
           `vel     ${s.velocity.toFixed(2)}\n` +
-          `reveal  ${s.sanctum.status}`;
+          `reveal  ${s.sanctum.status}\n` +
+          `tier    ${s.tier}\n` +
+          `pool    ${(pool.bytes / 1e6).toFixed(0)}MB / ${pool.decoded}f / ${pool.inflight}dec`;
       }
     };
     gsap.ticker.add(tick);
