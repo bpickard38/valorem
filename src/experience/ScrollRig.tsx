@@ -30,7 +30,10 @@ export function ScrollRig({ children }: { children: ReactNode }) {
         scrollTrigger: {
           trigger: track.current,
           start: "top top",
-          end: () => `+=${(TOTAL_SPAN / 100) * window.innerHeight}`,
+          // Track bottom meeting viewport bottom = exactly the max scrollable
+          // distance (track height − one viewport). Never use the raw track
+          // height here — the last viewport-height of it can't be scrolled.
+          end: "bottom bottom",
           scrub: 1, // 1s catch-up = the cinematic inertia
           invalidateOnRefresh: true,
           markers: DEV,
