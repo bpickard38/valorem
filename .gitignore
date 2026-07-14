@@ -1,0 +1,19 @@
+# deps / build
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env
+.env*
+!.env.example
+
+# generated media — regenerable via scripts/ from _raw masters
+public/sequences/
+public/fx/
+scripts/_raw/
+
+# misc
+.DS_Store
+npm-debug.log*
