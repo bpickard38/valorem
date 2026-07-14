@@ -6,6 +6,7 @@ import { GrayboxPlates } from "./GrayboxPlates";
 import { Overlay } from "./Overlay";
 import { DebugHud } from "./DebugHud";
 import { SequenceCanvas } from "@/sequence/SequenceCanvas";
+import { Stage } from "@/three/Stage";
 import { Loader } from "@/ui/Loader";
 
 /*
@@ -23,6 +24,7 @@ export default function Experience() {
     <ScrollRig>
       <GrayboxPlates />
       <SequenceCanvas />
+      <Stage />
       <Overlay />
       <Loader />
       <SkipToShop />

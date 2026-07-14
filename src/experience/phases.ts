@@ -82,6 +82,16 @@ export const PHASES: Phase[] = [
 /** Total scroll track length in vh units. */
 export const TOTAL_SPAN = PHASES.reduce((sum, p) => sum + p.span, 0);
 
+/** Cumulative [start, end) of a phase in vh units along the track. */
+export function phaseRange(id: PhaseId): { start: number; end: number } {
+  let acc = 0;
+  for (const p of PHASES) {
+    if (p.id === id) return { start: acc, end: acc + p.span };
+    acc += p.span;
+  }
+  return { start: 0, end: 0 };
+}
+
 /** Shared exponential-smoothing constant — canvas and WebGL layers must damp
  *  with the same factor so baked footage and live parallax stay coherent. */
 export const DAMP = 6;
