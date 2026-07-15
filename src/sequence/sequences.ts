@@ -43,7 +43,8 @@ async function fetchSegment(
   onProgress?: (loaded: number, total: number) => void,
 ): Promise<void> {
   const m = getManifest();
-  const info = m?.segments[name];
+  if (!m) return;
+  const info = m.segments[name];
   if (!info) return;
   if (segs.get(name)?.done) return;
 
@@ -69,8 +70,10 @@ async function fetchSegment(
         const i = indices.shift()!;
         const pad = String(i + 1).padStart(4, "0");
         try {
+          // generatedAt busts the immutable cache whenever a segment is
+          // re-encoded — frame URLs change with every manifest rebuild.
           const res = await fetch(
-            `/sequences/${name}/${tier}/f_${pad}.${info.format}`,
+            `/sequences/${name}/${tier}/f_${pad}.${info.format}?v=${encodeURIComponent(m.generatedAt)}`,
           );
           if (res.ok) {
             const blob = await res.blob();

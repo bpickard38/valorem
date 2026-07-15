@@ -28,7 +28,9 @@ let pending: Promise<Manifest> | null = null;
 
 export function loadManifest(): Promise<Manifest> {
   if (manifest) return Promise.resolve(manifest);
-  pending ??= fetch("/sequences/manifest.json")
+  // The immutable cache header on /sequences/** must never pin the manifest
+  // itself — it's the version pointer that busts everything else.
+  pending ??= fetch("/sequences/manifest.json", { cache: "no-store" })
     .then((r) => {
       if (!r.ok) throw new Error(`manifest fetch ${r.status}`);
       return r.json() as Promise<Manifest>;
