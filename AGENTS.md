@@ -14,5 +14,5 @@ Phase model: `hero` (live chroma-keyed pegasus loop) → `morph` (pegasus → bl
 - `/fx/**`, `/sequences/**`, `/plates/**` are immutable-cached — new or regenerated media MUST ship under a new filename/folder (loop: `pegasus-loop-side-v2.mp4`, finale: `statues-to-product-v1.mp4`).
 - Media is git-ignored and regenerable: masters in `scripts/_raw/`, encode with `node scripts/encode.mjs <segment> <master> --fps N`, then rebuild the manifest.
 - Never `await` inside the canvas draw loop; draw the nearest decoded frame.
-- Commerce (`src/lib/shopify.ts`, `/api/checkout`, `/api/subscribe`) is canonical here; `../valorem` is the frozen landing-page archive.
+- Commerce (`src/lib/shopify.ts`, `/api/checkout`, `/api/subscribe`) is canonical here; `../valorem-landing-archive` is the frozen landing-page archive.
 - Dev server runs on port 3001.
