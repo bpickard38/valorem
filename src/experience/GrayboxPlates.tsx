@@ -54,11 +54,7 @@ export function GrayboxPlates() {
           data-plate={p.id}
           className="absolute inset-0 flex items-center justify-center"
           style={{ background: PLATE_STYLES[p.id], opacity: p.id === "hero" ? 1 : 0 }}
-        >
-          <span className="select-none font-serif text-[12vw] uppercase tracking-widest text-charcoal/10">
-            {p.id}
-          </span>
-        </div>
+        />
       ))}
     </div>
   );

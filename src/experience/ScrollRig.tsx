@@ -76,10 +76,24 @@ export function ScrollRig({ children }: { children: ReactNode }) {
       const dock = document.querySelector<HTMLElement>("[data-logo-dock]");
       if (dock) {
         gsap.set(dock, { xPercent: -50, yPercent: -50 });
+        // Settle size: the lockup appears AS BIG as the film silhouette it
+        // replaces — composite scaled to the full viewport height (width-
+        // guarded for portrait) — then shrinks continuously down to the dock.
+        const mark = dock.querySelector<HTMLElement>("img");
+        const bigScale = () =>
+          Math.min(
+            window.innerHeight / dock.offsetHeight,
+            (0.9 * window.innerWidth) / (mark?.offsetWidth || 1),
+          );
         tl.fromTo(
           dock,
-          { autoAlpha: 0, scale: 0.96 },
-          { autoAlpha: 1, scale: 1, duration: 16, ease: "power2.out" },
+          { autoAlpha: 0, scale: () => bigScale() * 0.97 },
+          {
+            autoAlpha: 1,
+            scale: bigScale,
+            duration: 16,
+            ease: "power2.out",
+          },
           "morph+=100",
         );
         const DOCK_SCALE = 0.16;
