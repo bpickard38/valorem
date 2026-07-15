@@ -49,6 +49,32 @@ export function locate(progress: number): {
   return { phase: "sanctum", phaseProgress: 1 };
 }
 
+/* ---- sanctum actions (guarded state machine) ------------------------- */
+
+export function revealStatue(scent: RevealScent): void {
+  const s = experienceStore.getState();
+  if (s.sanctum.status !== "idle" || s.phase !== "sanctum") return;
+  experienceStore.setState({ sanctum: { status: "revealing", scent } });
+}
+
+export function revealComplete(): void {
+  const s = experienceStore.getState().sanctum;
+  if (s.status !== "revealing") return;
+  experienceStore.setState({ sanctum: { status: "revealed", scent: s.scent } });
+}
+
+export function closeReveal(): void {
+  const s = experienceStore.getState().sanctum;
+  if (s.status === "idle" || s.status === "navigating") return;
+  experienceStore.setState({ sanctum: { status: "idle" } });
+}
+
+export function beginNavigate(): void {
+  const s = experienceStore.getState().sanctum;
+  if (s.status !== "revealed") return;
+  experienceStore.setState({ sanctum: { status: "navigating", scent: s.scent } });
+}
+
 /** Frame-rate independent exponential smoothing toward a target. */
 export function damp(
   current: number,

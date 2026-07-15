@@ -8,6 +8,8 @@ import { DebugHud } from "./DebugHud";
 import { SequenceCanvas } from "@/sequence/SequenceCanvas";
 import { Stage } from "@/three/Stage";
 import { Loader } from "@/ui/Loader";
+import { StatueHotspots } from "@/ui/StatueHotspots";
+import { ProductReveal } from "@/ui/ProductReveal";
 
 /*
  * Composition root for the cinematic journey. Layer order (bottom → top):
@@ -26,6 +28,8 @@ export default function Experience() {
       <SequenceCanvas />
       <Stage />
       <Overlay />
+      <StatueHotspots />
+      <ProductReveal />
       <Loader />
       <SkipToShop />
       <DebugHud />

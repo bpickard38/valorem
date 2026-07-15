@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { CloudLayers } from "./CloudLayers";
 import { PegasusPlane } from "./PegasusPlane";
+import { ParticleMorph } from "./ParticleMorph";
 import { GrainVignette } from "./GrainVignette";
 
 /*
@@ -27,6 +28,7 @@ export function Stage() {
           <CloudLayers />
           <PegasusPlane />
         </Suspense>
+        <ParticleMorph />
         <GrainVignette />
       </Canvas>
     </div>
