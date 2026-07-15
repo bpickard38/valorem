@@ -16,8 +16,8 @@ import { createChromaKeyMaterial } from "./chromaKey";
 
 // Versioned filename: /fx/** is immutable-cached, so a new clip needs a new
 // name (the old pegasus-loop.mp4 was pinned in users' caches for a year).
-const LOOP_SRC = "/fx/pegasus-loop-side.mp4";
-const VIDEO_ASPECT = 16 / 9;
+const LOOP_SRC = "/fx/pegasus-loop-side-v2.mp4";
+const VIDEO_ASPECT = 1920 / 1072;
 
 export function PegasusPlane() {
   const mesh = useRef<THREE.Mesh>(null);
@@ -69,7 +69,7 @@ export function PegasusPlane() {
     const m = mesh.current;
     if (!m || !material) return;
 
-    // Cover-fit the 16:9 video across the viewport (world units at z=0),
+    // Cover-fit the video across the viewport (world units at z=0),
     // matching SequenceCanvas's crop of the same full-frame composition.
     const coverW = Math.max(viewport.width, viewport.height * VIDEO_ASPECT);
     m.scale.set(coverW, coverW / VIDEO_ASPECT, 1);
