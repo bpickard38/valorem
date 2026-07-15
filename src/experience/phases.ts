@@ -30,6 +30,9 @@ export interface Phase {
   seq?: PhaseSeq;
   /** normalized cover-crop anchor for portrait viewports */
   focal?: { x: number; y: number };
+  /** fraction of the phase over which the drawn film fades out at its end
+   *  (hands the frame to a DOM element, e.g. morph silhouette → logo dock) */
+  fadeTail?: number;
   overlay?: { label?: string; heading?: string };
 }
 
@@ -45,6 +48,9 @@ export const PHASES: Phase[] = [
     span: 120,
     seam: "live-crossfade",
     seq: { name: "pegasus-morph", frames: 120, fps: 24 },
+    // Film silhouette dissolves out over the last 12% while the DOM logo
+    // dock fades in over the live clouds.
+    fadeTail: 0.12,
   },
   {
     id: "descent",

@@ -67,6 +67,7 @@ export function CloudLayers() {
   );
 
   const descent = phaseRange("descent");
+  const morph = phaseRange("morph");
 
   useFrame((state, dt) => {
     const st = experienceStore.getState();
@@ -80,14 +81,18 @@ export function CloudLayers() {
     const g = group.current;
     if (!g) return;
 
-    // Camera "falls": clouds rise, nearer layers faster.
-    const fall = pos / 100; // vh → world units baseline
+    // Clouds HOLD through hero + morph (the logo settles over them), then
+    // the camera "falls": clouds rise and part quickly across early descent
+    // before the fade hands the sky to the baked footage.
+    const fall = Math.max(0, pos - morph.end) / 100;
+    const t = state.clock.elapsedTime;
     g.children.forEach((child, i) => {
       const layer = layers[i];
       const mesh = child as THREE.Mesh;
-      mesh.position.y = layer.y + fall * layer.speed * 1.6;
+      mesh.position.y =
+        layer.y + fall * layer.speed * 4.5 + Math.sin(t * 0.05 + i * 1.7) * 0.12;
       mesh.position.x =
-        layer.x + Math.sin(state.clock.elapsedTime * 0.04 + i * 2.1) * 0.35;
+        layer.x + Math.sin(t * 0.04 + i * 2.1) * 0.35;
       // fade out as the baked descent film takes over
       const fadeT =
         (pos - descent.start) / ((descent.end - descent.start) * CLOUD_FADE_END);

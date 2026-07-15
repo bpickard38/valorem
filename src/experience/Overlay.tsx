@@ -30,14 +30,27 @@ export function Overlay() {
         <span className="label-engraved text-charcoal/45">Scroll</span>
       </div>
 
-      {/* MORPH settle — crisp vector lockup */}
+      {/* MORPH settle — the full brand lockup assembles over the clouds,
+          then shrinks as one unit and docks top-center (beats in ScrollRig;
+          GSAP owns the transform: xPercent/yPercent centering + y/scale). */}
       <div
-        data-logo-lockup
-        className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center opacity-0"
+        data-logo-dock
+        className="absolute left-1/2 top-1/2 text-center opacity-0 will-change-transform"
       >
-        <p className="type-display text-charcoal">VALOREM</p>
-        <div className="mx-auto mt-4 h-px w-12 bg-gold/80" />
-        <p className="label-engraved mt-4 text-charcoal/55">Solid Fragrance</p>
+        {/* eslint-disable-next-line @next/next/no-img-element -- animated, scaled element; next/image adds nothing here */}
+        <img
+          src="/brand/pegasus-mark.png"
+          alt=""
+          draggable={false}
+          className="mx-auto h-[30vmin] w-auto select-none"
+        />
+        <p className="type-display mt-1 text-charcoal">VALOREM</p>
+        <div data-logo-subline>
+          <div className="mx-auto mt-3 h-px w-12 bg-gold/80" />
+          <p className="label-engraved mt-3 text-charcoal/55">
+            Solid Fragrance
+          </p>
+        </div>
       </div>
 
       {/* DESCENT */}

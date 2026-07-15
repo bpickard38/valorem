@@ -11,6 +11,12 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const DEV = process.env.NODE_ENV === "development";
 
+// Dev-only: lets headless checks drive gsap.ticker.tick() when the tab is
+// backgrounded (rAF frozen) to verify scrubbed states numerically.
+if (DEV && typeof window !== "undefined") {
+  (window as unknown as { __gsap?: typeof gsap }).__gsap = gsap;
+}
+
 /*
  * The master rig: one tall scroll track, one scrubbed timeline, labels per
  * phase. The timeline's length is TOTAL_SPAN units so label offsets read in
@@ -64,17 +70,43 @@ export function ScrollRig({ children }: { children: ReactNode }) {
         { autoAlpha: 0, duration: 30 },
         "hero+=55",
       );
-      tl.fromTo(
-        "[data-logo-lockup]",
-        { autoAlpha: 0, scale: 0.97 },
-        { autoAlpha: 1, scale: 1, duration: 18, ease: "power2.out" },
-        "morph+=95",
-      );
-      tl.to(
-        "[data-logo-lockup]",
-        { autoAlpha: 0, duration: 14 },
-        "descent+=25",
-      );
+      // Logo dock: assembles over the clouds as the film silhouette fades
+      // (morph fadeTail), then shrinks as one unit and pins top-center as
+      // the persistent brand header for the rest of the journey.
+      const dock = document.querySelector<HTMLElement>("[data-logo-dock]");
+      if (dock) {
+        gsap.set(dock, { xPercent: -50, yPercent: -50 });
+        tl.fromTo(
+          dock,
+          { autoAlpha: 0, scale: 0.96 },
+          { autoAlpha: 1, scale: 1, duration: 16, ease: "power2.out" },
+          "morph+=100",
+        );
+        const DOCK_SCALE = 0.16;
+        const DOCK_TOP = 30; // px from viewport top to the scaled lockup's top
+        tl.to(
+          dock,
+          {
+            scale: DOCK_SCALE,
+            // Function-based → invalidateOnRefresh recomputes on resize, so
+            // the docked lockup stays glued to top-center at any viewport.
+            y: () =>
+              -(
+                window.innerHeight / 2 -
+                DOCK_TOP -
+                (dock.offsetHeight * DOCK_SCALE) / 2
+              ),
+            duration: 55,
+            ease: "power1.inOut",
+          },
+          "descent+=5",
+        );
+        tl.to(
+          "[data-logo-subline]",
+          { autoAlpha: 0, duration: 14 },
+          "descent+=5",
+        );
+      }
       tl.fromTo(
         "[data-copy='descent']",
         { autoAlpha: 0, y: 12 },

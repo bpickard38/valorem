@@ -134,6 +134,12 @@ export function SequenceCanvas() {
       const hasCurrent = decodePool().nearest(seg, lo, 6) !== null;
       if (!hasCurrent && !dissolving) return; // hold last drawn frame
 
+      // fadeTail: film hands the frame to a DOM element at the phase end.
+      const tailAlpha =
+        ph.fadeTail && local > 1 - ph.fadeTail
+          ? Math.max(0, (1 - local) / ph.fadeTail)
+          : 1;
+
       ctx.clearRect(0, 0, vw, vh);
       if (dissolving) {
         const prevMeta = segMeta(prevSeq.name);
@@ -148,9 +154,9 @@ export function SequenceCanvas() {
         const headAlpha = local / DISSOLVE_SPAN;
         drawFrame(seg, lo, ph.focal, headAlpha);
       } else {
-        drawFrame(seg, lo, ph.focal, 1);
+        drawFrame(seg, lo, ph.focal, tailAlpha);
         if (hi !== lo && decodePool().has(seg, hi)) {
-          drawFrame(seg, hi, ph.focal, f - lo); // 2-frame cross-blend
+          drawFrame(seg, hi, ph.focal, (f - lo) * tailAlpha); // cross-blend
         }
       }
     };
