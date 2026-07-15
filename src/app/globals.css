@@ -85,6 +85,26 @@ body::before {
   font-weight: 400;
 }
 
+/* Travertine slab — /deity "Format, Owned" section background */
+.texture-travertine {
+  background-color: #f1ede4;
+  background-image: repeating-linear-gradient(
+      0deg,
+      rgba(26, 25, 23, 0.02) 0px,
+      rgba(26, 25, 23, 0.02) 1px,
+      transparent 1px,
+      transparent 11px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(184, 150, 62, 0.018) 0px,
+      rgba(184, 150, 62, 0.018) 2px,
+      transparent 2px,
+      transparent 27px
+    ),
+    linear-gradient(180deg, rgba(26, 25, 23, 0.015) 0%, transparent 8%, transparent 92%, rgba(26, 25, 23, 0.015) 100%);
+}
+
 /* Statue hotspot halo */
 @keyframes haloPulse {
   0%,

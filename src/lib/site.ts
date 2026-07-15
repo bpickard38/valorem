@@ -9,6 +9,7 @@ export const PRICE = "$32";
 
 // TODO: real ship date before launch (kept in sync with main app)
 export const SHIP_DATE = "September 15, 2026";
+export const SHIP_DATE_SHORT = "September 15";
 
 export const STICK_SIZE = "15 g";
 export const WEAR_ESTIMATE = "three months";
