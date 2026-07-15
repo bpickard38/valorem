@@ -61,9 +61,9 @@ export function Overlay() {
         </div>
       </div>
 
-      {/* DESCENT — sits below the docked brand header */}
+      {/* VOYAGE — sits below the docked brand header */}
       <div
-        data-copy="descent"
+        data-copy="voyage"
         className="absolute inset-x-0 top-[26%] text-center opacity-0"
       >
         <p className="label-engraved text-ivory/85 [text-shadow:0_1px_12px_rgba(26,25,23,.35)]">
@@ -71,23 +71,13 @@ export function Overlay() {
         </p>
       </div>
 
-      {/* DOORS — sits below the docked brand header */}
+      {/* COLLECTION — as the doors pass, before the sanctum finale */}
       <div
-        data-copy="doors"
+        data-copy="collection"
         className="absolute inset-x-0 top-[26%] text-center opacity-0"
       >
         <p className="label-engraved text-ivory/85 [text-shadow:0_1px_12px_rgba(26,25,23,.5)]">
           Collection № 1 — The Pantheon
-        </p>
-      </div>
-
-      {/* SANCTUM */}
-      <div
-        data-copy="sanctum"
-        className="absolute inset-x-0 bottom-12 text-center opacity-0"
-      >
-        <p className="label-engraved text-ivory/90 [text-shadow:0_1px_12px_rgba(26,25,23,.5)]">
-          Choose your deity
         </p>
       </div>
     </div>

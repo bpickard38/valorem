@@ -15,9 +15,7 @@ const OUT = path.resolve(import.meta.dirname, "..", "public", "sequences");
 // re-reads reality from disk either way.
 const SEGMENTS = [
   { name: "pegasus-morph", frames: 120, fps: 24, from: "#8fadd0", to: "#dfe6ee" },
-  { name: "descent", frames: 80, fps: 16, from: "#e8ecf0", to: "#8fa07a" },
-  { name: "approach", frames: 80, fps: 16, from: "#b8c8dc", to: "#a9a184" },
-  { name: "doors", frames: 96, fps: 16, from: "#6b6459", to: "#241f18" },
+  { name: "voyage", frames: 92, fps: 30, from: "#e8ecf0", to: "#241f18" },
 ];
 
 const TIERS = [

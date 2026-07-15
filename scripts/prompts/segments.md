@@ -1,5 +1,11 @@
 # OpenArt prompt library — Valorem film segments
 
+> **2026-07-15:** The `descent`/`approach`/`doors` segments below are superseded
+> by the single user-supplied `voyage` master (`scripts/_raw/voyage-master.mp4`,
+> clouds → temple doors → statues) and the sanctum finale video
+> (`scripts/_raw/finale-master.mp4`, statues → product tins). The hero loop is
+> now `scripts/_raw/loop-side-master-v2.mp4`. Prompts kept for reference.
+
 Account refs (openart_upload_list ids):
 
 | Ref | Upload id |

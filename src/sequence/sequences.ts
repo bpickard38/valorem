@@ -23,8 +23,7 @@ const segs = new Map<string, SegState>();
 /** Fetch priority: hero-critical first, then down the journey. */
 export const TIER_ORDER: string[][] = [
   ["pegasus-morph"],
-  ["descent"],
-  ["approach", "doors"],
+  ["voyage"],
 ];
 
 export function getBlob(seg: string, i: number): Blob | null {

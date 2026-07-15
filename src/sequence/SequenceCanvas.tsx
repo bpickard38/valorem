@@ -94,7 +94,7 @@ export function SequenceCanvas() {
       let seg = ph.seq?.name ?? null;
       let local = phaseProgress;
       if (ph.id === "sanctum") {
-        // Hold the final doors frame under the sanctum interactions.
+        // Hold the final voyage frame (the statues) under the finale.
         seg = phaseAt(idx - 1)?.seq?.name ?? null;
         local = 1;
       }

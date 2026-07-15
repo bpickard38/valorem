@@ -14,9 +14,7 @@ import { experienceStore } from "./state";
 const PLATE_STYLES: Record<PhaseId, string> = {
   hero: "linear-gradient(180deg,#9db8d4 0%,#e8ecf0 70%,#f7f4ee 100%)",
   morph: "linear-gradient(180deg,#8fadd0 0%,#dfe6ee 65%,#f2f0ea 100%)",
-  descent: "linear-gradient(180deg,#e8ecf0 0%,#b9c9a8 60%,#8fa07a 100%)",
-  approach: "linear-gradient(180deg,#b8c8dc 0%,#d8d2bd 55%,#a9a184 100%)",
-  doors: "linear-gradient(180deg,#6b6459 0%,#3a352c 60%,#241f18 100%)",
+  voyage: "linear-gradient(180deg,#e8ecf0 0%,#b8c8dc 35%,#6b6459 70%,#241f18 100%)",
   sanctum: "linear-gradient(180deg,#f0e9dc 0%,#d9cba8 55%,#8a6f3d 100%)",
 };
 

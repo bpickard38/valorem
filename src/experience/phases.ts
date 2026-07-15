@@ -4,13 +4,7 @@
  * derives its behavior from this table — change the film here, nowhere else.
  */
 
-export type PhaseId =
-  | "hero"
-  | "morph"
-  | "descent"
-  | "approach"
-  | "doors"
-  | "sanctum";
+export type PhaseId = "hero" | "morph" | "voyage" | "sanctum";
 
 export type Seam = "cut" | "dissolve" | "live-crossfade";
 
@@ -18,7 +12,7 @@ export interface PhaseSeq {
   /** folder under public/sequences/<name>/<tier>/ */
   name: string;
   frames: number;
-  fps: 16 | 24;
+  fps: 16 | 24 | 30 | 60;
 }
 
 export interface Phase {
@@ -53,31 +47,18 @@ export const PHASES: Phase[] = [
     fadeTail: 0.12,
   },
   {
-    id: "descent",
-    span: 150,
+    // One continuous shot: fall through the clouds, cross the temple front,
+    // and dolly through the doors onto the two statues.
+    id: "voyage",
+    span: 430,
     seam: "cut",
-    seq: { name: "descent", frames: 80, fps: 16 },
-    focal: { x: 0.5, y: 0.45 },
+    seq: { name: "voyage", frames: 90, fps: 30 },
+    focal: { x: 0.5, y: 0.5 },
     overlay: { label: "The House" },
   },
   {
-    id: "approach",
-    span: 150,
-    seam: "dissolve",
-    seq: { name: "approach", frames: 80, fps: 16 },
-    focal: { x: 0.5, y: 0.5 },
-  },
-  {
-    id: "doors",
-    span: 130,
-    seam: "dissolve",
-    seq: { name: "doors", frames: 96, fps: 16 },
-    focal: { x: 0.5, y: 0.42 },
-    overlay: { label: "Collection № 1 — The Pantheon" },
-  },
-  {
-    // Holds the final doors frame; the scroll track ends here — the "lock".
-    // Clicking a statue is the only way forward.
+    // Holds the final voyage frame (the statues); the scroll track ends here.
+    // The finale video (statues → product tins) auto-plays on arrival.
     id: "sanctum",
     span: 40,
     seam: "cut",

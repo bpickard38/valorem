@@ -78,7 +78,7 @@ export function ScrollRig({ children }: { children: ReactNode }) {
         // Center on the MARK: the wordmark is out of flow, so dock.offsetHeight
         // is the mark's height and yPercent:-50 keeps the mark screen-centered.
         gsap.set(dock, { xPercent: -50, yPercent: -50 });
-        // Settle: the mark's CSS size (h-[82vh]) already matches the film
+        // Settle: the mark's CSS size (h-[104vh]) already matches the film
         // silhouette, so this is scale 1 — just fade it in over the clouds
         // as the baked pegasus dissolves out. Wordmark stays hidden here.
         tl.fromTo(
@@ -104,7 +104,7 @@ export function ScrollRig({ children }: { children: ReactNode }) {
             duration: 55,
             ease: "power1.inOut",
           },
-          "descent+=5",
+          "voyage+=5",
         );
         // VALOREM + subline fade in as the shrink begins and ride down with
         // the mark into the docked header.
@@ -112,28 +112,24 @@ export function ScrollRig({ children }: { children: ReactNode }) {
           "[data-logo-word]",
           { autoAlpha: 0 },
           { autoAlpha: 1, duration: 22, ease: "power1.out" },
-          "descent+=8",
+          "voyage+=8",
         );
       }
       tl.fromTo(
-        "[data-copy='descent']",
+        "[data-copy='voyage']",
         { autoAlpha: 0, y: 12 },
         { autoAlpha: 1, y: 0, duration: 20, ease: "power2.out" },
-        "descent+=60",
+        "voyage+=60",
       );
-      tl.to("[data-copy='descent']", { autoAlpha: 0, duration: 16 }, "approach+=20");
+      tl.to("[data-copy='voyage']", { autoAlpha: 0, duration: 16 }, "voyage+=170");
       tl.fromTo(
-        "[data-copy='doors']",
+        "[data-copy='collection']",
         { autoAlpha: 0, y: 12 },
         { autoAlpha: 1, y: 0, duration: 20, ease: "power2.out" },
-        "doors+=70",
+        "voyage+=370",
       );
-      tl.fromTo(
-        "[data-copy='sanctum']",
-        { autoAlpha: 0 },
-        { autoAlpha: 1, duration: 20 },
-        "sanctum+=10",
-      );
+      // Clear the frame before the sanctum finale video takes over.
+      tl.to("[data-copy='collection']", { autoAlpha: 0, duration: 12 }, "voyage+=415");
     },
     { scope: track },
   );

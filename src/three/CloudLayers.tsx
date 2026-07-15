@@ -9,8 +9,8 @@ import { experienceStore, damp } from "@/experience/state";
 /*
  * Soft parallax cloud planes. Procedural sprites for now (blurred white
  * blobs) — swappable for AI-generated cloud plates without touching the
- * motion. Clouds rise as the camera "falls" (hero → descent), then fade
- * out once the baked descent footage owns the frame.
+ * motion. Clouds rise as the camera "falls" (hero → voyage), then fade
+ * out once the baked voyage footage owns the frame.
  */
 
 function makeCloudTexture(seed: number): THREE.CanvasTexture {
@@ -47,7 +47,9 @@ interface Layer {
   texture: THREE.CanvasTexture;
 }
 
-const CLOUD_FADE_END = 0.35; // fraction into descent where live clouds are gone
+// Fraction into voyage where live clouds are gone. 0.12 × 430vh ≈ the same
+// ~52vh absolute fade the old 0.35 × 150vh descent gave.
+const CLOUD_FADE_END = 0.12;
 
 export function CloudLayers() {
   const group = useRef<THREE.Group>(null);
@@ -66,7 +68,7 @@ export function CloudLayers() {
     [],
   );
 
-  const descent = phaseRange("descent");
+  const voyage = phaseRange("voyage");
   const morph = phaseRange("morph");
 
   useFrame((state, dt) => {
@@ -93,9 +95,9 @@ export function CloudLayers() {
         layer.y + fall * layer.speed * 4.5 + Math.sin(t * 0.05 + i * 1.7) * 0.12;
       mesh.position.x =
         layer.x + Math.sin(t * 0.04 + i * 2.1) * 0.35;
-      // fade out as the baked descent film takes over
+      // fade out as the baked voyage film takes over
       const fadeT =
-        (pos - descent.start) / ((descent.end - descent.start) * CLOUD_FADE_END);
+        (pos - voyage.start) / ((voyage.end - voyage.start) * CLOUD_FADE_END);
       const opacity = 1 - THREE.MathUtils.clamp(fadeT, 0, 1);
       (mesh.material as THREE.MeshBasicMaterial).opacity = opacity;
       mesh.visible = opacity > 0.01;

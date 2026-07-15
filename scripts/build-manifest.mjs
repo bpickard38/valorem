@@ -12,7 +12,7 @@ import path from "node:path";
 const ROOT = path.resolve(import.meta.dirname, "..", "public", "sequences");
 
 // fps is authored, not derivable from files.
-const FPS = { "pegasus-morph": 24, descent: 16, approach: 16, doors: 16 };
+const FPS = { "pegasus-morph": 24, voyage: 30 };
 
 const manifest = { generatedAt: new Date().toISOString(), segments: {} };
 
