@@ -30,22 +30,30 @@ export function Overlay() {
         <span className="label-engraved text-charcoal/45">Scroll</span>
       </div>
 
-      {/* MORPH settle — the full brand lockup assembles over the clouds,
-          then shrinks as one unit and docks top-center (beats in ScrollRig;
-          GSAP owns the transform: xPercent/yPercent centering + y/scale). */}
+      {/* MORPH settle → dock. The pegasus MARK matches the film silhouette's
+          size at settle (wordmark hidden); as the whole thing shrinks toward
+          the top dock, VALOREM + subline fade in beneath it and ride down.
+          GSAP owns the transform (centering + y/scale); the wordmark is
+          out of flow so it never shifts the mark off-center. */}
       <div
         data-logo-dock
-        className="absolute left-1/2 top-1/2 text-center opacity-0 will-change-transform"
+        className="absolute left-1/2 top-1/2 opacity-0 will-change-transform"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- animated, scaled element; next/image adds nothing here */}
+        {/* Sized so the horse INSIDE the png (≈93% of its height) matches the
+            film silhouette's on-screen height (~full viewport). */}
         <img
+          data-logo-mark
           src="/brand/pegasus-mark.png"
           alt=""
           draggable={false}
-          className="mx-auto h-[30vmin] w-auto select-none"
+          className="block h-[104vh] w-auto max-w-[104vw] select-none object-contain"
         />
-        <p className="type-display mt-1 text-charcoal">VALOREM</p>
-        <div data-logo-subline>
+        <div
+          data-logo-word
+          className="absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap text-center opacity-0"
+        >
+          <p className="type-display leading-none text-charcoal">VALOREM</p>
           <div className="mx-auto mt-3 h-px w-12 bg-gold/80" />
           <p className="label-engraved mt-3 text-charcoal/55">
             Solid Fragrance
@@ -53,20 +61,20 @@ export function Overlay() {
         </div>
       </div>
 
-      {/* DESCENT */}
+      {/* DESCENT — sits below the docked brand header */}
       <div
         data-copy="descent"
-        className="absolute inset-x-0 top-[14%] text-center opacity-0"
+        className="absolute inset-x-0 top-[26%] text-center opacity-0"
       >
         <p className="label-engraved text-ivory/85 [text-shadow:0_1px_12px_rgba(26,25,23,.35)]">
           The House
         </p>
       </div>
 
-      {/* DOORS */}
+      {/* DOORS — sits below the docked brand header */}
       <div
         data-copy="doors"
-        className="absolute inset-x-0 top-[12%] text-center opacity-0"
+        className="absolute inset-x-0 top-[26%] text-center opacity-0"
       >
         <p className="label-engraved text-ivory/85 [text-shadow:0_1px_12px_rgba(26,25,23,.5)]">
           Collection № 1 — The Pantheon

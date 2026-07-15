@@ -75,35 +75,26 @@ export function ScrollRig({ children }: { children: ReactNode }) {
       // the persistent brand header for the rest of the journey.
       const dock = document.querySelector<HTMLElement>("[data-logo-dock]");
       if (dock) {
+        // Center on the MARK: the wordmark is out of flow, so dock.offsetHeight
+        // is the mark's height and yPercent:-50 keeps the mark screen-centered.
         gsap.set(dock, { xPercent: -50, yPercent: -50 });
-        // Settle size: the lockup appears AS BIG as the film silhouette it
-        // replaces — composite scaled to the full viewport height (width-
-        // guarded for portrait) — then shrinks continuously down to the dock.
-        const mark = dock.querySelector<HTMLElement>("img");
-        const bigScale = () =>
-          Math.min(
-            window.innerHeight / dock.offsetHeight,
-            (0.9 * window.innerWidth) / (mark?.offsetWidth || 1),
-          );
+        // Settle: the mark's CSS size (h-[82vh]) already matches the film
+        // silhouette, so this is scale 1 — just fade it in over the clouds
+        // as the baked pegasus dissolves out. Wordmark stays hidden here.
         tl.fromTo(
           dock,
-          { autoAlpha: 0, scale: () => bigScale() * 0.97 },
-          {
-            autoAlpha: 1,
-            scale: bigScale,
-            duration: 16,
-            ease: "power2.out",
-          },
+          { autoAlpha: 0, scale: 1.02 },
+          { autoAlpha: 1, scale: 1, duration: 16, ease: "power2.out" },
           "morph+=100",
         );
-        const DOCK_SCALE = 0.16;
-        const DOCK_TOP = 30; // px from viewport top to the scaled lockup's top
+        const DOCK_SCALE = 0.13;
+        const DOCK_TOP = 26; // px from viewport top to the docked mark's top
         tl.to(
           dock,
           {
             scale: DOCK_SCALE,
             // Function-based → invalidateOnRefresh recomputes on resize, so
-            // the docked lockup stays glued to top-center at any viewport.
+            // the docked mark stays glued to top-center at any viewport.
             y: () =>
               -(
                 window.innerHeight / 2 -
@@ -115,10 +106,13 @@ export function ScrollRig({ children }: { children: ReactNode }) {
           },
           "descent+=5",
         );
-        tl.to(
-          "[data-logo-subline]",
-          { autoAlpha: 0, duration: 14 },
-          "descent+=5",
+        // VALOREM + subline fade in as the shrink begins and ride down with
+        // the mark into the docked header.
+        tl.fromTo(
+          "[data-logo-word]",
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 22, ease: "power1.out" },
+          "descent+=8",
         );
       }
       tl.fromTo(
