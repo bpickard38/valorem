@@ -5,7 +5,7 @@
 
 import type { ScentId } from "@/lib/shopify";
 
-export const PRICE = "$32";
+export const PRICE = "$70";
 
 // TODO: real ship date before launch (kept in sync with main app)
 export const SHIP_DATE = "September 15, 2026";
