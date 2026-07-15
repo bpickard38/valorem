@@ -24,6 +24,14 @@ if (!segment || !input) {
 }
 const fps = Number(rest[rest.indexOf("--fps") + 1]) || 16;
 const key = rest.includes("--key");
+// Sample the ACTUAL screen green from a corner of the clip (models differ);
+// keep similarity tight or neutral whites/blacks get keyed away too.
+const keyColor = rest.includes("--keycolor")
+  ? rest[rest.indexOf("--keycolor") + 1]
+  : "0x2BBE36";
+const keySim = rest.includes("--keysim")
+  ? rest[rest.indexOf("--keysim") + 1]
+  : "0.13";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const TMP = path.join(ROOT, "scripts", "_tmp_frames", segment);
@@ -35,7 +43,7 @@ await mkdir(TMP, { recursive: true });
 // 1. Extract frames (keyed → RGBA png). Tune the key color/threshold per clip
 //    if fringe shows: sample the actual screen green from a corner pixel.
 const vf = key
-  ? `fps=${fps},chromakey=0x1EC81E:0.28:0.06,despill=type=green`
+  ? `fps=${fps},chromakey=${keyColor}:${keySim}:0.04,despill=type=green`
   : `fps=${fps}`;
 console.log(`extracting @ ${fps}fps${key ? " with chroma key" : ""}…`);
 execFileSync(ffmpegPath, [

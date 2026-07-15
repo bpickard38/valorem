@@ -14,7 +14,9 @@ import { createChromaKeyMaterial } from "./chromaKey";
  * pegasus holds its screen position and scale across the hand-off.
  */
 
-const LOOP_SRC = "/fx/pegasus-loop.mp4";
+// Versioned filename: /fx/** is immutable-cached, so a new clip needs a new
+// name (the old pegasus-loop.mp4 was pinned in users' caches for a year).
+const LOOP_SRC = "/fx/pegasus-loop-side.mp4";
 const VIDEO_ASPECT = 16 / 9;
 
 export function PegasusPlane() {
