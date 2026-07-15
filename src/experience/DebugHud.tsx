@@ -20,7 +20,7 @@ export function DebugHud() {
           `local   ${(s.phaseProgress * 100).toFixed(1)}%\n` +
           `global  ${(s.progress * 100).toFixed(1)}%\n` +
           `vel     ${s.velocity.toFixed(2)}\n` +
-          `reveal  ${s.sanctum.status}\n` +
+          `finale  ${s.finale.status}\n` +
           `tier    ${s.tier}\n` +
           `pool    ${(pool.bytes / 1e6).toFixed(0)}MB / ${pool.decoded}f / ${pool.inflight}dec`;
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { PRICE } from "@/lib/site";
 
 /* Fixed mini-nav — hidden over the hero, slides in once it scrolls away. */
@@ -34,13 +35,13 @@ export default function Nav() {
           Valorem
         </a>
         <div className="flex items-center gap-6">
-          <a
+          <Link
             href="/"
             className="text-[0.65rem] uppercase tracking-[0.25em] text-charcoal/60 transition-colors hover:text-gold"
             tabIndex={shown ? 0 : -1}
           >
             ← The House
-          </a>
+          </Link>
           <a
             href="#pantheon"
             className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-gold-deep transition-colors hover:text-charcoal"

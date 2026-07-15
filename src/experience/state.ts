@@ -1,5 +1,6 @@
 import { createStore } from "zustand/vanilla";
 import { PHASES, TOTAL_SPAN, type PhaseId } from "./phases";
+import type { ScentId } from "@/lib/shopify";
 
 /*
  * Transient experience state. ScrollTrigger writes on scroll; the canvas draw
@@ -8,8 +9,7 @@ import { PHASES, TOTAL_SPAN, type PhaseId } from "./phases";
  * changes subscribe selectively.
  */
 
-export type RevealStatus = "idle" | "revealing" | "revealed" | "navigating";
-export type RevealScent = "aphrodite" | "poseidon";
+export type FinaleStatus = "idle" | "playing" | "ended" | "navigating";
 
 export interface ExperienceState {
   /** 0..1 raw progress across the whole scroll track */
@@ -19,7 +19,8 @@ export interface ExperienceState {
   phaseProgress: number;
   /** scroll velocity (sign = direction) for prefetch bias */
   velocity: number;
-  sanctum: { status: RevealStatus; scent?: RevealScent };
+  /** the sanctum finale video (statues → product tins) */
+  finale: { status: FinaleStatus; scent?: ScentId };
   /** highest fully-fetched asset tier (-1 = nothing yet) */
   tier: number;
 }
@@ -29,7 +30,7 @@ export const experienceStore = createStore<ExperienceState>(() => ({
   phase: "hero",
   phaseProgress: 0,
   velocity: 0,
-  sanctum: { status: "idle" },
+  finale: { status: "idle" },
   tier: -1,
 }));
 
@@ -49,30 +50,31 @@ export function locate(progress: number): {
   return { phase: "sanctum", phaseProgress: 1 };
 }
 
-/* ---- sanctum actions (guarded state machine) ------------------------- */
+/* ---- finale actions (guarded state machine) -------------------------- */
 
-export function revealStatue(scent: RevealScent): void {
+export function startFinale(): void {
   const s = experienceStore.getState();
-  if (s.sanctum.status !== "idle" || s.phase !== "sanctum") return;
-  experienceStore.setState({ sanctum: { status: "revealing", scent } });
+  if (s.finale.status !== "idle" || s.phase !== "sanctum") return;
+  experienceStore.setState({ finale: { status: "playing" } });
 }
 
-export function revealComplete(): void {
-  const s = experienceStore.getState().sanctum;
-  if (s.status !== "revealing") return;
-  experienceStore.setState({ sanctum: { status: "revealed", scent: s.scent } });
+export function finaleEnded(): void {
+  const s = experienceStore.getState().finale;
+  if (s.status !== "playing") return;
+  experienceStore.setState({ finale: { status: "ended" } });
 }
 
-export function closeReveal(): void {
-  const s = experienceStore.getState().sanctum;
-  if (s.status === "idle" || s.status === "navigating") return;
-  experienceStore.setState({ sanctum: { status: "idle" } });
+/** Scrolling back out of the sanctum rewinds the finale. */
+export function resetFinale(): void {
+  const s = experienceStore.getState().finale;
+  if (s.status !== "playing" && s.status !== "ended") return;
+  experienceStore.setState({ finale: { status: "idle" } });
 }
 
-export function beginNavigate(): void {
-  const s = experienceStore.getState().sanctum;
-  if (s.status !== "revealed") return;
-  experienceStore.setState({ sanctum: { status: "navigating", scent: s.scent } });
+export function beginNavigate(scent: ScentId): void {
+  const s = experienceStore.getState().finale;
+  if (s.status !== "ended") return;
+  experienceStore.setState({ finale: { status: "navigating", scent } });
 }
 
 /** Frame-rate independent exponential smoothing toward a target. */
