@@ -95,7 +95,7 @@ export function HeroRender() {
       }}
     >
       <Image
-        src="/Valorem_transparent.png"
+        src="/shopify/valorem.png"
         alt="Valorem Solid Fragrance"
         fill
         sizes="(max-width: 768px) 100vw, 512px"
@@ -116,9 +116,9 @@ export function CardRender({
   backdrop?: string;
   scentId?: string;
 }) {
-  let imgSrc = "/Valorem_transparent.png";
+  let imgSrc = "/shopify/valorem.png";
   if (scentId === "poseidon") imgSrc = "/shopify/poseidon.png";
-  if (scentId === "aphrodite") imgSrc = "/shopify/aphrodite.webp";
+  if (scentId === "aphrodite") imgSrc = "/shopify/aphrodite.png";
 
   return (
     <div
