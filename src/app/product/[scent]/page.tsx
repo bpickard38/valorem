@@ -6,7 +6,6 @@ import {
   PRICE,
   RETURN_WINDOW,
   SCENTS,
-  SHIP_WINDOW,
   STICK_SIZE,
   WEAR_ESTIMATE,
 } from "@/lib/site";
@@ -86,7 +85,7 @@ export default async function ProductPage({
         <div className="mt-10">
           <OrderButton scent={s.id}>Order — {PRICE}</OrderButton>
           <p className="mt-4 text-xs tracking-wide text-charcoal/55">
-            Ships in {SHIP_WINDOW}. Returns accepted within {RETURN_WINDOW}.
+            Returns accepted within {RETURN_WINDOW}.
           </p>
         </div>
 

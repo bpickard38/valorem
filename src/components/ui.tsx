@@ -71,7 +71,7 @@ export function SectionHeader({
   align = "center",
 }: {
   numeral: string;
-  label: string;
+  label?: string;
   title?: ReactNode;
   align?: "center" | "left";
 }) {
@@ -82,7 +82,9 @@ export function SectionHeader({
       <div
         className={`mt-4 h-px w-10 bg-gold/70 ${centered ? "mx-auto" : ""}`}
       />
-      <p className="label-engraved mt-4 text-charcoal/55">{label}</p>
+      {label ? (
+        <p className="label-engraved mt-4 text-charcoal/55">{label}</p>
+      ) : null}
       {title ? <h2 className="type-heading mt-7 text-charcoal">{title}</h2> : null}
     </header>
   );

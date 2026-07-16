@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RETURN_WINDOW, SHIP_WINDOW, STICK_SIZE, WEAR_ESTIMATE } from "@/lib/site";
+import { RETURN_WINDOW, STICK_SIZE, WEAR_ESTIMATE } from "@/lib/site";
 
 const items = [
   {
@@ -10,7 +10,7 @@ const items = [
   },
   {
     q: "When does it ship?",
-    a: `Orders ship in ${SHIP_WINDOW}. You'll get tracking as soon as it's on its way.`,
+    a: "You'll get tracking as soon as it's on its way.",
   },
   {
     q: "What if I don't like it?",
@@ -22,7 +22,7 @@ const items = [
   },
   {
     q: "How big is it?",
-    a: `${STICK_SIZE} — roughly ${WEAR_ESTIMATE} of daily wear.`,
+    a: `${STICK_SIZE} of premium solid fragrance in a twist-up stick — roughly ${WEAR_ESTIMATE} of daily wear.`,
   },
 ];
 

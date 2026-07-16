@@ -4,15 +4,8 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui";
 
-/** Sends a scent straight to Shopify's hosted checkout. The label is the
- *  caller's — this component owns no copy but its own status text. */
-export default function OrderButton({
-  scent,
-  children,
-}: {
-  scent: string;
-  children: ReactNode;
-}) {
+/** Shared checkout flow — sends a scent straight to Shopify's hosted checkout. */
+function useCheckout(scent: string) {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
 
   // Back from Shopify restores this page from the bfcache with the frozen
@@ -26,6 +19,7 @@ export default function OrderButton({
   }, []);
 
   async function checkout() {
+    if (status === "loading") return;
     setStatus("loading");
     // If Back from Shopify comes home as a fresh load (no bfcache), the whole
     // experience resets to frame one and the tins vanish. Leave a note so the
@@ -48,6 +42,20 @@ export default function OrderButton({
     }
   }
 
+  return { status, checkout };
+}
+
+/** The label is the caller's — this component owns no copy but its own
+ *  status text. */
+export default function OrderButton({
+  scent,
+  children,
+}: {
+  scent: string;
+  children: ReactNode;
+}) {
+  const { status, checkout } = useCheckout(scent);
+
   return (
     <>
       <Button type="button" onClick={checkout} disabled={status === "loading"}>
@@ -59,5 +67,43 @@ export default function OrderButton({
         </p>
       )}
     </>
+  );
+}
+
+/** Makes an entire region — image, copy, whitespace — click through to a
+ *  scent's checkout. Renders its own order button; a single click anywhere
+ *  in the zone (the button included, via bubbling) starts checkout once. */
+export function CheckoutZone({
+  scent,
+  buttonLabel,
+  note,
+  children,
+  className = "",
+}: {
+  scent: string;
+  buttonLabel: ReactNode;
+  note?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  const { status, checkout } = useCheckout(scent);
+
+  return (
+    <div className={`cursor-pointer ${className}`} onClick={checkout}>
+      {children}
+      <div className="mt-8 text-center">
+        <Button type="button" disabled={status === "loading"}>
+          {status === "loading" ? "One moment" : buttonLabel}
+        </Button>
+        {status === "error" && (
+          <p className="mt-3 text-xs tracking-wide text-charcoal/70">
+            Checkout is unavailable right now. Try again shortly.
+          </p>
+        )}
+        {note ? (
+          <p className="mt-3 text-xs tracking-wide text-charcoal/50">{note}</p>
+        ) : null}
+      </div>
+    </div>
   );
 }

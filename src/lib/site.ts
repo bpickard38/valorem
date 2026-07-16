@@ -12,7 +12,7 @@ export const PRICE = "$70";
 export const SHIP_WINDOW = "2–5 business days";
 export const RETURN_WINDOW = "thirty days";
 
-export const STICK_SIZE = "15 g";
+export const STICK_SIZE = "30 ml (1 oz)";
 export const WEAR_ESTIMATE = "three months";
 
 export interface Scent {

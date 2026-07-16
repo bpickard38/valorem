@@ -4,10 +4,10 @@ import FadeIn from "@/components/FadeIn";
 import Faq from "@/components/Faq";
 import EmailForm from "@/components/EmailForm";
 import Nav from "@/components/Nav";
-import OrderButton from "@/components/OrderButton";
+import { CheckoutZone } from "@/components/OrderButton";
 import { HeroRender, CardRender } from "@/components/ProductRender";
 import { ButtonLink, SectionHeader } from "@/components/ui";
-import { PRICE, RETURN_WINDOW, SHIP_WINDOW } from "@/lib/site";
+import { PRICE, RETURN_WINDOW } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "VALOREM — Fragrance, carved down to its essence",
@@ -89,13 +89,7 @@ export default function Home() {
               </p>
             </FadeIn>
             <FadeIn delay={300} duration={900}>
-              <p className="mt-9 font-serif text-2xl text-charcoal">
-                {PRICE}
-                <span className="mx-3 text-gold">·</span>
-                <span className="text-lg text-charcoal/70">
-                  Ships in {SHIP_WINDOW}
-                </span>
-              </p>
+              <p className="mt-9 font-serif text-2xl text-charcoal">{PRICE}</p>
               <div className="mt-7">
                 <ButtonLink href="#pantheon">Order Now</ButtonLink>
               </div>
@@ -116,26 +110,26 @@ export default function Home() {
         >
           <a
             href="#pantheon"
+            aria-label="Scroll to the collection"
             className="flex flex-col items-center gap-3 text-charcoal/50 transition-colors hover:text-gold-deep"
           >
-            <span className="label-engraved text-[0.58rem]">
-              The Collection
-            </span>
             <span aria-hidden="true" className="h-10 w-px bg-gold/70" />
           </a>
         </FadeIn>
       </section>
 
       {/* I — THE COLLECTION: full-bleed split */}
-      <section id="pantheon" className="py-24 sm:py-28">
+      <section className="py-24 sm:py-28">
         <FadeIn className="px-6">
           <SectionHeader
             numeral="I"
-            label="Collection № 1 — The Pantheon"
-            title="Two to begin. Choose your side."
+            title="Collection I — The Parthenon"
           />
         </FadeIn>
-        <div className="mt-16 grid md:grid-cols-2 md:divide-x md:divide-gold/50">
+        <div
+          id="pantheon"
+          className="-scroll-mt-28 mt-16 grid md:grid-cols-2 md:divide-x md:divide-gold/50"
+        >
           {scents.map((scent, i) => (
             <FadeIn
               key={scent.name}
@@ -160,7 +154,7 @@ export default function Home() {
               <div className="mt-8 text-center">
                 <OrderButton scent={scent.id}>Order — {PRICE}</OrderButton>
                 <p className="mt-3 text-xs tracking-wide text-charcoal/50">
-                  Ships in {SHIP_WINDOW}. Returns within {RETURN_WINDOW}.
+                  Returns within {RETURN_WINDOW}.
                 </p>
               </div>
             </FadeIn>
@@ -206,9 +200,6 @@ export default function Home() {
               Great fragrance shouldn&rsquo;t live on a shelf — it should live
               in your pocket.
             </p>
-            <p className="mt-3 text-center font-serif text-sm italic text-charcoal/50 md:text-left">
-              (It is not lip balm. Please don&rsquo;t.)
-            </p>
           </FadeIn>
           <FadeIn delay={150} className="group">
             <div className="mx-auto w-full max-w-xs">
@@ -239,7 +230,7 @@ export default function Home() {
             <div className="border border-gold/70 px-6 py-16 text-center sm:px-12 sm:py-20">
               <SectionHeader numeral="V" label="The First Batch" />
               <h2 className="type-heading mx-auto mt-9 max-w-xl text-charcoal">
-                Poseidon and Aphrodite. {PRICE}. Ships in {SHIP_WINDOW}.
+                Poseidon and Aphrodite. {PRICE}.
               </h2>
               <div className="mt-10">
                 <ButtonLink href="#pantheon" variant="outline">
@@ -285,8 +276,7 @@ export default function Home() {
             </a>
           </div>
           <p className="max-w-md text-center text-xs leading-relaxed text-charcoal/45">
-            Orders ship in {SHIP_WINDOW}. Returns accepted within{" "}
-            {RETURN_WINDOW} of delivery.
+            Returns accepted within {RETURN_WINDOW} of delivery.
           </p>
           <p className="text-xs tracking-[0.2em] text-charcoal/45">
             © 2026 VALOREM

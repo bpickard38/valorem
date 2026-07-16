@@ -117,8 +117,8 @@ export function CardRender({
   scentId?: string;
 }) {
   let imgSrc = "/Valorem_transparent.png";
-  if (scentId === "poseidon") imgSrc = "/Poseidon_transparent.png";
-  if (scentId === "aphrodite") imgSrc = "/Aphrodite_transparent.png";
+  if (scentId === "poseidon") imgSrc = "/shopify/poseidon.png";
+  if (scentId === "aphrodite") imgSrc = "/shopify/aphrodite.webp";
 
   return (
     <div
