@@ -134,29 +134,30 @@ export default function Home() {
             <FadeIn
               key={scent.name}
               delay={i * 150}
-              className="group px-6 pb-16 pt-4 last:pb-4 sm:px-10 md:pb-4 lg:px-16"
+              className="group pb-16 last:pb-4 md:pb-4"
             >
-              <div className="mx-auto w-full max-w-sm">
-                <CardRender wax={scent.wax} backdrop={scent.backdrop} scentId={scent.id} />
-              </div>
-              <h3 className="mt-9 text-center font-serif text-3xl uppercase tracking-[0.22em] text-charcoal">
-                {scent.name}
-              </h3>
-              <p className="mt-3 text-center font-serif text-lg italic text-gold-deep">
-                {scent.lead}
-              </p>
-              <p className="mx-auto mt-4 max-w-sm text-center text-sm leading-relaxed text-charcoal/70">
-                {scent.body}
-              </p>
-              <p className="mt-5 text-center text-[0.65rem] uppercase tracking-[0.28em] text-charcoal/55">
-                {scent.notes.join("  ·  ")}
-              </p>
-              <div className="mt-8 text-center">
-                <OrderButton scent={scent.id}>Order — {PRICE}</OrderButton>
-                <p className="mt-3 text-xs tracking-wide text-charcoal/50">
-                  Returns within {RETURN_WINDOW}.
+              <CheckoutZone
+                scent={scent.id}
+                buttonLabel={<>Order — {PRICE}</>}
+                note={<>Returns within {RETURN_WINDOW}.</>}
+                className="h-full px-6 pt-4 sm:px-10 lg:px-16"
+              >
+                <div className="mx-auto w-full max-w-sm">
+                  <CardRender wax={scent.wax} backdrop={scent.backdrop} scentId={scent.id} />
+                </div>
+                <h3 className="mt-9 text-center font-serif text-3xl uppercase tracking-[0.22em] text-charcoal">
+                  {scent.name}
+                </h3>
+                <p className="mt-3 text-center font-serif text-lg italic text-gold-deep">
+                  {scent.lead}
                 </p>
-              </div>
+                <p className="mx-auto mt-4 max-w-sm text-center text-sm leading-relaxed text-charcoal/70">
+                  {scent.body}
+                </p>
+                <p className="mt-5 text-center text-[0.65rem] uppercase tracking-[0.28em] text-charcoal/55">
+                  {scent.notes.join("  ·  ")}
+                </p>
+              </CheckoutZone>
             </FadeIn>
           ))}
         </div>
