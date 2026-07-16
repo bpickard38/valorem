@@ -119,17 +119,14 @@ export default function Home() {
       </section>
 
       {/* I — THE COLLECTION: full-bleed split */}
-      <section className="py-24 sm:py-28">
+      <section id="pantheon" className="scroll-mt-[-72px] py-24 sm:py-28">
         <FadeIn className="px-6">
           <SectionHeader
             numeral="I"
             title="Collection I — The Parthenon"
           />
         </FadeIn>
-        <div
-          id="pantheon"
-          className="-scroll-mt-28 mt-16 grid md:grid-cols-2 md:divide-x md:divide-gold/50"
-        >
+        <div className="mt-10 grid md:grid-cols-2 md:divide-x md:divide-gold/50">
           {scents.map((scent, i) => (
             <FadeIn
               key={scent.name}
@@ -142,10 +139,10 @@ export default function Home() {
                 note={<>Returns within {RETURN_WINDOW}.</>}
                 className="h-full px-6 pt-4 sm:px-10 lg:px-16"
               >
-                <div className="mx-auto w-full max-w-sm">
+                <div className="mx-auto w-full max-w-[260px]">
                   <CardRender wax={scent.wax} backdrop={scent.backdrop} scentId={scent.id} />
                 </div>
-                <h3 className="mt-9 text-center font-serif text-3xl uppercase tracking-[0.22em] text-charcoal">
+                <h3 className="mt-6 text-center font-serif text-3xl uppercase tracking-[0.22em] text-charcoal">
                   {scent.name}
                 </h3>
                 <p className="mt-3 text-center font-serif text-lg italic text-gold-deep">

@@ -212,18 +212,39 @@ export function Finale() {
         }
         const cap = captions.current.get(id);
         if (cap) {
-          // Caption floats in the clear zone above the tin's wax dome.
+          // Caption floats in the clear zone above the tin's wax dome —
+          // scaled with the projected tin so it never dwarfs it on small
+          // screens (floor keeps the Order button tappable).
           const a = finalePointToScreen(TINS[id].cx, 0.07, fw, fh, vw, vh);
+          const k = Math.min(1, Math.max(0.55, r.w / 340));
           cap.style.left = `${a.x}px`;
           cap.style.top = `${Math.max(16, a.y)}px`;
+          cap.style.transform = `translateX(-50%) scale(${k})`;
+          cap.style.transformOrigin = "top center";
         }
       }
-      // Collection line — centered in the aisle between the two tins.
+      // Collection line — centered in the aisle between the two tins,
+      // shrunk to fit it, and dropped entirely when even that can't fit
+      // (narrow phones), where it would collide with the tins.
       if (collection.current) {
+        const el = collection.current;
         const midCx = (TINS.poseidon.cx + TINS.aphrodite.cx) / 2;
         const m = finalePointToScreen(midCx, 0.5, fw, fh, vw, vh);
-        collection.current.style.left = `${m.x}px`;
-        collection.current.style.top = `${m.y}px`;
+        const left = finalePointToScreen(
+          TINS.poseidon.cx + TINS.poseidon.w / 2, 0.5, fw, fh, vw, vh,
+        );
+        const right = finalePointToScreen(
+          TINS.aphrodite.cx - TINS.aphrodite.w / 2, 0.5, fw, fh, vw, vh,
+        );
+        const aisle = right.x - left.x;
+        const natural = el.scrollWidth || 1; // transform-independent
+        const k = Math.min(1, (aisle * 0.92) / natural);
+        // visibility, not display — display:none zeroes scrollWidth, which
+        // would make the next tick think the line fits again (flicker loop).
+        el.style.visibility = k < 0.45 ? "hidden" : "";
+        el.style.left = `${m.x}px`;
+        el.style.top = `${m.y}px`;
+        el.style.transform = `translate(-50%, -50%) scale(${k})`;
       }
     };
     tick();
@@ -273,10 +294,8 @@ export function Finale() {
       >
         {/* Collection line, centered between the two products (positioned by
             the same ticker that glues the captions to the tins). */}
-        <div
-          ref={collection}
-          className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-center"
-        >
+        {/* transform (centering + fit-to-aisle scale) is set by the ticker */}
+        <div ref={collection} className="absolute whitespace-nowrap text-center">
           <p className="font-serif text-lg text-ivory/90 [text-shadow:0_1px_12px_rgba(26,25,23,.7)]">
             № 1
           </p>
@@ -316,18 +335,19 @@ export function Finale() {
                       the cascade over a Tailwind utility */}
                   <span
                     className="label-engraved text-ivory [text-shadow:0_1px_12px_rgba(26,25,23,.75)]"
-                    style={{ fontSize: "1.25rem" }}
+                    style={{ fontSize: "clamp(0.7rem, 2.4vw, 1.25rem)" }}
                   >
                     View Product
                   </span>
                 </span>
               </button>
               {/* price + order, floating above the tin */}
+              {/* transform (centering + tin-tracking scale) is set by the ticker */}
               <div
                 ref={(el) => {
                   if (el) captions.current.set(id, el);
                 }}
-                className="absolute -translate-x-1/2 text-center"
+                className="absolute text-center"
                 style={{ pointerEvents: shopping ? "auto" : "none" }}
               >
                 <p className="label-engraved text-ivory/85 [text-shadow:0_1px_10px_rgba(26,25,23,.6)]">
