@@ -18,6 +18,7 @@ import {
   TINS,
 } from "@/experience/finaleConfig";
 import { stageSize } from "@/sequence/coverFit";
+import { finaleVideoUrl } from "@/sequence/finaleVideo";
 import type { ScentId } from "@/lib/shopify";
 import { PRICE, SCENTS } from "@/lib/site";
 import OrderButton from "@/components/OrderButton";
@@ -54,18 +55,26 @@ export function Finale() {
       const v = video.current;
       if (!v) return;
 
-      // Fetch the finale only after the voyage sequence tier is down — it
-      // must never compete with the film for first-load bandwidth. "sanctum"
-      // is here because Skip to Shop jumps straight there without ever
-      // passing through voyage; without it the video would stay preload="none"
-      // on exactly the path that needs it most.
+      // The Loader already fetched the finale into a blob (finaleVideo.ts);
+      // hand its object URL to the element once the journey nears the
+      // sanctum. "sanctum" is here because Skip to Shop jumps straight there
+      // without ever passing through voyage. If the blob fetch failed (or the
+      // Loader's failsafe gave up first), fall back to native preload.
       if (
         !preloaded &&
         (s.tier >= 1 || s.phase === "voyage" || s.phase === "sanctum")
       ) {
         preloaded = true;
-        v.preload = "auto";
-        v.load();
+        void finaleVideoUrl().then((url) => {
+          const vv = video.current;
+          if (!vv) return;
+          if (url && vv.paused && vv.currentTime === 0) {
+            vv.src = url;
+          } else if (!url) {
+            vv.preload = "auto";
+            vv.load();
+          }
+        });
       }
 
       if (
@@ -205,10 +214,13 @@ export function Finale() {
         aria-hidden="true"
       />
 
-      {/* Shop overlay — price + order per tin, tins clickable. */}
+      {/* Shop overlay — price + order per tin, tins clickable. The container
+          is ALWAYS pointer-events-none: it spans the viewport at the same
+          z as the logo dock and would otherwise eat the docked mark's
+          back-to-top click. The interactive children re-enable themselves. */}
       <div
-        className={`fixed inset-0 z-30 transition-opacity duration-700 ${
-          shopping ? "opacity-100" : "pointer-events-none opacity-0"
+        className={`pointer-events-none fixed inset-0 z-30 transition-opacity duration-700 ${
+          shopping ? "opacity-100" : "opacity-0"
         }`}
         aria-hidden={!shopping}
       >
@@ -225,9 +237,20 @@ export function Finale() {
                 tabIndex={shopping ? 0 : -1}
                 aria-label={`View ${s.name} — ${s.notes.join(", ")}`}
                 onClick={() => enter(id)}
-                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                className="group absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-gold"
                 style={{ pointerEvents: shopping ? "auto" : "none" }}
-              />
+              >
+                {/* hover affordance; always visible where hover doesn't exist */}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute bottom-[6%] left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100"
+                >
+                  <span className="mx-auto mb-2 block h-px w-8 bg-gold/80" />
+                  <span className="label-engraved text-ivory/90 [text-shadow:0_1px_10px_rgba(26,25,23,.65)]">
+                    View Product Page
+                  </span>
+                </span>
+              </button>
               {/* price + order, floating above the tin */}
               <div
                 ref={(el) => {

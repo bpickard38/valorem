@@ -51,7 +51,7 @@ class DecodePool {
           bmp = resizeWidth
             ? await createImageBitmap(blob, {
                 resizeWidth,
-                resizeQuality: "medium",
+                resizeQuality: "high",
               })
             : await createImageBitmap(blob);
         } catch {

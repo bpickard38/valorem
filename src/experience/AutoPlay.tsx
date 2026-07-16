@@ -10,16 +10,17 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 /*
  * The guided run. The film is 590vh of scroll and viewers were stalling in the
- * middle of it, never reaching the product — so the first input, however small,
- * hands the track over and carries them to the finale.
+ * middle of it, never reaching the product — so a downward input at the TOP of
+ * the track hands it over and carries them to the finale.
  *
- * It arms on the INPUT (wheel/key/touch), not on the scroll position, so it
- * takes over on the first notch of the gesture rather than after the page has
- * already moved. The scroll listener is only a backstop for inputs we don't
- * see. Anything downward arms; a deliberate UP takes control back. Down never
- * cancels, because the momentum of the very flick that started the run is
- * downward — which is also why ScrollToPlugin's autoKill is off, it can't tell
- * the two apart.
+ * It arms on the INPUT (wheel/key/touch), never on scroll position — a scroll
+ * that moved without a gesture we saw (restoration, programmatic) must not
+ * start the film. It's re-armable: any time the viewer is back at frame one
+ * (scrollY within TOP_ZONE — e.g. after the docked logo jump), the next
+ * downward gesture runs it again. Mid-track gestures never arm; a deliberate
+ * UP takes control back. Down never cancels, because the momentum of the very
+ * flick that started the run is downward — which is also why ScrollToPlugin's
+ * autoKill is off, it can't tell the two apart.
  *
  * Voyage frames stream during the run, and the morph fills the first ~20% of
  * the track, giving them a head start; the canvas holds its nearest decoded
@@ -28,13 +29,12 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 /** Top of the film to the product. One knob — tune to taste. */
 const RUN_SECONDS = 12;
-/** "Even a little scroll" is the whole point; this is just past noise. */
-const ARM_AT_Y = 4;
+/** "At the top of the page" — anything within this many px still counts. */
+const TOP_ZONE = 8;
 /** Finger travel in px (downward drag = scrolling up) that counts as taking over. */
 const TOUCH_CANCEL = 24;
 
 let tween: gsap.core.Tween | null = null;
-let spent = false;
 
 export function cancelAutoPlay(): void {
   tween?.kill();
@@ -42,7 +42,6 @@ export function cancelAutoPlay(): void {
 }
 
 function run(): void {
-  spent = true;
   tween = gsap.to(window, {
     scrollTo: { y: "max", autoKill: false },
     duration: RUN_SECONDS,
@@ -62,30 +61,32 @@ function run(): void {
   });
 }
 
-/** Ready once the opening tier is fetched. The Loader's overflow lock stops the
- *  scroll path from arming early, but wheel/key events fire straight through
- *  it — arming on those would burn the one shot on a film that can't move. */
+/** Ready once the Loader has dismissed AND the opening tier is fetched (the
+ *  failsafe can dismiss the Loader with nothing playable yet). Wheel/key
+ *  events fire straight through the Loader's overflow lock — arming on those
+ *  would start a film that can't move. */
 function filmReady(): boolean {
-  return experienceStore.getState().tier >= 0;
+  const s = experienceStore.getState();
+  return s.loaded && s.tier >= 0;
 }
 
 function armFromIntent(): void {
-  if (spent || tween || !filmReady()) return;
+  if (tween || !filmReady()) return;
+  if (window.scrollY > TOP_ZONE) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   run();
 }
 
 /** Straight to the product (Skip to Shop). */
 export function jumpToFilmEnd(): void {
   cancelAutoPlay();
-  spent = true;
   window.scrollTo({ top: ScrollTrigger.maxScroll(window), behavior: "instant" });
 }
 
-/** Back to frame one (the docked logo). Re-arms: a fresh scroll should carry
- *  them through again. */
+/** Back to frame one (the docked logo). Landing at scrollY 0 re-arms: a fresh
+ *  scroll carries them through again. */
 export function jumpToFilmStart(): void {
   cancelAutoPlay();
-  spent = false;
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -99,11 +100,18 @@ export function AutoPlay() {
     const prevBehavior = root.style.scrollBehavior;
     root.style.scrollBehavior = "auto";
 
-    // Backstop: a scroll that moved without us seeing the input that caused it.
-    const onScroll = () => {
-      if (spent || tween) return;
-      if (window.scrollY > ARM_AT_Y) run();
-    };
+    // Reloads must open on frame one. The browser's own restoration would
+    // drop the film mid-track behind the Loader — the page feels frozen, and
+    // the first input afterwards reads as a jump to wherever it left off.
+    // Mount-only on purpose: bfcache restores (Back from checkout) skip this
+    // effect and correctly keep their position.
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+
+    // Leaving the page mid-run (checkout, browser chrome) must not leave a
+    // live tween behind for a bfcache restore to resume.
+    const onPageHide = () => cancelAutoPlay();
+
     const onWheel = (e: WheelEvent) => {
       if (tween) {
         if (e.deltaY < 0) cancelAutoPlay();
@@ -133,7 +141,7 @@ export function AutoPlay() {
       if (dy < -TOUCH_CANCEL) armFromIntent(); // finger up = scrolling down
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pagehide", onPageHide);
     window.addEventListener("wheel", onWheel, { passive: true });
     window.addEventListener("keydown", onKey);
     window.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -141,9 +149,9 @@ export function AutoPlay() {
 
     return () => {
       cancelAutoPlay();
-      spent = false;
       root.style.scrollBehavior = prevBehavior;
-      window.removeEventListener("scroll", onScroll);
+      if ("scrollRestoration" in history) history.scrollRestoration = "auto";
+      window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("touchstart", onTouchStart);

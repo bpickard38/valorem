@@ -68,9 +68,11 @@ export const PHASES: Phase[] = [
     seam: "cut",
     seq: { name: "pegasus-morph", frames: 120, fps: 24 },
     overlay: { heading: "Fragrance, in its most permanent form." },
-    // Film silhouette dissolves out over the last 12% while the DOM logo
-    // dock fades in over the live clouds.
-    fadeTail: 0.12,
+    // Film silhouette dissolves out over the last 10% — UNDER the DOM logo
+    // dock, which is fully opaque by then (see the settle fromTo in
+    // ScrollRig). Overlapping two semi-transparent marks let the light sky
+    // plate bleed through and washed the black logo white.
+    fadeTail: 0.1,
   },
   {
     // One continuous shot: fall through the clouds, cross the temple front,

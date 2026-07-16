@@ -18,10 +18,12 @@ import { getBlob, segMeta } from "./sequences";
 
 /*
  * The baked film. A fixed fullscreen 2D canvas whose playhead is a damped
- * copy of scroll progress. Draws floor/ceil frames cross-blended (16fps
- * sources read as continuous motion), dissolves across baked→baked seams,
- * and NEVER awaits — if the exact frame isn't decoded yet it draws the
- * nearest neighbor and lets the damped playhead catch up.
+ * copy of scroll progress. Draws the single nearest frame — the damped
+ * playhead supplies the motion smoothing; blending adjacent frames left a
+ * permanent double-exposure whenever the playhead rested on a fraction.
+ * Dissolves across baked→baked seams, and NEVER awaits — if the exact frame
+ * isn't decoded yet it draws the nearest neighbor and lets the damped
+ * playhead catch up.
  *
  * On viewports too narrow to crop (see MIN_COVER_ASPECT) the film becomes a
  * centered band and a second canvas fills the gap behind it with a blurred
@@ -76,6 +78,11 @@ export function SequenceCanvas() {
       vh = Math.round(s.h * dpr);
       canvas.width = vw;
       canvas.height = vh;
+      // Resizing the backing store resets 2D context state, so re-assert
+      // smoothing here: the 1080p masters upscale on HiDPI displays and the
+      // default "low" quality reads as soft.
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       // The film's layer owns the fit, so it owns publishing it. See
       // syncFilmVars — ScrollTrigger's refresh alone can't be trusted to.
       syncFilmVars();
@@ -189,8 +196,7 @@ export function SequenceCanvas() {
         }
       }
 
-      const lo = Math.floor(f);
-      const hi = Math.min(meta.frames - 1, lo + 1);
+      const lo = Math.round(f);
       const hasCurrent = decodePool().nearest(seg, lo, 6) !== null;
       if (!hasCurrent && !dissolving) return; // hold last drawn frame
 
@@ -217,9 +223,6 @@ export function SequenceCanvas() {
         drawFrame(seg, lo, ph.focal, headAlpha);
       } else {
         drawFrame(seg, lo, ph.focal, tailAlpha);
-        if (hi !== lo && decodePool().has(seg, hi)) {
-          drawFrame(seg, hi, ph.focal, (f - lo) * tailAlpha); // cross-blend
-        }
       }
     };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui";
 
@@ -14,6 +14,16 @@ export default function OrderButton({
   children: ReactNode;
 }) {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+
+  // Back from Shopify restores this page from the bfcache with the frozen
+  // "loading" state — the button would sit on "One moment", disabled, forever.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setStatus("idle");
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   async function checkout() {
     setStatus("loading");

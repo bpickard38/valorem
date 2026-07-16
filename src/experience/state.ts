@@ -23,6 +23,8 @@ export interface ExperienceState {
   finale: { status: FinaleStatus; scent?: ScentId };
   /** highest fully-fetched asset tier (-1 = nothing yet) */
   tier: number;
+  /** the Loader has dismissed — the film may accept input */
+  loaded: boolean;
 }
 
 export const experienceStore = createStore<ExperienceState>(() => ({
@@ -32,6 +34,7 @@ export const experienceStore = createStore<ExperienceState>(() => ({
   velocity: 0,
   finale: { status: "idle" },
   tier: -1,
+  loaded: false,
 }));
 
 /** Pure: raw track progress → { phase, phaseProgress }. */

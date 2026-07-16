@@ -6,6 +6,7 @@
 
 import { getManifest, loadManifest, pickTier } from "@/experience/manifest";
 import { experienceStore } from "@/experience/state";
+import { FINALE_VIDEO_BYTES, preloadFinaleVideo } from "./finaleVideo";
 
 interface SegState {
   tier: string;
@@ -89,28 +90,70 @@ async function fetchSegment(
   state.done = true;
 }
 
-let started = false;
+let runPromise: Promise<void> | null = null;
+let progressCb: (fraction: number) => void = () => {};
+const bySource = new Map<string, { loaded: number; total: number }>();
 
-/** Kick off the tiered download chain. T0 progress feeds the Loader; the
- *  store's `tier` field advances as each group completes. */
-export async function startLoading(
-  onT0Progress: (fraction: number) => void,
-): Promise<void> {
-  if (started) return;
-  started = true;
-  await loadManifest();
-
-  for (let t = 0; t < TIER_ORDER.length; t++) {
-    await Promise.all(
-      TIER_ORDER[t].map((name) =>
-        fetchSegment(
-          name,
-          t === 0
-            ? (loaded, total) => onT0Progress(total ? loaded / total : 1)
-            : undefined,
-        ),
-      ),
-    );
-    experienceStore.setState({ tier: t });
+function report(): void {
+  let loaded = 0;
+  let total = 0;
+  for (const s of bySource.values()) {
+    loaded += s.loaded;
+    total += s.total;
   }
+  progressCb(total ? Math.min(1, loaded / total) : 1);
+}
+
+/** Kick off the full download: both sequence tiers (sequentially — the store's
+ *  `tier` field advances as each group completes) plus the finale video in
+ *  parallel. Byte-weighted progress across ALL of it feeds the Loader, which
+ *  gates the experience until everything is playable. Idempotent: repeat
+ *  calls (StrictMode remount) re-bind the callback onto the same run. */
+export function startLoading(
+  onProgress: (fraction: number) => void,
+): Promise<void> {
+  progressCb = onProgress;
+  if (runPromise) {
+    report();
+    return runPromise;
+  }
+  runPromise = (async () => {
+    await loadManifest();
+    const m = getManifest();
+
+    // Seed every source's total up front so the fraction is stable from 0%.
+    if (m) {
+      for (const group of TIER_ORDER) {
+        for (const name of group) {
+          const info = m.segments[name];
+          if (info) {
+            const v = info.variants[pickTier(info)];
+            bySource.set(name, { loaded: 0, total: v.bytes });
+          }
+        }
+      }
+    }
+    bySource.set("finale-video", { loaded: 0, total: FINALE_VIDEO_BYTES });
+    report();
+
+    const videoDone = preloadFinaleVideo((loaded, total) => {
+      bySource.set("finale-video", { loaded, total });
+      report();
+    });
+
+    for (let t = 0; t < TIER_ORDER.length; t++) {
+      await Promise.all(
+        TIER_ORDER[t].map((name) =>
+          fetchSegment(name, (loaded, total) => {
+            bySource.set(name, { loaded, total });
+            report();
+          }),
+        ),
+      );
+      experienceStore.setState({ tier: t });
+    }
+    await videoDone;
+    report();
+  })();
+  return runPromise;
 }

@@ -83,9 +83,17 @@ export function CloudLayers() {
     const g = group.current;
     if (!g) return;
 
-    // Clouds HOLD through the morph (the logo settles over them), then
-    // the camera "falls": clouds rise and part quickly across early descent
-    // before the fade hands the sky to the baked footage.
+    // Full atmosphere on the held hero frame, then the veil thins while the
+    // pegasus transforms — white sprites sit ABOVE the film (z-10) and at
+    // full strength they wash out both the morphing horse and the black
+    // mark. Held at a low floor through the logo settle/dock, then the
+    // voyage fade takes the rest to zero.
+    const morphT = THREE.MathUtils.clamp(pos / morph.end, 0, 1);
+    const veil = 1 - 0.8 * THREE.MathUtils.smoothstep(morphT, 0.3, 0.65);
+
+    // The camera "falls" after the morph: clouds rise and part quickly
+    // across early descent before the fade hands the sky to the baked
+    // footage.
     const fall = Math.max(0, pos - morph.end) / 100;
     const t = state.clock.elapsedTime;
     g.children.forEach((child, i) => {
@@ -98,7 +106,7 @@ export function CloudLayers() {
       // fade out as the baked voyage film takes over
       const fadeT =
         (pos - voyage.start) / ((voyage.end - voyage.start) * CLOUD_FADE_END);
-      const opacity = 1 - THREE.MathUtils.clamp(fadeT, 0, 1);
+      const opacity = veil * (1 - THREE.MathUtils.clamp(fadeT, 0, 1));
       (mesh.material as THREE.MeshBasicMaterial).opacity = opacity;
       mesh.visible = opacity > 0.01;
     });

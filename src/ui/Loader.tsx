@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { startLoading } from "@/sequence/sequences";
+import { experienceStore } from "@/experience/state";
 
 /*
- * Byte-weighted preloader. Blocks scroll until the opening tier (T0, the
- * morph) is fetched, then fades out while T1 continues in the background.
- * The overflow lock is also what keeps AutoPlay from arming early — no
- * scroll is possible until the film can actually play.
- * Brand-calm: ivory field, gold rule, serif numerals.
+ * Byte-weighted preloader. Blocks scroll until EVERYTHING is playable — both
+ * sequence tiers and the finale video — then fades out. Dismissal flips the
+ * store's `loaded` flag, which is what lets AutoPlay arm; wheel/key events
+ * fire straight through the overflow lock, so the lock alone can't gate it.
+ * Brand-calm: ivory field, gold rule + progress bar, serif numerals.
  */
 export function Loader() {
   const [pct, setPct] = useState(0);
@@ -16,19 +17,23 @@ export function Loader() {
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    let t0Done = false;
+    let finished = false;
 
     const finish = () => {
-      if (t0Done) return;
-      t0Done = true;
+      if (finished) return;
+      finished = true;
       document.body.style.overflow = "";
+      // The film must open on frame one, and arming stays gesture-only —
+      // AutoPlay has no scroll-position trigger.
+      window.scrollTo(0, 0);
+      experienceStore.setState({ loaded: true });
       setPhase("fading");
       setTimeout(() => setPhase("done"), 700);
     };
 
-    // Never trap the user: if the manifest is missing or the network hangs,
-    // unlock anyway after a grace period.
-    const failsafe = setTimeout(finish, 12000);
+    // Never trap the user: if the network hangs, unlock anyway after a grace
+    // period (the full gate is ~15 MB — allow slow connections to make it).
+    const failsafe = setTimeout(finish, 25000);
 
     void startLoading((fraction) => {
       setPct(Math.round(fraction * 100));
@@ -48,7 +53,13 @@ export function Loader() {
     >
       <p className="label-engraved text-charcoal/60">Valorem</p>
       <div className="mt-5 h-px w-10 bg-gold/70" />
-      <p className="mt-6 font-serif text-4xl tabular-nums text-charcoal">
+      <div className="mt-6 h-px w-44 overflow-hidden bg-charcoal/15">
+        <div
+          className="h-full origin-left bg-gold transition-transform duration-200 ease-out"
+          style={{ transform: `scaleX(${pct / 100})` }}
+        />
+      </div>
+      <p className="mt-5 font-serif text-4xl tabular-nums text-charcoal">
         {pct}
       </p>
     </div>

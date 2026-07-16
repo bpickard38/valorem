@@ -129,9 +129,12 @@ export function ScrollRig({ children }: { children: ReactNode }) {
         // is the mark's height and yPercent:-50 keeps the mark screen-centered.
         gsap.set(dock, { xPercent: -50, yPercent: -50 });
         // Settle: the mark's CSS size already matches the film silhouette's
-        // height, so this is scale 1 — just fade it in over the clouds as the
-        // baked pegasus dissolves out. x/y are pinned to the silhouette (which
-        // is off-centre in frame) on BOTH sides of the fromTo, so the mark
+        // height, so this is scale 1. Sequenced, not crossfaded: the mark
+        // fades in over the still-OPAQUE film silhouette and must reach full
+        // alpha before the film's fadeTail begins (morph span × (1 −
+        // fadeTail)) — two semi-transparent marks over the light sky plate
+        // read as a white wash. x/y are pinned to the silhouette (which is
+        // off-centre in frame) on BOTH sides of the fromTo, so the mark
         // holds still on top of the film instead of drifting into place.
         // Wordmark stays hidden here.
         tl.fromTo(
@@ -142,7 +145,7 @@ export function ScrollRig({ children }: { children: ReactNode }) {
             scale: 1,
             x: settleX,
             y: settleY,
-            duration: 16,
+            duration: 8,
             ease: "power2.out",
           },
           "morph+=100",
