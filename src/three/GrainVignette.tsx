@@ -5,10 +5,10 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 /*
- * Film finish in one clip-space quad rendered last: animated grain + gentle
- * vignette over the WebGL layers. Deliberately subtle. (The CSS paper-grain
- * overlay that used to sit above this was cut — it read as confetti on
- * mobile screens.)
+ * Film finish in one clip-space quad rendered last: a gentle vignette over
+ * the WebGL layers. The animated grain that used to accompany it was cut —
+ * like the CSS paper-grain overlay before it, its noise specks read as
+ * confetti lights on mobile screens.
  */
 export function GrainVignette() {
   const material = useRef<THREE.ShaderMaterial>(null);
@@ -27,17 +27,11 @@ export function GrainVignette() {
         uniform float uTime;
         uniform vec2 uResolution;
 
-        float hash(vec2 p) {
-          return fract(sin(dot(p, vec2(127.1, 311.7)) + uTime) * 43758.5453);
-        }
-
         void main() {
           vec2 uv = gl_FragCoord.xy / uResolution;
-          float grain = (hash(gl_FragCoord.xy) - 0.5) * 0.06;
           float dist = length(uv - 0.5) * 1.35;
           float vignette = smoothstep(0.55, 1.25, dist) * 0.18;
-          float a = clamp(vignette + max(grain, 0.0), 0.0, 1.0);
-          gl_FragColor = vec4(0.0, 0.0, 0.0, a);
+          gl_FragColor = vec4(0.0, 0.0, 0.0, vignette);
         }
       `,
     }),
