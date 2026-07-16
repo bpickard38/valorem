@@ -17,6 +17,7 @@ import {
   tinScreenRect,
   TINS,
 } from "@/experience/finaleConfig";
+import { stageSize } from "@/sequence/coverFit";
 import type { ScentId } from "@/lib/shopify";
 import { PRICE, SCENTS } from "@/lib/site";
 import OrderButton from "@/components/OrderButton";
@@ -147,8 +148,10 @@ export function Finale() {
       const v = video.current;
       const fw = v?.videoWidth || FINALE_FRAME_FALLBACK.w;
       const fh = v?.videoHeight || FINALE_FRAME_FALLBACK.h;
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
+      // The <video> is `fixed inset-0`, so it fills the viewport minus the
+      // scrollbar — projecting against innerWidth would slide the hit-areas
+      // off the tins by half a scrollbar.
+      const { w: vw, h: vh } = stageSize();
       for (const id of SCENT_IDS) {
         const r = tinScreenRect(id, fw, fh, vw, vh);
         const hit = hits.current.get(id);

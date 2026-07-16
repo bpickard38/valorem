@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { PHASES, TOTAL_SPAN, DAMP, type Phase } from "@/experience/phases";
 import { experienceStore, locate, damp } from "@/experience/state";
 import { getManifest } from "@/experience/manifest";
-import { isLetterboxed, stageFit, syncFilmVars } from "./coverFit";
+import { isLetterboxed, stageFit, stageSize, syncFilmVars } from "./coverFit";
 import { decodePool } from "./decodePool";
 import { getBlob, segMeta } from "./sequences";
 
@@ -51,8 +51,14 @@ export function SequenceCanvas() {
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
-      vw = Math.round(window.innerWidth * dpr);
-      vh = Math.round(window.innerHeight * dpr);
+      // stageSize, not innerWidth: this canvas is `fixed inset-0`, so it lays
+      // out to the viewport minus the scrollbar. Sizing the backing store to
+      // innerWidth drew the film into a buffer wider than the box it renders
+      // in — a ~1.2% horizontal squash, and a stage fit solved for the wrong
+      // aspect.
+      const s = stageSize();
+      vw = Math.round(s.w * dpr);
+      vh = Math.round(s.h * dpr);
       canvas.width = vw;
       canvas.height = vh;
       // The film's layer owns the fit, so it owns publishing it. See

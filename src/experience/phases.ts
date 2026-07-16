@@ -12,6 +12,25 @@ export type Seam = "cut" | "dissolve";
  *  sequence/coverFit.ts) and the DOM logo's --film-h sizing. */
 export const FILM_ASPECT = 1920 / 1072;
 
+/*
+ * Where the pegasus silhouette actually sits inside the morph's LAST frame,
+ * normalised. It is NOT centred — it sits ~4.4% left of frame centre — so a
+ * DOM logo centred on the viewport misses it by ~57px at 1280px wide, which
+ * is exactly the doubling you'd see during the hand-off crossfade. ScrollRig
+ * offsets the dock by this at settle instead of centring it.
+ *
+ * Measured, not guessed: `node scripts/make-brand-mark.mjs` re-derives these
+ * from the frame and the mark, and prints them. Re-run it if the morph is
+ * re-encoded or the logo changes.
+ */
+export const SILHOUETTE = {
+  cx: 0.4557,
+  cy: 0.512,
+  /** silhouette height as a fraction of frame height; mirrored by the mark's
+   *  `h-[calc(var(--film-h)*0.9741)]` in Overlay. */
+  heightFrac: 0.9741,
+};
+
 export interface PhaseSeq {
   /** folder under public/sequences/<name>/<tier>/ */
   name: string;

@@ -4,9 +4,16 @@ import { useRef, type ReactNode } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { DOCK_RUN, DOCK_START_AT, PHASES, TOTAL_SPAN } from "./phases";
+import {
+  DOCK_RUN,
+  DOCK_START_AT,
+  FILM_ASPECT,
+  PHASES,
+  SILHOUETTE,
+  TOTAL_SPAN,
+} from "./phases";
 import { experienceStore, locate } from "./state";
-import { syncFilmVars } from "@/sequence/coverFit";
+import { filmHeight, stageSize, syncFilmVars } from "@/sequence/coverFit";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -14,14 +21,13 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 const DOCK_PAD = 20;
 
 /*
- * The dock's containing block is the Overlay's `fixed inset-0` box, which is
- * the viewport MINUS any classic scrollbar — so the centring these offsets are
- * measured from is clientWidth/2, not innerWidth/2. Using innerWidth parks the
- * mark half a scrollbar (~7-8px) off the corner on Windows and Linux, while
- * looking perfect on overlay-scrollbar platforms.
+ * The dock's containing block is the Overlay's `fixed inset-0` box — see
+ * stageSize(). Measuring these offsets from innerWidth/2 parks the mark half a
+ * scrollbar (~7-8px) off the corner on Windows and Linux, while looking
+ * perfect on overlay-scrollbar platforms.
  */
-const stageW = () => document.documentElement.clientWidth;
-const stageH = () => document.documentElement.clientHeight;
+const stageW = () => stageSize().w;
+const stageH = () => stageSize().h;
 
 /** Docked mark height, px. A fixed scale can't work across viewports any more:
  *  the mark is sized against the film (--film-h), so on a letterboxed phone
@@ -30,6 +36,19 @@ const stageH = () => document.documentElement.clientHeight;
 function dockHeight(): number {
   return Math.min(140, Math.max(56, stageW() * 0.09));
 }
+
+/*
+ * Where the dock has to sit so the DOM horse lands ON the film's horse at the
+ * hand-off, rather than in the middle of the screen. The film frame is always
+ * centred in the viewport (cover crops symmetrically, contain letterboxes
+ * symmetrically), so the silhouette's offset from the frame centre scales
+ * straight off --film-h.
+ */
+const settleX = () => {
+  const h = filmHeight(stageW(), stageH());
+  return (SILHOUETTE.cx - 0.5) * (h * FILM_ASPECT);
+};
+const settleY = () => (SILHOUETTE.cy - 0.5) * filmHeight(stageW(), stageH());
 
 const DEV = process.env.NODE_ENV === "development";
 
@@ -109,13 +128,23 @@ export function ScrollRig({ children }: { children: ReactNode }) {
         // Center on the MARK: the wordmark is out of flow, so dock.offsetHeight
         // is the mark's height and yPercent:-50 keeps the mark screen-centered.
         gsap.set(dock, { xPercent: -50, yPercent: -50 });
-        // Settle: the mark's CSS size already matches the film silhouette, so
-        // this is scale 1 — just fade it in over the clouds as the baked
-        // pegasus dissolves out. Wordmark stays hidden here.
+        // Settle: the mark's CSS size already matches the film silhouette's
+        // height, so this is scale 1 — just fade it in over the clouds as the
+        // baked pegasus dissolves out. x/y are pinned to the silhouette (which
+        // is off-centre in frame) on BOTH sides of the fromTo, so the mark
+        // holds still on top of the film instead of drifting into place.
+        // Wordmark stays hidden here.
         tl.fromTo(
           dock,
-          { autoAlpha: 0, scale: 1.02 },
-          { autoAlpha: 1, scale: 1, duration: 16, ease: "power2.out" },
+          { autoAlpha: 0, scale: 1.02, x: settleX, y: settleY },
+          {
+            autoAlpha: 1,
+            scale: 1,
+            x: settleX,
+            y: settleY,
+            duration: 16,
+            ease: "power2.out",
+          },
           "morph+=100",
         );
         // x/y are offsets FROM the centered position (xPercent/yPercent own

@@ -48,6 +48,21 @@ export function isLetterboxed(dstW: number, dstH: number): boolean {
   return dstW / dstH < MIN_COVER_ASPECT;
 }
 
+/*
+ * The box every `fixed inset-0` film layer actually occupies — the viewport
+ * MINUS any classic scrollbar. Use this, never window.innerWidth: innerWidth
+ * counts the scrollbar, so on Windows/Linux it is ~15px wider than the layer
+ * it is supposedly describing. That gap squashed the canvas horizontally
+ * (backing store sized to innerWidth, element laid out to clientWidth) and
+ * pushed the logo and the finale's tin hit-areas off their marks.
+ */
+export function stageSize(): { w: number; h: number } {
+  return {
+    w: document.documentElement.clientWidth,
+    h: document.documentElement.clientHeight,
+  };
+}
+
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
 }
@@ -141,7 +156,8 @@ export function filmHeight(
  */
 export function syncFilmVars(): void {
   if (typeof window === "undefined") return;
-  const h = filmHeight(window.innerWidth, window.innerHeight);
+  const { w, h: sh } = stageSize();
+  const h = filmHeight(w, sh);
   // A viewport with no width (pre-layout, hidden tab) would otherwise write
   // 0px and collapse the logo until something forces another refresh. Leave
   // the CSS default standing instead.

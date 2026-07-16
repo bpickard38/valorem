@@ -71,18 +71,19 @@ export function Overlay() {
           style={{ pointerEvents: docked ? "auto" : "none" }}
           className="block cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-gold"
         >
-          {/* Sized so the horse INSIDE the png (≈93% of its height) matches the
-              film silhouette. Against --film-h, not the viewport: once a narrow
-              screen letterboxes the film the silhouette is no longer viewport
-              height. On a normal desktop --film-h resolves to 100vh, i.e. the
-              104vh this used to hardcode. */}
+          {/* The mark is trimmed tight to the horse, so its height IS the
+              horse's — and the film's silhouette measures 0.9741 of the frame
+              height (scripts/make-brand-mark.mjs prints both). Sized against
+              --film-h rather than the viewport because once a narrow screen
+              letterboxes the film, the silhouette is no longer viewport height;
+              on a normal desktop --film-h resolves to 100vh. */}
           {/* eslint-disable-next-line @next/next/no-img-element -- animated, scaled element; next/image adds nothing here */}
           <img
             data-logo-mark
-            src="/brand/pegasus-mark.png"
+            src="/brand/pegasus-mark-v2.png"
             alt=""
             draggable={false}
-            className="block h-[calc(var(--film-h)*1.04)] w-auto max-w-[104vw] select-none object-contain"
+            className="block h-[calc(var(--film-h)*0.9741)] w-auto max-w-[104vw] select-none object-contain"
           />
           <div
             data-logo-word

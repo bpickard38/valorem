@@ -54,7 +54,7 @@ export default async function ProductPage({
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- fixed-size mark; next/image adds nothing here */}
         <img
-          src="/brand/pegasus-mark.png"
+          src="/brand/pegasus-mark-v2.png"
           alt=""
           draggable={false}
           className="h-16 w-auto select-none opacity-80 transition-opacity hover:opacity-100"
