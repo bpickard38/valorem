@@ -103,24 +103,9 @@ export function Overlay() {
       </div>
 
       {/* VOYAGE — sits below the docked brand header */}
-      <div
-        data-copy="voyage"
-        className="absolute inset-x-0 top-[26%] text-center opacity-0"
-      >
-        <p className="label-engraved text-ivory/85 [text-shadow:0_1px_12px_rgba(26,25,23,.35)]">
-          The House
-        </p>
-      </div>
-
-      {/* COLLECTION — as the doors pass, before the sanctum finale */}
-      <div
-        data-copy="collection"
-        className="absolute inset-x-0 top-[26%] text-center opacity-0"
-      >
-        <p className="label-engraved text-ivory/85 [text-shadow:0_1px_12px_rgba(26,25,23,.5)]">
-          Collection № 1 — The Pantheon
-        </p>
-      </div>
+      {/* (The "The House" and "Collection" copy beats that floated over the
+          voyage were cut — the collection line now lives in the Finale,
+          centered between the two tins.) */}
     </div>
   );
 }

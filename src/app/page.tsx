@@ -12,7 +12,7 @@ export default function Home() {
         <h1>VALOREM — Fragrance, in its most permanent form.</h1>
         <p>
           Solid cologne and perfume in a twist-up capsule. Carried, not
-          sprayed. Enter the House of Valorem: Collection № 1 — The Pantheon.
+          sprayed. Enter the House of Valorem: Collection № 1 — The Parthenon.
         </p>
         <ul>
           <li>

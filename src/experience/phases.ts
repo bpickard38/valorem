@@ -83,7 +83,6 @@ export const PHASES: Phase[] = [
     seq: { name: "voyage", frames: 90, fps: 30 },
     focal: { x: 0.5, y: 0.5 },
     opaque: true,
-    overlay: { label: "The House" },
   },
   {
     // Holds the final voyage frame (the statues); the scroll track ends here.

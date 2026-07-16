@@ -45,6 +45,7 @@ export function Finale() {
   const video = useRef<HTMLVideoElement>(null);
   const hits = useRef(new Map<ScentId, HTMLButtonElement>());
   const captions = useRef(new Map<ScentId, HTMLDivElement>());
+  const collection = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<FinaleStatus>("idle");
 
   // Back from Shopify checkout as a fresh load (no bfcache): the experience
@@ -217,6 +218,13 @@ export function Finale() {
           cap.style.top = `${Math.max(16, a.y)}px`;
         }
       }
+      // Collection line — centered in the aisle between the two tins.
+      if (collection.current) {
+        const midCx = (TINS.poseidon.cx + TINS.aphrodite.cx) / 2;
+        const m = finalePointToScreen(midCx, 0.5, fw, fh, vw, vh);
+        collection.current.style.left = `${m.x}px`;
+        collection.current.style.top = `${m.y}px`;
+      }
     };
     tick();
     gsap.ticker.add(tick);
@@ -263,6 +271,25 @@ export function Finale() {
         }`}
         aria-hidden={!shopping}
       >
+        {/* Collection line, centered between the two products (positioned by
+            the same ticker that glues the captions to the tins). */}
+        <div
+          ref={collection}
+          className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-center"
+        >
+          <p className="font-serif text-lg text-ivory/90 [text-shadow:0_1px_12px_rgba(26,25,23,.7)]">
+            № 1
+          </p>
+          <div className="mx-auto my-3 h-px w-10 bg-gold/80" />
+          {/* inline font-size: .label-engraved sets its own and wins the
+              cascade over a Tailwind utility */}
+          <p
+            className="label-engraved text-ivory/90 [text-shadow:0_1px_12px_rgba(26,25,23,.7)]"
+            style={{ fontSize: "0.85rem" }}
+          >
+            The Parthenon
+          </p>
+        </div>
         {SCENT_IDS.map((id) => {
           const s = SCENTS[id];
           return (
@@ -289,9 +316,9 @@ export function Finale() {
                       the cascade over a Tailwind utility */}
                   <span
                     className="label-engraved text-ivory [text-shadow:0_1px_12px_rgba(26,25,23,.75)]"
-                    style={{ fontSize: "1rem" }}
+                    style={{ fontSize: "1.25rem" }}
                   >
-                    View Product Page
+                    View Product
                   </span>
                 </span>
               </button>

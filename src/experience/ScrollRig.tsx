@@ -177,22 +177,6 @@ export function ScrollRig({ children }: { children: ReactNode }) {
           "voyage+=8",
         );
       }
-      tl.fromTo(
-        "[data-copy='voyage']",
-        { autoAlpha: 0, y: 12 },
-        { autoAlpha: 1, y: 0, duration: 20, ease: "power2.out" },
-        "voyage+=60",
-      );
-      tl.to("[data-copy='voyage']", { autoAlpha: 0, duration: 16 }, "voyage+=170");
-      tl.fromTo(
-        "[data-copy='collection']",
-        { autoAlpha: 0, y: 12 },
-        { autoAlpha: 1, y: 0, duration: 20, ease: "power2.out" },
-        "voyage+=370",
-      );
-      // Clear the frame before the sanctum finale video takes over.
-      tl.to("[data-copy='collection']", { autoAlpha: 0, duration: 12 }, "voyage+=415");
-
       return () => {
         ScrollTrigger.removeEventListener("refreshInit", syncFilmVars);
       };

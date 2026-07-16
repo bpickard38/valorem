@@ -144,6 +144,45 @@ export function isScentId(value: unknown): value is ScentId {
   return typeof value === "string" && value in VARIANT_ENV;
 }
 
+export interface ProductImage {
+  url: string;
+  width: number;
+  height: number;
+  altText: string | null;
+}
+
+/* The scent's product image from Shopify — the variant's own image if one is
+ * assigned, else the product's featured image. Returns null (caller falls
+ * back to a placeholder) rather than throwing: a missing image must never
+ * take the product page down. */
+export async function productImage(
+  scent: ScentId,
+): Promise<ProductImage | null> {
+  const variantId = process.env[VARIANT_ENV[scent]];
+  if (!variantId) return null;
+  try {
+    const data = await storefrontQuery<{
+      node: {
+        image: ProductImage | null;
+        product: { featuredImage: ProductImage | null };
+      } | null;
+    }>(
+      `query variantImage($id: ID!) {
+        node(id: $id) {
+          ... on ProductVariant {
+            image { url width height altText }
+            product { featuredImage { url width height altText } }
+          }
+        }
+      }`,
+      { id: `gid://shopify/ProductVariant/${variantId}` },
+    );
+    return data.node?.image ?? data.node?.product.featuredImage ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /* Creates a single-item cart and returns Shopify's hosted checkout URL. */
 export async function createCheckout(scent: ScentId): Promise<string> {
   const variantId = process.env[VARIANT_ENV[scent]];

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isScentId } from "@/lib/shopify";
+import { isScentId, productImage } from "@/lib/shopify";
 import {
   PRICE,
   RETURN_WINDOW,
@@ -11,7 +11,6 @@ import {
 } from "@/lib/site";
 import { SectionHeader } from "@/components/ui";
 import OrderButton from "@/components/OrderButton";
-import EmailForm from "@/components/EmailForm";
 
 export const dynamicParams = false;
 
@@ -41,75 +40,99 @@ export default async function ProductPage({
   const { scent } = await params;
   if (!isScentId(scent)) notFound();
   const s = SCENTS[scent];
+  const otherId = scent === "aphrodite" ? "poseidon" : "aphrodite";
+  const other = SCENTS[otherId];
+  const image = await productImage(scent);
+
+  const sideArrow =
+    "group/arrow absolute top-1/2 -translate-y-1/2 text-center text-charcoal/50 transition-colors hover:text-gold";
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-ivory px-6 py-24">
+    // One screen, no scroll — everything fits inside the viewport.
+    <main className="flex h-svh flex-col items-center justify-center overflow-hidden bg-ivory px-6">
       {/* Picks up where the film's logo dock left off — same corner, same
           inset — so the mark reads as continuous across the route change. */}
       <Link
         href="/"
-        aria-label="Valorem — back to the start"
-        className="fixed left-5 top-5 z-50 block"
+        aria-label="Valorem — home"
+        className="group fixed left-5 top-5 z-50 block"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- fixed-size mark; next/image adds nothing here */}
         <img
           src="/brand/pegasus-mark-v2.png"
           alt=""
           draggable={false}
-          className="h-16 w-auto select-none opacity-80 transition-opacity hover:opacity-100"
+          className="h-16 w-auto select-none opacity-80 transition-opacity group-hover:opacity-100"
         />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none mt-1.5 block text-center text-[0.7rem] uppercase tracking-[0.3em] text-charcoal/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+        >
+          Home
+        </span>
       </Link>
 
       <div className="w-full max-w-xl text-center">
-        <SectionHeader numeral="№ 1" label="The Pantheon" />
+        <SectionHeader numeral="№ 1" label="The Parthenon" />
 
-        {/* Hero slot — the sanctum FLIP transition lands the capsule here */}
-        <div
-          data-product-hero={s.id}
-          className="mx-auto mt-12 flex aspect-[4/5] w-56 items-end justify-center bg-stone"
-        >
-          <div className="mb-8 h-40 w-10 bg-charcoal/85" aria-hidden="true" />
+        {/* Hero image flanked by the ‹ › arrows to the other scent,
+            vertically centered on the image */}
+        <div className="relative mx-auto mt-8 w-fit">
+          <div
+            data-product-hero={s.id}
+            className="mx-auto flex aspect-[4/5] h-[34vh] items-end justify-center overflow-hidden bg-stone"
+          >
+            {image ? (
+              // eslint-disable-next-line @next/next/no-img-element -- remote Shopify CDN image; sized by the frame
+              <img
+                src={image.url}
+                alt={image.altText ?? `${s.name} — VALOREM solid fragrance`}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="mb-8 h-[60%] w-10 bg-charcoal/85" aria-hidden="true" />
+            )}
+          </div>
+
+          <Link
+            href={`/product/${otherId}`}
+            aria-label={`View ${other.name}`}
+            className={`${sideArrow} right-full mr-5 sm:mr-8`}
+          >
+            <span className="block font-serif text-4xl leading-none">‹</span>
+            <span className="mt-2 block text-[0.65rem] uppercase tracking-[0.28em]">
+              {other.name}
+            </span>
+          </Link>
+          <Link
+            href={`/product/${otherId}`}
+            aria-label={`View ${other.name}`}
+            className={`${sideArrow} left-full ml-5 sm:ml-8`}
+          >
+            <span className="block font-serif text-4xl leading-none">›</span>
+            <span className="mt-2 block text-[0.65rem] uppercase tracking-[0.28em]">
+              {other.name}
+            </span>
+          </Link>
         </div>
 
-        <h1 className="type-display mt-12">{s.name}</h1>
-        <p className="label-engraved mt-4 text-charcoal/55">
+        <h1 className="type-display mt-8">{s.name}</h1>
+        <p className="label-engraved mt-3 text-charcoal/55">
           {s.notes.join("  ·  ")}
         </p>
-        <p className="mx-auto mt-8 max-w-md text-sm leading-relaxed text-charcoal/75">
+        <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-charcoal/75">
           {s.description}
         </p>
-        <p className="mt-6 text-sm text-charcoal/60">
+        <p className="mt-4 text-sm text-charcoal/60">
           {STICK_SIZE} solid fragrance · about {WEAR_ESTIMATE} of wear
         </p>
 
-        <div className="mt-10">
+        <div className="mt-7">
           <OrderButton scent={s.id}>Order — {PRICE}</OrderButton>
-          <p className="mt-4 text-xs tracking-wide text-charcoal/55">
+          <p className="mt-3 text-xs tracking-wide text-charcoal/55">
             Returns accepted within {RETURN_WINDOW}.
           </p>
         </div>
-
-        <div className="mx-auto mt-16 h-px w-10 bg-gold/70" />
-
-        <p className="label-engraved mt-10 text-charcoal/55">
-          First to know when a collection drops
-        </p>
-        <div className="mt-6">
-          <EmailForm />
-        </div>
-
-        <nav className="mt-16 text-xs uppercase tracking-[0.28em] text-charcoal/50">
-          <Link href="/" className="hover:text-gold">
-            ← Return to the House
-          </Link>
-          <span className="mx-4 text-gold/60">|</span>
-          <Link
-            href={s.id === "aphrodite" ? "/product/poseidon" : "/product/aphrodite"}
-            className="hover:text-gold"
-          >
-            {s.id === "aphrodite" ? "Poseidon" : "Aphrodite"} →
-          </Link>
-        </nav>
       </div>
     </main>
   );
