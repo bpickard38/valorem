@@ -33,9 +33,17 @@ export function GrayboxPlates() {
       for (const [id, node] of layers) {
         const i = PHASES.findIndex((p) => p.id === id);
         let alpha = 0;
-        if (i === idx) alpha = 1;
-        // fade the next plate in over the last 15% of the current phase
-        else if (i === idx + 1) alpha = Math.max(0, (phaseProgress - 0.85) / 0.15);
+        // Plates stack in PHASES order, so a later one paints over an earlier
+        // one: fade the CURRENT plate in over the first 15% of its OWN phase
+        // and let the previous hold underneath.
+        //
+        // Not the other way round. Pre-fading the NEXT plate in over the last
+        // 15% of the current phase pulled the voyage's brown gradient up behind
+        // the morph — which is an alpha cutout, so the plate IS the background —
+        // at exactly the point the logo settles (morph 83-97%). That was the
+        // brown wash under the mark.
+        if (i === idx) alpha = idx === 0 ? 1 : Math.min(1, phaseProgress / 0.15);
+        else if (i === idx - 1) alpha = 1;
         node.style.opacity = String(alpha);
       }
     };

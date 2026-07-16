@@ -2,7 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-import { PHASES, TOTAL_SPAN, DAMP, type Phase } from "@/experience/phases";
+import {
+  DAMP,
+  DOCK_SETTLE_AT,
+  PHASES,
+  phaseRange,
+  TOTAL_SPAN,
+  type Phase,
+} from "@/experience/phases";
 import { experienceStore, locate, damp } from "@/experience/state";
 import { getManifest } from "@/experience/manifest";
 import { isLetterboxed, stageFit, stageSize, syncFilmVars } from "./coverFit";
@@ -18,9 +25,11 @@ import { getBlob, segMeta } from "./sequences";
  *
  * On viewports too narrow to crop (see MIN_COVER_ASPECT) the film becomes a
  * centered band and a second canvas fills the gap behind it with a blurred
- * enlargement of the same frame. That backdrop only runs for opaque phases:
- * the morph is an alpha cutout over the sky plate, which already fills the
- * screen — blurring a transparent frame would just smear it.
+ * enlargement of the same frame. That backdrop is deliberately narrow in scope
+ * — opaque phases only, and only once the logo has docked (BACKDROP_FROM). The
+ * morph is an alpha cutout over the sky plate, so blurring it would smear a
+ * transparent frame, and a blurred wash behind the settling mark reads as a
+ * halo around the brand moment.
  */
 
 const DISSOLVE_SPAN = 0.06; // fraction of a phase used for seam dissolves
@@ -30,6 +39,12 @@ const DISSOLVE_SPAN = 0.06; // fraction of a phase used for seam dissolves
  * frame, while a 64px drawImage plus a GPU-composited CSS blur is free. */
 const BACKDROP_W = 64;
 const BACKDROP_H = Math.round(BACKDROP_W / (1920 / 1072));
+
+/* The blurred fill is for the film once it owns the frame — so it waits for the
+ * logo to finish docking. Before that, the pegasus and the settling mark ARE
+ * the picture and the sky plate is their background; blurring a copy of the
+ * film behind them just wraps the brand moment in a smeared halo. */
+const BACKDROP_FROM = phaseRange("voyage").start + DOCK_SETTLE_AT;
 
 function phaseAt(idx: number): Phase | undefined {
   return PHASES[idx];
@@ -144,8 +159,12 @@ export function SequenceCanvas() {
       if (!meta) return;
 
       // Blurred fill, only where it earns its keep: a band that can't fill the
-      // screen, showing footage that's actually opaque.
-      const wantBackdrop = ph.opaque === true && isLetterboxed(vw, vh);
+      // screen, showing footage that's actually opaque, once the logo is out of
+      // the way.
+      const wantBackdrop =
+        ph.opaque === true &&
+        isLetterboxed(vw, vh) &&
+        dampedPos >= BACKDROP_FROM;
       backdrop.style.opacity = wantBackdrop ? "1" : "0";
 
       const f = local * (meta.frames - 1);
