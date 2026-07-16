@@ -6,8 +6,9 @@ import * as THREE from "three";
 
 /*
  * Film finish in one clip-space quad rendered last: animated grain + gentle
- * vignette over the WebGL layers. Deliberately subtle — the brand's paper
- * grain (CSS, body::before) stays the top-most texture.
+ * vignette over the WebGL layers. Deliberately subtle. (The CSS paper-grain
+ * overlay that used to sit above this was cut — it read as confetti on
+ * mobile screens.)
  */
 export function GrainVignette() {
   const material = useRef<THREE.ShaderMaterial>(null);

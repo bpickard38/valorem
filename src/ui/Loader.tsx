@@ -7,8 +7,8 @@ import { experienceStore } from "@/experience/state";
 /*
  * Byte-weighted preloader. Blocks scroll until EVERYTHING is playable — both
  * sequence tiers and the finale video — then fades out. Dismissal flips the
- * store's `loaded` flag, which is what lets AutoPlay arm; wheel/key events
- * fire straight through the overflow lock, so the lock alone can't gate it.
+ * store's `loaded` flag (the "film is watchable" signal, e.g. for the
+ * return-from-checkout jump in Finale).
  * Brand-calm: ivory field, gold rule + progress bar, serif numerals.
  */
 export function Loader() {
@@ -23,8 +23,7 @@ export function Loader() {
       if (finished) return;
       finished = true;
       document.body.style.overflow = "";
-      // The film must open on frame one, and arming stays gesture-only —
-      // AutoPlay has no scroll-position trigger.
+      // The film must open on frame one.
       window.scrollTo(0, 0);
       experienceStore.setState({ loaded: true });
       setPhase("fading");

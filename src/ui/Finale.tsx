@@ -19,6 +19,7 @@ import {
 } from "@/experience/finaleConfig";
 import { stageSize } from "@/sequence/coverFit";
 import { finaleVideoUrl } from "@/sequence/finaleVideo";
+import { jumpToFilmEnd } from "@/experience/AutoPlay";
 import type { ScentId } from "@/lib/shopify";
 import { PRICE, SCENTS } from "@/lib/site";
 import OrderButton from "@/components/OrderButton";
@@ -45,6 +46,44 @@ export function Finale() {
   const hits = useRef(new Map<ScentId, HTMLButtonElement>());
   const captions = useRef(new Map<ScentId, HTMLDivElement>());
   const [status, setStatus] = useState<FinaleStatus>("idle");
+
+  // Back from Shopify checkout as a fresh load (no bfcache): the experience
+  // resets to frame one, but the viewer left from the finale — carry them
+  // back to the tins once the Loader has everything. On a bfcache restore
+  // the page state (and scroll) survive intact, so just drop the note.
+  useEffect(() => {
+    const KEY = "return-to-finale";
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) sessionStorage.removeItem(KEY);
+    };
+    window.addEventListener("pageshow", onPageShow);
+
+    // The note is cleared only when the jump happens (or on a bfcache
+    // restore above) — clearing it eagerly loses it to StrictMode's
+    // mount → cleanup → mount cycle in dev.
+    let unsub: (() => void) | undefined;
+    const jumpBack = () => {
+      sessionStorage.removeItem(KEY);
+      jumpToFilmEnd();
+    };
+    if (sessionStorage.getItem(KEY)) {
+      if (experienceStore.getState().loaded) {
+        jumpBack();
+      } else {
+        unsub = experienceStore.subscribe((s) => {
+          if (s.loaded) {
+            unsub?.();
+            unsub = undefined;
+            jumpBack();
+          }
+        });
+      }
+    }
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      unsub?.();
+    };
+  }, []);
 
   // Store subscription: preload gate, arm/reset triggers, status mirror.
   useEffect(() => {

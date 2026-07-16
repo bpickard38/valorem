@@ -27,6 +27,13 @@ export default function OrderButton({
 
   async function checkout() {
     setStatus("loading");
+    // If Back from Shopify comes home as a fresh load (no bfcache), the whole
+    // experience resets to frame one and the tins vanish. Leave a note so the
+    // film jumps straight back to the finale. Home page only — the product
+    // pages keep their own scroll.
+    if (window.location.pathname === "/") {
+      sessionStorage.setItem("return-to-finale", "1");
+    }
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
