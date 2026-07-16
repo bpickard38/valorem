@@ -3,10 +3,11 @@ import type { ScentId } from "@/lib/shopify";
 
 /*
  * Where the two product tins live inside the finale video's FINAL frame
- * (normalized frame coordinates). The finale <video> renders object-fit:cover
- * center-focal, so projecting through the same cover-fit math the film canvas
+ * (normalized frame coordinates). The <video> is fitted by .film-fit, which
+ * mirrors stageFit() — so projecting through the same math the film canvas
  * uses keeps hit-areas and captions glued to the tins across resizes and
- * orientations. Tune cx/cy/w/h here if the finale master is regenerated.
+ * orientations, cropped or letterboxed. Tune cx/cy/w/h here if the finale
+ * master is regenerated.
  */
 
 export interface FrameRect {

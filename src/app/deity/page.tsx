@@ -4,15 +4,14 @@ import FadeIn from "@/components/FadeIn";
 import Faq from "@/components/Faq";
 import EmailForm from "@/components/EmailForm";
 import Nav from "@/components/Nav";
-import PreorderButton from "@/components/PreorderButton";
+import OrderButton from "@/components/OrderButton";
 import { HeroRender, CardRender } from "@/components/ProductRender";
 import { ButtonLink, SectionHeader } from "@/components/ui";
-import { PRICE, SHIP_DATE, SHIP_DATE_SHORT } from "@/lib/site";
+import { PRICE, RETURN_WINDOW, SHIP_WINDOW } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "VALOREM — Fragrance, carved down to its essence",
-  description:
-    "Designer-grade solid fragrance in a twist-up stick. 20% fragrance load, no glass, no alcohol. Poseidon & Aphrodite — $70, fully refundable until your order ships.",
+  description: `Designer-grade solid fragrance in a twist-up stick. 20% fragrance load, no glass, no alcohol. Poseidon & Aphrodite — ${PRICE}.`,
 };
 
 const scents = [
@@ -94,14 +93,14 @@ export default function Home() {
                 {PRICE}
                 <span className="mx-3 text-gold">·</span>
                 <span className="text-lg text-charcoal/70">
-                  Ships {SHIP_DATE_SHORT}
+                  Ships in {SHIP_WINDOW}
                 </span>
               </p>
               <div className="mt-7">
-                <ButtonLink href="#pantheon">Preorder Now</ButtonLink>
+                <ButtonLink href="#pantheon">Order Now</ButtonLink>
               </div>
               <p className="mt-4 text-xs tracking-wide text-charcoal/55">
-                Fully refundable until your order ships.
+                Returns accepted within {RETURN_WINDOW}.
               </p>
             </FadeIn>
           </div>
@@ -159,11 +158,9 @@ export default function Home() {
                 {scent.notes.join("  ·  ")}
               </p>
               <div className="mt-8 text-center">
-                <PreorderButton scent={scent.id}>
-                  Preorder — {PRICE}
-                </PreorderButton>
+                <OrderButton scent={scent.id}>Order — {PRICE}</OrderButton>
                 <p className="mt-3 text-xs tracking-wide text-charcoal/50">
-                  Ships {SHIP_DATE_SHORT}. Refundable until it does.
+                  Ships in {SHIP_WINDOW}. Returns within {RETURN_WINDOW}.
                 </p>
               </div>
             </FadeIn>
@@ -242,7 +239,7 @@ export default function Home() {
             <div className="border border-gold/70 px-6 py-16 text-center sm:px-12 sm:py-20">
               <SectionHeader numeral="V" label="The First Batch" />
               <h2 className="type-heading mx-auto mt-9 max-w-xl text-charcoal">
-                Poseidon and Aphrodite. {PRICE}. Ships {SHIP_DATE_SHORT}.
+                Poseidon and Aphrodite. {PRICE}. Ships in {SHIP_WINDOW}.
               </h2>
               <div className="mt-10">
                 <ButtonLink href="#pantheon" variant="outline">
@@ -288,9 +285,8 @@ export default function Home() {
             </a>
           </div>
           <p className="max-w-md text-center text-xs leading-relaxed text-charcoal/45">
-            Payment charged at preorder. Full refund available any time before
-            shipment. If the launch is cancelled, all orders are refunded
-            within 48 hours. Estimated ship date: {SHIP_DATE}.
+            Orders ship in {SHIP_WINDOW}. Returns accepted within{" "}
+            {RETURN_WINDOW} of delivery.
           </p>
           <p className="text-xs tracking-[0.2em] text-charcoal/45">
             © 2026 VALOREM

@@ -2,9 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isScentId } from "@/lib/shopify";
-import { PRICE, SCENTS, SHIP_DATE, STICK_SIZE, WEAR_ESTIMATE } from "@/lib/site";
+import {
+  PRICE,
+  RETURN_WINDOW,
+  SCENTS,
+  SHIP_WINDOW,
+  STICK_SIZE,
+  WEAR_ESTIMATE,
+} from "@/lib/site";
 import { SectionHeader } from "@/components/ui";
-import PreorderButton from "@/components/PreorderButton";
+import OrderButton from "@/components/OrderButton";
 import EmailForm from "@/components/EmailForm";
 
 export const dynamicParams = false;
@@ -38,6 +45,22 @@ export default async function ProductPage({
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-ivory px-6 py-24">
+      {/* Picks up where the film's logo dock left off — same corner, same
+          inset — so the mark reads as continuous across the route change. */}
+      <Link
+        href="/"
+        aria-label="Valorem — back to the start"
+        className="fixed left-5 top-5 z-50 block"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- fixed-size mark; next/image adds nothing here */}
+        <img
+          src="/brand/pegasus-mark.png"
+          alt=""
+          draggable={false}
+          className="h-16 w-auto select-none opacity-80 transition-opacity hover:opacity-100"
+        />
+      </Link>
+
       <div className="w-full max-w-xl text-center">
         <SectionHeader numeral="№ 1" label="The Pantheon" />
 
@@ -61,11 +84,9 @@ export default async function ProductPage({
         </p>
 
         <div className="mt-10">
-          <PreorderButton scent={s.id}>
-            Preorder — {PRICE}
-          </PreorderButton>
+          <OrderButton scent={s.id}>Order — {PRICE}</OrderButton>
           <p className="mt-4 text-xs tracking-wide text-charcoal/55">
-            Ships {SHIP_DATE}. Fully refundable until your order ships.
+            Ships in {SHIP_WINDOW}. Returns accepted within {RETURN_WINDOW}.
           </p>
         </div>
 

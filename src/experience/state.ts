@@ -27,7 +27,7 @@ export interface ExperienceState {
 
 export const experienceStore = createStore<ExperienceState>(() => ({
   progress: 0,
-  phase: "hero",
+  phase: "morph",
   phaseProgress: 0,
   velocity: 0,
   finale: { status: "idle" },

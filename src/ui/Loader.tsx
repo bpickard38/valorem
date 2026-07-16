@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { startLoading } from "@/sequence/sequences";
 
 /*
- * Byte-weighted preloader. Blocks scroll until the hero-critical tier (T0)
- * is fetched, then fades out while T1/T2 continue in the background.
+ * Byte-weighted preloader. Blocks scroll until the opening tier (T0, the
+ * morph) is fetched, then fades out while T1 continues in the background.
+ * The overflow lock is also what keeps AutoPlay from arming early — no
+ * scroll is possible until the film can actually play.
  * Brand-calm: ivory field, gold rule, serif numerals.
  */
 export function Loader() {

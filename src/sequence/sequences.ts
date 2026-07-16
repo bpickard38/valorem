@@ -20,7 +20,7 @@ interface SegState {
 
 const segs = new Map<string, SegState>();
 
-/** Fetch priority: hero-critical first, then down the journey. */
+/** Fetch priority: the opening segment first, then down the journey. */
 export const TIER_ORDER: string[][] = [
   ["pegasus-morph"],
   ["voyage"],

@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { PHASES, TOTAL_SPAN, DAMP, type Phase } from "@/experience/phases";
 import { experienceStore, locate, damp } from "@/experience/state";
 import { getManifest } from "@/experience/manifest";
-import { coverFit } from "./coverFit";
+import { isLetterboxed, stageFit, syncFilmVars } from "./coverFit";
 import { decodePool } from "./decodePool";
 import { getBlob, segMeta } from "./sequences";
 
@@ -15,9 +15,21 @@ import { getBlob, segMeta } from "./sequences";
  * sources read as continuous motion), dissolves across baked→baked seams,
  * and NEVER awaits — if the exact frame isn't decoded yet it draws the
  * nearest neighbor and lets the damped playhead catch up.
+ *
+ * On viewports too narrow to crop (see MIN_COVER_ASPECT) the film becomes a
+ * centered band and a second canvas fills the gap behind it with a blurred
+ * enlargement of the same frame. That backdrop only runs for opaque phases:
+ * the morph is an alpha cutout over the sky plate, which already fills the
+ * screen — blurring a transparent frame would just smear it.
  */
 
 const DISSOLVE_SPAN = 0.06; // fraction of a phase used for seam dissolves
+
+/* The backdrop is blurred to mush by CSS, so it's drawn at a deliberately
+ * tiny size — a full-DPR canvas-2D filter: blur() would not be affordable per
+ * frame, while a 64px drawImage plus a GPU-composited CSS blur is free. */
+const BACKDROP_W = 64;
+const BACKDROP_H = Math.round(BACKDROP_W / (1920 / 1072));
 
 function phaseAt(idx: number): Phase | undefined {
   return PHASES[idx];
@@ -25,10 +37,15 @@ function phaseAt(idx: number): Phase | undefined {
 
 export function SequenceCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const backdropRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
+    const backdrop = backdropRef.current!;
+    const bctx = backdrop.getContext("2d")!;
+    backdrop.width = BACKDROP_W;
+    backdrop.height = BACKDROP_H;
     let vw = 0;
     let vh = 0;
 
@@ -38,13 +55,16 @@ export function SequenceCanvas() {
       vh = Math.round(window.innerHeight * dpr);
       canvas.width = vw;
       canvas.height = vh;
+      // The film's layer owns the fit, so it owns publishing it. See
+      // syncFilmVars — ScrollTrigger's refresh alone can't be trusted to.
+      syncFilmVars();
     };
     resize();
     window.addEventListener("resize", resize);
 
     let dampedPos = experienceStore.getState().progress * TOTAL_SPAN;
 
-    /** Draw one segment frame cover-fit; returns true if something drew. */
+    /** Draw one segment frame at its stage placement; true if something drew. */
     const drawFrame = (
       seg: string,
       frame: number,
@@ -53,7 +73,7 @@ export function SequenceCanvas() {
     ): boolean => {
       const bmp = decodePool().nearest(seg, frame);
       if (!bmp) return false;
-      const { sx, sy, sw, sh } = coverFit(
+      const { sx, sy, sw, sh, dx, dy, dw, dh } = stageFit(
         bmp.width,
         bmp.height,
         vw,
@@ -61,9 +81,17 @@ export function SequenceCanvas() {
         focal,
       );
       ctx.globalAlpha = alpha;
-      ctx.drawImage(bmp, sx, sy, sw, sh, 0, 0, vw, vh);
+      ctx.drawImage(bmp, sx, sy, sw, sh, dx, dy, dw, dh);
       ctx.globalAlpha = 1;
       return true;
+    };
+
+    /** The whole frame, squeezed into a thumbnail. CSS crops, blurs, and
+     *  scales it up to fill the gap around the letterboxed band. */
+    const drawBackdrop = (seg: string, frame: number): void => {
+      const bmp = decodePool().nearest(seg, frame);
+      if (!bmp) return;
+      bctx.drawImage(bmp, 0, 0, BACKDROP_W, BACKDROP_H);
     };
 
     const requestAround = (seg: string, f: number, dir: number) => {
@@ -100,12 +128,19 @@ export function SequenceCanvas() {
       }
 
       if (!seg) {
-        // hero: live WebGL owns the frame — keep the film transparent
+        // No phase hits this today; cheap insurance if one ever hands the
+        // frame to the live WebGL layer again.
         ctx.clearRect(0, 0, vw, vh);
+        backdrop.style.opacity = "0";
         return;
       }
       const meta = segMeta(seg);
       if (!meta) return;
+
+      // Blurred fill, only where it earns its keep: a band that can't fill the
+      // screen, showing footage that's actually opaque.
+      const wantBackdrop = ph.opaque === true && isLetterboxed(vw, vh);
+      backdrop.style.opacity = wantBackdrop ? "1" : "0";
 
       const f = local * (meta.frames - 1);
       const dir = st.velocity >= 0 ? 1 : -1;
@@ -140,6 +175,8 @@ export function SequenceCanvas() {
           ? Math.max(0, (1 - local) / ph.fadeTail)
           : 1;
 
+      if (wantBackdrop) drawBackdrop(seg, lo);
+
       ctx.clearRect(0, 0, vw, vh);
       if (dissolving) {
         const prevMeta = segMeta(prevSeq.name);
@@ -169,10 +206,18 @@ export function SequenceCanvas() {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="pointer-events-none fixed inset-0 z-[5] h-full w-full"
-      aria-hidden="true"
-    />
+    <>
+      {/* Blurred fill — under the film (z-5), over the sky plates (z-0). */}
+      <canvas
+        ref={backdropRef}
+        className="pointer-events-none fixed inset-0 z-[4] h-full w-full scale-110 object-cover opacity-0 blur-2xl brightness-[0.82] transition-opacity duration-300"
+        aria-hidden="true"
+      />
+      <canvas
+        ref={canvasRef}
+        className="pointer-events-none fixed inset-0 z-[5] h-full w-full"
+        aria-hidden="true"
+      />
+    </>
   );
 }

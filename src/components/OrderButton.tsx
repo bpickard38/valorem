@@ -4,7 +4,9 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui";
 
-export default function PreorderButton({
+/** Sends a scent straight to Shopify's hosted checkout. The label is the
+ *  caller's — this component owns no copy but its own status text. */
+export default function OrderButton({
   scent,
   children,
 }: {

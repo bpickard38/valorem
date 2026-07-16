@@ -7,6 +7,12 @@
   --gold-deep: #9a7d33;
   --stone: #ede8dc;
   --stone-deep: #ddd5c2;
+
+  /* On-screen height of the whole film frame. Rewritten by syncFilmVars()
+     (sequence/coverFit.ts) on every ScrollTrigger refresh; the DOM logo is
+     sized against it so it lands on the film's silhouette rather than the
+     window. This default is the value a normal desktop resolves to. */
+  --film-h: 100vh;
 }
 
 @theme inline {
@@ -55,6 +61,22 @@ body::before {
 :focus-visible {
   outline: 1px solid var(--gold);
   outline-offset: 3px;
+}
+
+/*
+ * Film fit for <video>. Mirrors stageFit() in sequence/coverFit.ts: wide
+ * viewports crop to fill, narrow ones show the whole frame as a centered band
+ * (a portrait cover-crop drops both product tins off screen).
+ * 6/5 = MIN_COVER_ASPECT — keep the two in sync.
+ */
+.film-fit {
+  object-fit: contain;
+}
+
+@media (min-aspect-ratio: 6/5) {
+  .film-fit {
+    object-fit: cover;
+  }
 }
 
 /* Engraved small-caps label — section markers, captions */

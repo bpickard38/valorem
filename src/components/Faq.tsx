@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SHIP_DATE, STICK_SIZE, WEAR_ESTIMATE } from "@/lib/site";
+import { RETURN_WINDOW, SHIP_WINDOW, STICK_SIZE, WEAR_ESTIMATE } from "@/lib/site";
 
 const items = [
   {
@@ -10,11 +10,11 @@ const items = [
   },
   {
     q: "When does it ship?",
-    a: `${SHIP_DATE}. If we're late, we'll tell you why — and you can refund with one click.`,
+    a: `Orders ship in ${SHIP_WINDOW}. You'll get tracking as soon as it's on its way.`,
   },
   {
     q: "What if I don't like it?",
-    a: "Refund any time before shipping, no questions asked. After shipping, returns accepted within thirty days.",
+    a: `Returns accepted within ${RETURN_WINDOW} of delivery, no questions asked.`,
   },
   {
     q: "Is it really 20% fragrance oil?",

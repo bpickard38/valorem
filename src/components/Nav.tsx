@@ -47,7 +47,7 @@ export default function Nav() {
             className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-gold-deep transition-colors hover:text-charcoal"
             tabIndex={shown ? 0 : -1}
           >
-            Preorder — {PRICE}
+            Order — {PRICE}
           </a>
         </div>
       </nav>

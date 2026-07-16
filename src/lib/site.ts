@@ -1,15 +1,16 @@
 /*
  * Launch constants + scent catalog for the shop experience.
- * Price/ship date mirror ../valorem/src/lib/site.ts — lock before traffic.
  */
 
 import type { ScentId } from "@/lib/shopify";
 
 export const PRICE = "$70";
 
-// TODO: real ship date before launch (kept in sync with main app)
-export const SHIP_DATE = "September 15, 2026";
-export const SHIP_DATE_SHORT = "September 15";
+// TODO: CONFIRM BEFORE TRAFFIC — this is a placeholder, not a measured number.
+// It is the only shipping representation the site makes now that the preorder
+// framing is gone, so it needs to be true.
+export const SHIP_WINDOW = "2–5 business days";
+export const RETURN_WINDOW = "thirty days";
 
 export const STICK_SIZE = "15 g";
 export const WEAR_ESTIMATE = "three months";

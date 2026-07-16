@@ -3,13 +3,11 @@
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { CloudLayers } from "./CloudLayers";
-import { PegasusPlane } from "./PegasusPlane";
 import { GrainVignette } from "./GrainVignette";
 
 /*
- * The live WebGL layer above the baked film: sky depth (clouds), the
- * chroma-keyed pegasus, and the grain finish.
- * Transparent canvas; never intercepts pointer events.
+ * The live WebGL layer above the baked film: sky depth (clouds) and the grain
+ * finish. Transparent canvas; never intercepts pointer events.
  */
 export function Stage() {
   return (
@@ -25,7 +23,6 @@ export function Stage() {
       >
         <Suspense fallback={null}>
           <CloudLayers />
-          <PegasusPlane />
         </Suspense>
         <GrainVignette />
       </Canvas>

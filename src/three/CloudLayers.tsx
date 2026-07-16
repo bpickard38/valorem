@@ -9,7 +9,7 @@ import { experienceStore, damp } from "@/experience/state";
 /*
  * Soft parallax cloud planes. Procedural sprites for now (blurred white
  * blobs) — swappable for AI-generated cloud plates without touching the
- * motion. Clouds rise as the camera "falls" (hero → voyage), then fade
+ * motion. Clouds rise as the camera "falls" (morph → voyage), then fade
  * out once the baked voyage footage owns the frame.
  */
 
@@ -83,7 +83,7 @@ export function CloudLayers() {
     const g = group.current;
     if (!g) return;
 
-    // Clouds HOLD through hero + morph (the logo settles over them), then
+    // Clouds HOLD through the morph (the logo settles over them), then
     // the camera "falls": clouds rise and part quickly across early descent
     // before the fade hands the sky to the baked footage.
     const fall = Math.max(0, pos - morph.end) / 100;

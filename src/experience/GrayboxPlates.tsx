@@ -12,7 +12,6 @@ import { experienceStore } from "./state";
  */
 
 const PLATE_STYLES: Record<PhaseId, string> = {
-  hero: "linear-gradient(180deg,#9db8d4 0%,#e8ecf0 70%,#f7f4ee 100%)",
   morph: "linear-gradient(180deg,#8fadd0 0%,#dfe6ee 65%,#f2f0ea 100%)",
   voyage: "linear-gradient(180deg,#e8ecf0 0%,#b8c8dc 35%,#6b6459 70%,#241f18 100%)",
   sanctum: "linear-gradient(180deg,#f0e9dc 0%,#d9cba8 55%,#8a6f3d 100%)",
@@ -51,7 +50,7 @@ export function GrayboxPlates() {
           key={p.id}
           data-plate={p.id}
           className="absolute inset-0 flex items-center justify-center"
-          style={{ background: PLATE_STYLES[p.id], opacity: p.id === "hero" ? 1 : 0 }}
+          style={{ background: PLATE_STYLES[p.id], opacity: p.id === "morph" ? 1 : 0 }}
         />
       ))}
     </div>

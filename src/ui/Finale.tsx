@@ -19,7 +19,7 @@ import {
 } from "@/experience/finaleConfig";
 import type { ScentId } from "@/lib/shopify";
 import { PRICE, SCENTS } from "@/lib/site";
-import PreorderButton from "@/components/PreorderButton";
+import OrderButton from "@/components/OrderButton";
 
 /*
  * The sanctum finale. When the scrub settles on the statues, a real <video>
@@ -54,8 +54,14 @@ export function Finale() {
       if (!v) return;
 
       // Fetch the finale only after the voyage sequence tier is down — it
-      // must never compete with the film for first-load bandwidth.
-      if (!preloaded && (s.tier >= 1 || s.phase === "voyage")) {
+      // must never compete with the film for first-load bandwidth. "sanctum"
+      // is here because Skip to Shop jumps straight there without ever
+      // passing through voyage; without it the video would stay preload="none"
+      // on exactly the path that needs it most.
+      if (
+        !preloaded &&
+        (s.tier >= 1 || s.phase === "voyage" || s.phase === "sanctum")
+      ) {
         preloaded = true;
         v.preload = "auto";
         v.load();
@@ -94,13 +100,25 @@ export function Finale() {
 
       // If playback never starts (iOS Low-Power etc.), don't strand the
       // user — surface the shop overlay over the held statue frame.
-      const stallGuard = setTimeout(() => {
-        if (v.paused && experienceStore.getState().finale.status === "playing") {
-          reveal();
-          v.currentTime = v.duration || 0;
-          finaleEnded();
+      //
+      // readyState is the whole point of the check: a video that's merely
+      // still buffering is also paused, and firing on that would skip the
+      // animation for anyone on a slow connection — the exact thing Skip to
+      // Shop exists to show them. Only give up once there's enough data to
+      // play and it still hasn't, which means autoplay was actually blocked.
+      let stallGuard: ReturnType<typeof setTimeout>;
+      const checkStalled = () => {
+        if (experienceStore.getState().finale.status !== "playing") return;
+        if (!v.paused) return;
+        if (v.readyState < 3 && !v.error) {
+          stallGuard = setTimeout(checkStalled, 1000); // still loading; wait
+          return;
         }
-      }, 2500);
+        reveal();
+        v.currentTime = v.duration || 0;
+        finaleEnded();
+      };
+      stallGuard = setTimeout(checkStalled, 2500);
 
       return () => {
         clearTimeout(stallGuard);
@@ -171,7 +189,7 @@ export function Finale() {
         muted
         playsInline
         preload="none"
-        className="pointer-events-none fixed inset-0 z-[8] h-full w-full object-cover opacity-0"
+        className="film-fit pointer-events-none fixed inset-0 z-[8] h-full w-full opacity-0"
         aria-hidden={!shopping}
         onEnded={finaleEnded}
       />
@@ -222,7 +240,7 @@ export function Finale() {
                   {PRICE}
                 </p>
                 <div className="mt-3">
-                  <PreorderButton scent={id}>Order</PreorderButton>
+                  <OrderButton scent={id}>Order</OrderButton>
                 </div>
               </div>
             </div>

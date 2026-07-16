@@ -4,10 +4,32 @@ import { useRef, type ReactNode } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { PHASES, TOTAL_SPAN } from "./phases";
+import { DOCK_RUN, DOCK_START_AT, PHASES, TOTAL_SPAN } from "./phases";
 import { experienceStore, locate } from "./state";
+import { syncFilmVars } from "@/sequence/coverFit";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
+
+/** Inset of the docked mark from the top-left corner, px. */
+const DOCK_PAD = 20;
+
+/*
+ * The dock's containing block is the Overlay's `fixed inset-0` box, which is
+ * the viewport MINUS any classic scrollbar — so the centring these offsets are
+ * measured from is clientWidth/2, not innerWidth/2. Using innerWidth parks the
+ * mark half a scrollbar (~7-8px) off the corner on Windows and Linux, while
+ * looking perfect on overlay-scrollbar platforms.
+ */
+const stageW = () => document.documentElement.clientWidth;
+const stageH = () => document.documentElement.clientHeight;
+
+/** Docked mark height, px. A fixed scale can't work across viewports any more:
+ *  the mark is sized against the film (--film-h), so on a letterboxed phone
+ *  it starts far smaller than on desktop and one ratio would dock it at ~29px.
+ *  Target a height instead and let the scale fall out. */
+function dockHeight(): number {
+  return Math.min(140, Math.max(56, stageW() * 0.09));
+}
 
 const DEV = process.env.NODE_ENV === "development";
 
@@ -31,6 +53,13 @@ export function ScrollRig({ children }: { children: ReactNode }) {
 
   useGSAP(
     () => {
+      // The dock's tweens read offsetHeight, which now depends on --film-h.
+      // ScrollTrigger's own resize handling and a plain resize listener would
+      // race, so publish the var from inside the refresh instead — refreshInit
+      // runs before function-based values are re-solved. Also covers mount.
+      ScrollTrigger.addEventListener("refreshInit", syncFilmVars);
+      syncFilmVars();
+
       const tl = gsap.timeline({
         defaults: { ease: "none" }, // scrubbed master = linear time
         scrollTrigger: {
@@ -64,47 +93,48 @@ export function ScrollRig({ children }: { children: ReactNode }) {
       tl.to({}, { duration: TOTAL_SPAN }, 0); // give the timeline its length
 
       // --- DOM overlay beats (eases allowed inside the scrub) -------------
+      // Opening title, over the held pegasus frame. Clears early — the logo
+      // dock starts settling at morph+=100.
       tl.fromTo(
         "[data-copy='hero']",
         { autoAlpha: 1 },
-        { autoAlpha: 0, duration: 30 },
-        "hero+=55",
+        { autoAlpha: 0, duration: 26 },
+        "morph+=8",
       );
       // Logo dock: assembles over the clouds as the film silhouette fades
-      // (morph fadeTail), then shrinks as one unit and pins top-center as
-      // the persistent brand header for the rest of the journey.
+      // (morph fadeTail), then shrinks as one unit into the top-LEFT corner,
+      // where it stays as the brand header and the way back to the start.
       const dock = document.querySelector<HTMLElement>("[data-logo-dock]");
       if (dock) {
         // Center on the MARK: the wordmark is out of flow, so dock.offsetHeight
         // is the mark's height and yPercent:-50 keeps the mark screen-centered.
         gsap.set(dock, { xPercent: -50, yPercent: -50 });
-        // Settle: the mark's CSS size (h-[104vh]) already matches the film
-        // silhouette, so this is scale 1 — just fade it in over the clouds
-        // as the baked pegasus dissolves out. Wordmark stays hidden here.
+        // Settle: the mark's CSS size already matches the film silhouette, so
+        // this is scale 1 — just fade it in over the clouds as the baked
+        // pegasus dissolves out. Wordmark stays hidden here.
         tl.fromTo(
           dock,
           { autoAlpha: 0, scale: 1.02 },
           { autoAlpha: 1, scale: 1, duration: 16, ease: "power2.out" },
           "morph+=100",
         );
-        const DOCK_SCALE = 0.13;
-        const DOCK_TOP = 26; // px from viewport top to the docked mark's top
+        // x/y are offsets FROM the centered position (xPercent/yPercent own
+        // the centering), so each is half the viewport minus the padding and
+        // half the docked size. All three are function-based, so
+        // invalidateOnRefresh re-solves them on resize and rotation.
+        const dockScale = () => dockHeight() / dock.offsetHeight;
         tl.to(
           dock,
           {
-            scale: DOCK_SCALE,
-            // Function-based → invalidateOnRefresh recomputes on resize, so
-            // the docked mark stays glued to top-center at any viewport.
+            scale: dockScale,
+            x: () =>
+              -(stageW() / 2 - DOCK_PAD - (dock.offsetWidth * dockScale()) / 2),
             y: () =>
-              -(
-                window.innerHeight / 2 -
-                DOCK_TOP -
-                (dock.offsetHeight * DOCK_SCALE) / 2
-              ),
-            duration: 55,
+              -(stageH() / 2 - DOCK_PAD - (dock.offsetHeight * dockScale()) / 2),
+            duration: DOCK_RUN,
             ease: "power1.inOut",
           },
-          "voyage+=5",
+          `voyage+=${DOCK_START_AT}`,
         );
         // VALOREM + subline fade in as the shrink begins and ride down with
         // the mark into the docked header.
@@ -130,6 +160,10 @@ export function ScrollRig({ children }: { children: ReactNode }) {
       );
       // Clear the frame before the sanctum finale video takes over.
       tl.to("[data-copy='collection']", { autoAlpha: 0, duration: 12 }, "voyage+=415");
+
+      return () => {
+        ScrollTrigger.removeEventListener("refreshInit", syncFilmVars);
+      };
     },
     { scope: track },
   );
