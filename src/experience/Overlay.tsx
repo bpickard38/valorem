@@ -49,7 +49,11 @@ export function Overlay() {
         data-copy="hero"
         className="absolute inset-x-0 bottom-10 text-center"
       >
-        <span className="label-engraved text-charcoal/45">Scroll</span>
+        {/* inline font-size: .label-engraved sets its own and wins the
+            cascade over a Tailwind utility */}
+        <span className="label-engraved text-charcoal/60" style={{ fontSize: "1rem" }}>
+          Scroll
+        </span>
       </div>
 
       {/* MORPH settle → dock. The pegasus MARK matches the film silhouette's

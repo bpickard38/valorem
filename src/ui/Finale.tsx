@@ -284,8 +284,13 @@ export function Finale() {
                   aria-hidden="true"
                   className="pointer-events-none absolute bottom-[6%] left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100"
                 >
-                  <span className="mx-auto mb-2 block h-px w-8 bg-gold/80" />
-                  <span className="label-engraved text-ivory/90 [text-shadow:0_1px_10px_rgba(26,25,23,.65)]">
+                  <span className="mx-auto mb-3 block h-px w-14 bg-gold/80" />
+                  {/* inline font-size: .label-engraved sets its own and wins
+                      the cascade over a Tailwind utility */}
+                  <span
+                    className="label-engraved text-ivory [text-shadow:0_1px_12px_rgba(26,25,23,.75)]"
+                    style={{ fontSize: "1rem" }}
+                  >
                     View Product Page
                   </span>
                 </span>
