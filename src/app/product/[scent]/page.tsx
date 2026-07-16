@@ -117,11 +117,12 @@ export default async function ProductPage({
         </div>
 
         <h1 className="type-display mt-8">{s.name}</h1>
-        <p className="label-engraved mt-3 text-charcoal/55">
-          {s.notes.join("  ·  ")}
-        </p>
-        <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-charcoal/75">
+        <p className="mt-3 font-serif text-lg italic text-gold-deep">{s.lead}</p>
+        <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-charcoal/70">
           {s.description}
+        </p>
+        <p className="mt-4 text-[0.65rem] uppercase tracking-[0.28em] text-charcoal/55">
+          {s.notes.join("  ·  ")}
         </p>
         <p className="mt-4 text-sm text-charcoal/60">
           {STICK_SIZE} solid fragrance · about {WEAR_ESTIMATE} of wear

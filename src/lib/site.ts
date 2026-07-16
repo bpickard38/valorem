@@ -15,11 +15,13 @@ export const RETURN_WINDOW = "thirty days";
 export const STICK_SIZE = "30 ml (1 oz)";
 export const WEAR_ESTIMATE = "three months";
 
+/* Canonical scent copy — the /deity cards and the product pages must read
+ * identically, so both pull from here. */
 export interface Scent {
   id: ScentId;
   name: string;
-  epithet: string;
-  notes: [string, string, string];
+  lead: string;
+  notes: string[];
   description: string;
 }
 
@@ -27,17 +29,17 @@ export const SCENTS: Record<ScentId, Scent> = {
   aphrodite: {
     id: "aphrodite",
     name: "Aphrodite",
-    epithet: "Risen from the foam",
-    notes: ["Rose", "Vanilla", "Musk"],
+    lead: "Warm. Magnetic.",
+    notes: ["Vanilla", "Amber", "Jasmine", "Sandalwood"],
     description:
-      "Warm rose over vanilla, held close by musk. A scent for the people close enough to matter.",
+      "A sophisticated vanilla that stays close to the skin — soft amber and cream without the sugar. The scent of being remembered.",
   },
   poseidon: {
     id: "poseidon",
     name: "Poseidon",
-    epithet: "Lord of the deep",
-    notes: ["Marine", "Musk", "Driftwood"],
+    lead: "Fresh. Commanding.",
+    notes: ["Bergamot", "Pepper", "Ambroxan", "Cedar"],
     description:
-      "Cold salt air over driftwood, grounded in musk. Carried, not sprayed.",
+      "A crisp aquatic in the spirit of the great blue colognes — bergamot brightness over ambroxan depth. The scent of showing up sure of yourself.",
   },
 };

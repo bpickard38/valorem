@@ -7,31 +7,28 @@ import Nav from "@/components/Nav";
 import { CheckoutZone } from "@/components/OrderButton";
 import { HeroRender, CardRender } from "@/components/ProductRender";
 import { ButtonLink, SectionHeader } from "@/components/ui";
-import { PRICE, RETURN_WINDOW } from "@/lib/site";
+import { PRICE, RETURN_WINDOW, SCENTS } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "VALOREM — Fragrance, carved down to its essence",
   description: `Designer-grade solid fragrance in a twist-up stick. 20% fragrance load, no glass, no alcohol. Poseidon & Aphrodite — ${PRICE}.`,
 };
 
+/* Copy comes from the canonical SCENTS catalog (lib/site.ts) so these cards
+ * and the /product pages always read identically; only the render styling
+ * lives here. */
 const scents = [
   {
-    name: "Poseidon",
-    lead: "Fresh. Commanding.",
-    body: "A crisp aquatic in the spirit of the great blue colognes — bergamot brightness over ambroxan depth. The scent of showing up sure of yourself.",
-    notes: ["Bergamot", "Pepper", "Ambroxan", "Cedar"],
+    ...SCENTS.poseidon,
+    body: SCENTS.poseidon.description,
     wax: "linear-gradient(180deg, #dfe4de 0%, #c8d1c9 100%)",
     backdrop: "linear-gradient(160deg, #e6eae5 0%, #ccd6d0 100%)",
-    id: "poseidon",
   },
   {
-    name: "Aphrodite",
-    lead: "Warm. Magnetic.",
-    body: "A sophisticated vanilla that stays close to the skin — soft amber and cream without the sugar. The scent of being remembered.",
-    notes: ["Vanilla", "Amber", "Jasmine", "Sandalwood"],
+    ...SCENTS.aphrodite,
+    body: SCENTS.aphrodite.description,
     wax: "linear-gradient(180deg, #eee2cf 0%, #e0cfb2 100%)",
     backdrop: "linear-gradient(160deg, #f1e8d7 0%, #e3d4ba 100%)",
-    id: "aphrodite",
   },
 ];
 
