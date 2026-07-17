@@ -6,15 +6,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # houseofvalorem.com
 
-The VALOREM production app: the cinematic scroll-driven storytelling shop at `/` plus the merged landing page at `/deity`. Architecture: AI-generated footage scrubbed as frame sequences on a 2D canvas + live WebGL layers (R3F) + DOM overlays, driven by one master GSAP ScrollTrigger timeline.
+The VALOREM production app. Solid fragrance ($70 twist-up tins), two scents: Poseidon & Aphrodite.
 
-Phase model: `morph` (opens on the held pegasus frame, then pegasus → black logo silhouette; film hands off to the DOM logo dock, which shrinks into the top-left corner and doubles as the way back to the start) → `voyage` (one continuous clouds → temple doors → statues scrub, 430vh) → `sanctum` (holds the statue frame; the finale video `statues → product tins` auto-plays, then a price + Order overlay appears per tin; tins click through to `/product/[scent]`). 590vh total.
+Routes:
 
-- There is NO guided auto-run — viewers scrub the film themselves (an auto-scroll was tried and cut as laggy). `AutoPlay.tsx` now only owns lifecycle: reloads always open on frame one (`history.scrollRestoration = "manual"` + scroll-to-0 on mount) and the `jumpToFilmEnd`/`jumpToFilmStart` shortcuts (Skip to Shop / docked logo). The Loader gates on ALL media — both sequence tiers plus the finale video (blob-preloaded in `src/sequence/finaleVideo.ts`) — and flips `loaded` in the store on dismissal. Back-from-checkout: a `return-to-finale` sessionStorage note (set by OrderButton on `/`) makes Finale jump back to the tins after a fresh-load return; bfcache restores keep their position — never scroll inside a `pageshow` handler.
-- `src/experience/phases.ts` is the single source of truth for the scroll journey (spans, sequences, seams, focal points, opacity, dock timings). Runtime frame counts come from `public/sequences/manifest.json` (rebuild with `node scripts/build-manifest.mjs`).
-- Viewports narrower than `MIN_COVER_ASPECT` (~1.2) letterbox instead of cropping — a portrait cover-crop drops both product tins off screen. `stageFit()` in `src/sequence/coverFit.ts` owns that decision for the canvas, the tin hit-areas, and `--film-h` (which sizes the DOM logo against the film, not the window); the `.film-fit` class mirrors it for the finale `<video>`. Opaque phases get a blurred fill behind the band; alpha cutouts composite over the sky plates instead.
-- `/fx/**`, `/sequences/**`, `/plates/**` are immutable-cached — new or regenerated media MUST ship under a new filename/folder (finale: `statues-to-product-v1.mp4`).
-- Media is git-ignored and regenerable: masters in `scripts/_raw/`, encode with `node scripts/encode.mjs <segment> <master> --fps N`, then rebuild the manifest.
-- Never `await` inside the canvas draw loop; draw the nearest decoded frame.
+- `/` — clean, light marketing home (`src/app/page.tsx`, server component). Sections navigate by anchor id; product cards link to `/product/[scent]`. Header is `src/components/HomeHeader.tsx`, footer `HomeFooter.tsx`.
+- `/deity` — immersive alternate landing page. Treat as frozen: do not modify `src/app/deity/**`, and any shared component it imports (Nav, Faq, EmailForm, FadeIn, ProductRender, ui, OrderButton) must keep rendering identically for it. `Nav.tsx` is the /deity-only header.
+- `/product/[scent]` — product detail pages, statically generated from the `SCENTS` catalog.
+
+Conventions:
+
+- `src/lib/site.ts` is the single source of truth for price, sizes, ship/return windows, and all scent copy. Never hardcode those facts in pages.
+- Design system lives in `src/app/globals.css`: ivory/charcoal/gold/stone palette, Cormorant Garamond (serif display) + Inter (body), utilities `.label-engraved`, `.type-display`, `.type-heading`, `.texture-travertine`. Tailwind v4, CSS-first (no config file).
+- Reveal animation is `src/components/FadeIn.tsx` (IntersectionObserver). No animation libraries.
 - Commerce (`src/lib/shopify.ts`, `/api/checkout`, `/api/subscribe`) is canonical here; `../valorem-landing-archive` is the frozen landing-page archive.
+- `scripts/` is legacy media tooling from the retired cinematic home; it is inert and not part of the build.
 - Dev server runs on port 3001.
