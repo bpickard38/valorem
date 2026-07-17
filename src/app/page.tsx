@@ -14,7 +14,7 @@ import {
 } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "VALOREM — Solid Cologne & Perfume in a Twist-Up Tin",
+  title: "VALOREM — Solid Cologne & Perfume in a Twist-Up Stick",
   description: `Solid fragrance you carry, not spray. Poseidon & Aphrodite — ${PRICE}. ${STICK_SIZE}, about ${WEAR_ESTIMATE} of daily wear. No glass, no spills.`,
 };
 
@@ -27,12 +27,12 @@ const hooks = [
   {
     question: "Tired of your scent running out by 1 PM?",
     answer:
-      "A spray bottle stays home on a shelf. A tin rides in your pocket — reapply anywhere in seconds. No mirror, no mist, no announcing it to the room.",
+      "A spray bottle stays home on a shelf. A stick rides in your pocket — reapply anywhere in seconds. No mirror, no mist, no announcing it to the room.",
   },
   {
     question: "Want a fragrance that can actually travel?",
     answer:
-      "No glass. No liquid. No spills. A pocket tin that walks straight through airport security — carry-on, gym bag, jacket pocket.",
+      "No glass. No liquid. No spills. A pocket stick that walks straight through airport security — carry-on, gym bag, jacket pocket.",
   },
 ];
 
@@ -59,10 +59,24 @@ export default function Home() {
     <main id="top" className="flex-1 scroll-mt-24">
       <HomeHeader />
 
-      {/* HERO */}
-      <section className="flex min-h-[88svh] flex-col justify-center px-6 py-16">
-        <div className="mx-auto grid w-full max-w-5xl items-center gap-12 md:grid-cols-[1.1fr_1fr]">
-          <div className="text-center md:text-left">
+      {/* HERO — full-bleed cinematic image, both tins, white text overlaid */}
+      <section className="relative flex min-h-[88svh] flex-col justify-center overflow-hidden px-6 py-16">
+        <Image
+          src="/shopify/hero-duo.png"
+          alt="Valorem Poseidon and Aphrodite solid fragrance sticks"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+        {/* darkening scrim so the white text stays readable on any screen crop.
+         * The image's calm zone is dead center, so the copy is centered too. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-black/55"
+        />
+        <div className="relative z-10 mx-auto w-full max-w-5xl">
+          <div className="mx-auto max-w-xl text-center">
             <FadeIn duration={900}>
               <Image
                 src="/valorem-pegasus.png"
@@ -70,51 +84,46 @@ export default function Home() {
                 width={572}
                 height={589}
                 priority
-                className="mx-auto h-auto w-16 opacity-90 sm:w-20 md:mx-0"
+                className="mx-auto h-auto w-16 opacity-95 brightness-0 invert sm:w-20"
               />
-              <p className="label-engraved mt-5 font-serif text-charcoal">
+              <p className="label-engraved mt-5 font-serif text-ivory">
                 Valorem
               </p>
-              <p className="mt-2 text-[0.65rem] uppercase tracking-[0.3em] text-charcoal/55">
+              <p className="mt-2 text-[0.65rem] uppercase tracking-[0.3em] text-ivory/70">
                 Solid Fragrance
               </p>
-              <h1 className="type-display mt-8 text-charcoal">
+              <h1 className="type-display mt-8 text-ivory">
                 Solid fragrance.{" "}
-                <em className="font-light italic text-gold-deep">Carried,</em>{" "}
-                not sprayed.
+                <em className="font-light italic text-gold">Carried,</em> not
+                sprayed.
               </h1>
-              <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed tracking-wide text-charcoal/65 sm:text-base md:mx-0">
-                High-concentration scent set in a wax balm, in a twist-up tin.
+              <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed tracking-wide text-ivory/80 sm:text-base">
+                High-concentration scent set in a wax balm, in a twist-up
+                stick.
                 Swipe it on at the pulse points and go — {STICK_SIZE}, about{" "}
                 {WEAR_ESTIMATE} of daily wear.
               </p>
             </FadeIn>
             <FadeIn delay={200} duration={900}>
-              <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center md:justify-start">
-                <ButtonLink href="/deity#parthenon">
+              <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+                <a
+                  href="/deity#parthenon"
+                  className="inline-block border border-ivory bg-ivory px-8 py-3.5 text-[0.7rem] uppercase tracking-[0.25em] text-charcoal transition-colors hover:bg-transparent hover:text-ivory"
+                >
                   Shop the Collection — {PRICE}
-                </ButtonLink>
-                <ButtonLink href="#learn" variant="outline">
+                </a>
+                <a
+                  href="#learn"
+                  className="inline-block border border-ivory/70 px-8 py-3.5 text-[0.7rem] uppercase tracking-[0.25em] text-ivory transition-colors hover:border-ivory hover:bg-ivory hover:text-charcoal"
+                >
                   New to solid cologne?
-                </ButtonLink>
+                </a>
               </div>
-              <p className="mt-5 text-xs tracking-wide text-charcoal/55">
+              <p className="mt-5 text-xs tracking-wide text-ivory/65">
                 Ships in {SHIP_WINDOW} · Returns within {RETURN_WINDOW}
               </p>
             </FadeIn>
           </div>
-          <FadeIn delay={350} duration={900}>
-            <div aria-hidden="true" className="mx-auto w-full max-w-sm">
-              <Image
-                src="/shopify/aphrodite-scene.png"
-                alt=""
-                width={1024}
-                height={1024}
-                priority
-                className="h-auto w-full"
-              />
-            </div>
-          </FadeIn>
         </div>
       </section>
 
