@@ -64,10 +64,21 @@ export default function Home() {
         <div className="mx-auto grid w-full max-w-5xl items-center gap-12 md:grid-cols-[1.1fr_1fr]">
           <div className="text-center md:text-left">
             <FadeIn duration={900}>
-              <p className="label-engraved text-charcoal/55">
-                Solid Fragrance · Collection № 1
+              <Image
+                src="/valorem-pegasus.png"
+                alt="Valorem pegasus mark"
+                width={572}
+                height={589}
+                priority
+                className="mx-auto h-auto w-16 opacity-90 sm:w-20 md:mx-0"
+              />
+              <p className="label-engraved mt-5 font-serif text-charcoal">
+                Valorem
               </p>
-              <h1 className="type-display mt-6 text-charcoal">
+              <p className="mt-2 text-[0.65rem] uppercase tracking-[0.3em] text-charcoal/55">
+                Solid Fragrance
+              </p>
+              <h1 className="type-display mt-8 text-charcoal">
                 Solid fragrance.{" "}
                 <em className="font-light italic text-gold-deep">Carried,</em>{" "}
                 not sprayed.
@@ -170,23 +181,9 @@ export default function Home() {
               <span className="text-gold-deep">worth.</span>
             </p>
             <p className="mt-5 text-center text-sm leading-relaxed text-charcoal/70 md:text-left">
-              We make fragrance worth keeping. Collection № 1
-              carries two scents, each named for a Greek god, each under the
-              sign of the pegasus.
+              We make fragrance worth keeping. Our first collection, the Deity
+              Collection, has two scents — named after Poseidon and Aphrodite.
             </p>
-            <div className="mt-9 text-center md:text-left">
-              <p className="label-engraved text-charcoal/55">
-                The Immersive Side
-              </p>
-              <div className="mt-5">
-                <ButtonLink href="/deity" variant="outline">
-                  Enter the Pantheon
-                </ButtonLink>
-              </div>
-              <p className="mt-3 text-xs text-charcoal/55">
-                Meet Poseidon and Aphrodite where they live.
-              </p>
-            </div>
           </FadeIn>
           <FadeIn delay={150}>
             <Image
