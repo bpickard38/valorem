@@ -106,18 +106,14 @@ export default function Home() {
             </FadeIn>
             <FadeIn delay={200} duration={900}>
               <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                <a
-                  href="/deity#parthenon"
-                  className="inline-block border border-ivory bg-ivory px-8 py-3.5 text-[0.7rem] uppercase tracking-[0.25em] text-charcoal transition-colors hover:bg-transparent hover:text-ivory"
-                >
+                <ButtonLink href="/deity#parthenon">
                   Shop the Collection — {PRICE}
-                </a>
-                <a
-                  href="#learn"
-                  className="inline-block border border-ivory/70 px-8 py-3.5 text-[0.7rem] uppercase tracking-[0.25em] text-ivory transition-colors hover:border-ivory hover:bg-ivory hover:text-charcoal"
-                >
+                </ButtonLink>
+                {/* outline variant's charcoal text is unreadable on the dark
+                 * hero image — force ivory (the ! wins the specificity tie) */}
+                <ButtonLink href="#learn" variant="outline" className="text-ivory!">
                   New to solid cologne?
-                </a>
+                </ButtonLink>
               </div>
               <p className="mt-5 text-xs tracking-wide text-ivory/65">
                 Ships in {SHIP_WINDOW} · Returns within {RETURN_WINDOW}
