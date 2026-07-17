@@ -13,7 +13,8 @@ export type MetaEventName =
   | "ViewContent"
   | "InitiateCheckout"
   | "AddPaymentInfo"
-  | "Purchase";
+  | "Purchase"
+  | "Lead";
 
 export function trackMetaEvent(
   eventName: MetaEventName,

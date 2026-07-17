@@ -8,6 +8,7 @@ const ALLOWED_EVENTS = new Set([
   "InitiateCheckout",
   "AddPaymentInfo",
   "Purchase",
+  "Lead",
 ]);
 
 function cookieValue(header: string | null, name: string): string | undefined {

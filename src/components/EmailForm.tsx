@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui";
+import { trackMetaEvent } from "@/lib/metaPixel";
 
 export default function EmailForm() {
   const [status, setStatus] = useState<
@@ -27,6 +28,7 @@ export default function EmailForm() {
         body: JSON.stringify({ email }),
       });
       if (!res.ok) throw new Error();
+      trackMetaEvent("Lead");
       setStatus("done");
     } catch {
       setStatus("error");
