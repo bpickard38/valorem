@@ -17,6 +17,14 @@ export const RETURN_WINDOW = "thirty days";
 export const STICK_SIZE = "30 ml (1 oz)";
 export const WEAR_ESTIMATE = "three months";
 
+export const CONTACT_EMAIL = "houseofvalorem@gmail.com";
+
+export const SOCIAL = {
+  instagram: "https://www.instagram.com/houseofvalorem/",
+  facebook: "https://www.facebook.com/profile.php?id=61592043447665",
+  tiktok: "https://www.tiktok.com/@houseofvalorem",
+} as const;
+
 /* Canonical scent copy — the /deity cards and the product pages must read
  * identically, so both pull from here. */
 export interface Scent {
