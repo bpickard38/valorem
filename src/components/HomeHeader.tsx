@@ -13,15 +13,17 @@ export default function HomeHeader() {
         aria-label="Main"
         className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5"
       >
-        <Link
+        {/* Plain anchor (not next/link) so clicking the wordmark always does a
+         * full reload back to the top of the home page, from any route. */}
+        <a
           href="/"
           className="font-serif text-sm uppercase tracking-[0.4em] text-charcoal transition-colors hover:text-gold-deep"
         >
           Valorem
-        </Link>
+        </a>
 
         <div className="flex items-center gap-6">
-          <Link href="/deity" className={navLink}>
+          <Link href="/deity#parthenon" className={navLink}>
             Collections
           </Link>
           <Link href="/faq" className={navLink}>
