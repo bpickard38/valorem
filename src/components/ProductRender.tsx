@@ -83,23 +83,19 @@ function CastShadow({ width }: { width: string }) {
   );
 }
 
-/* Hero — stick on a stone plinth, wide editorial crop */
+/* Hero — Poseidon campaign scene, portrait editorial crop */
 export function HeroRender() {
   return (
     <div
       aria-hidden="true"
-      className="relative mx-auto aspect-[4/3] w-full max-w-lg overflow-hidden flex items-center justify-center"
-      style={{
-        background:
-          "linear-gradient(115deg, #f0ebe0 0%, #e3dccb 52%, #cdc4ad 100%)",
-      }}
+      className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden"
     >
       <Image
-        src="/shopify/valorem.png"
+        src="/shopify/poseidon-scene.jpg"
         alt="Valorem Solid Fragrance"
         fill
-        sizes="(max-width: 768px) 100vw, 512px"
-        className="object-contain"
+        sizes="(max-width: 768px) 100vw, 384px"
+        className="object-cover"
         priority
       />
     </div>
@@ -116,9 +112,8 @@ export function CardRender({
   backdrop?: string;
   scentId?: string;
 }) {
-  let imgSrc = "/shopify/valorem.png";
-  if (scentId === "poseidon") imgSrc = "/shopify/poseidon.png";
-  if (scentId === "aphrodite") imgSrc = "/shopify/aphrodite.png";
+  let imgSrc = "/shopify/aphrodite-scene.png";
+  if (scentId === "poseidon") imgSrc = "/shopify/poseidon-scene.jpg";
 
   return (
     <div
@@ -131,7 +126,7 @@ export function CardRender({
         alt={scentId || "Valorem product"}
         fill
         sizes="(max-width: 768px) 100vw, 384px"
-        className="object-contain p-4"
+        className="object-cover"
       />
     </div>
   );

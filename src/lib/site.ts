@@ -31,10 +31,10 @@ export const SCENTS: Record<ScentId, Scent> = {
   aphrodite: {
     id: "aphrodite",
     name: "Aphrodite",
-    lead: "Warm. Magnetic.",
-    notes: ["Vanilla", "Amber", "Jasmine", "Sandalwood"],
+    lead: "Radiant. Addictive.",
+    notes: ["Saffron", "Jasmine", "Amberwood", "Cedar"],
     description:
-      "A sophisticated vanilla that stays close to the skin — soft amber and cream without the sugar. The scent of being remembered.",
+      "A luminous sweet amber in the spirit of the modern cult classics — saffron and jasmine glowing over crystalline amberwood. The scent of being remembered.",
   },
   poseidon: {
     id: "poseidon",
