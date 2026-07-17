@@ -5,6 +5,8 @@
 import type { ScentId } from "@/lib/shopify";
 
 export const PRICE = "$70";
+export const PRICE_AMOUNT = 70; // numeric twin of PRICE for ad/event tracking
+export const CURRENCY = "USD";
 
 // TODO: CONFIRM BEFORE TRAFFIC — this is a placeholder, not a measured number.
 // It is the only shipping representation the site makes now that the preorder

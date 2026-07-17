@@ -11,6 +11,7 @@ import {
 } from "@/lib/site";
 import { SectionHeader } from "@/components/ui";
 import OrderButton from "@/components/OrderButton";
+import TrackViewContent from "@/components/TrackViewContent";
 
 export const dynamicParams = false;
 
@@ -50,6 +51,7 @@ export default async function ProductPage({
   return (
     // One screen, no scroll — everything fits inside the viewport.
     <main className="flex h-svh flex-col items-center justify-center overflow-hidden bg-ivory px-6">
+      <TrackViewContent contentId={s.id} contentName={s.name} />
       {/* Picks up where the film's logo dock left off — same corner, same
           inset — so the mark reads as continuous across the route change. */}
       <Link

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui";
+import { trackMetaEvent } from "@/lib/metaPixel";
+import { CURRENCY, PRICE_AMOUNT } from "@/lib/site";
 
 /** Shared checkout flow — sends a scent straight to Shopify's hosted checkout. */
 function useCheckout(scent: string) {
@@ -21,6 +23,12 @@ function useCheckout(scent: string) {
   async function checkout() {
     if (status === "loading") return;
     setStatus("loading");
+    trackMetaEvent("InitiateCheckout", {
+      content_ids: [scent],
+      content_type: "product",
+      value: PRICE_AMOUNT,
+      currency: CURRENCY,
+    });
     // If Back from Shopify comes home as a fresh load (no bfcache), the whole
     // experience resets to frame one and the tins vanish. Leave a note so the
     // film jumps straight back to the finale. Home page only — the product
