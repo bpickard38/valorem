@@ -4,6 +4,7 @@ import FadeIn from "@/components/FadeIn";
 import EmailForm from "@/components/EmailForm";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
+import ScrollLink from "@/components/ScrollLink";
 import { ButtonLink, SectionHeader } from "@/components/ui";
 import {
   PRICE,
@@ -110,10 +111,12 @@ export default function Home() {
                   Shop the Collection — {PRICE}
                 </ButtonLink>
                 {/* outline variant's charcoal text is unreadable on the dark
-                 * hero image — force ivory (the ! wins the specificity tie) */}
-                <ButtonLink href="#learn" variant="outline" className="text-ivory!">
+                 * hero image — force ivory (the ! wins the specificity tie).
+                 * ScrollLink keeps #learn out of the URL so reloads start at
+                 * the top. */}
+                <ScrollLink href="#learn" variant="outline" className="text-ivory!">
                   New to solid cologne?
-                </ButtonLink>
+                </ScrollLink>
               </div>
               <p className="mt-5 text-xs tracking-wide text-ivory/65">
                 Ships in {SHIP_WINDOW} · Returns within {RETURN_WINDOW}
