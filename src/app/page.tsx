@@ -4,7 +4,6 @@ import FadeIn from "@/components/FadeIn";
 import EmailForm from "@/components/EmailForm";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
-import RevealButton from "@/components/RevealButton";
 import { ButtonLink, SectionHeader } from "@/components/ui";
 import {
   PRICE,
@@ -84,9 +83,9 @@ export default function Home() {
                 <ButtonLink href="/deity#parthenon">
                   Shop the Collection — {PRICE}
                 </ButtonLink>
-                <RevealButton targetId="learn">
+                <ButtonLink href="#learn" variant="outline">
                   New to solid cologne?
-                </RevealButton>
+                </ButtonLink>
               </div>
               <p className="mt-5 text-xs tracking-wide text-charcoal/55">
                 Ships in {SHIP_WINDOW} · Returns within {RETURN_WINDOW}
@@ -108,8 +107,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* EDUCATION — hidden until "New to solid cologne?" is clicked */}
-      <div id="learn" hidden className="scroll-mt-20">
+      {/* EDUCATION */}
+      <div id="learn" className="scroll-mt-20">
         {/* I — SOUND FAMILIAR? */}
         <section id="why-solid" className="px-6 py-24 sm:py-28">
           <FadeIn>
@@ -158,20 +157,20 @@ export default function Home() {
         </section>
       </div>
 
-      {/* III — THE HOUSE */}
+      {/* III — OUR STORY */}
       <section
-        id="house"
+        id="story"
         className="texture-travertine scroll-mt-20 px-6 py-24 sm:py-28"
       >
         <div className="mx-auto grid max-w-4xl items-center gap-14 md:grid-cols-2">
           <FadeIn>
-            <SectionHeader numeral="III" label="The House" align="left" />
+            <SectionHeader numeral="III" label="Our Story" align="left" />
             <p className="mt-9 text-center font-serif text-2xl leading-snug text-charcoal sm:text-3xl md:text-left">
               Valorem — from the Latin for{" "}
               <span className="text-gold-deep">worth.</span>
             </p>
             <p className="mt-5 text-center text-sm leading-relaxed text-charcoal/70 md:text-left">
-              A small house making fragrance worth keeping. Collection № 1
+              We make fragrance worth keeping. Collection № 1
               carries two scents, each named for a Greek god, each under the
               sign of the pegasus.
             </p>

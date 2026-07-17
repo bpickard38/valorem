@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import FadeIn from "@/components/FadeIn";
-import Faq from "@/components/Faq";
 import EmailForm from "@/components/EmailForm";
-import Nav from "@/components/Nav";
+import HomeHeader from "@/components/HomeHeader";
 import SocialLinks from "@/components/SocialLinks";
 import { CheckoutZone } from "@/components/OrderButton";
 import { HeroRender, CardRender } from "@/components/ProductRender";
@@ -54,7 +53,7 @@ const benefits = [
 export default function Home() {
   return (
     <main className="flex-1">
-      <Nav />
+      <HomeHeader />
 
       {/* HERO */}
       <section
@@ -117,7 +116,7 @@ export default function Home() {
       </section>
 
       {/* I — THE COLLECTION: full-bleed split */}
-      <section id="parthenon" className="scroll-mt-[-96px] py-24 sm:py-28">
+      <section id="parthenon" className="scroll-mt-16 py-24 sm:py-28">
         <FadeIn className="px-6">
           <SectionHeader
             numeral="I"
@@ -209,22 +208,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* IV — FAQ */}
-      <section id="faq" className="px-6 py-24 sm:py-28">
-        <FadeIn>
-          <SectionHeader numeral="IV" label="Questions" />
-        </FadeIn>
-        <FadeIn delay={120} className="mx-auto mt-14 max-w-2xl">
-          <Faq />
-        </FadeIn>
-      </section>
-
-      {/* V — CLOSING CTA: engraved plaque */}
+      {/* IV — CLOSING CTA: engraved plaque */}
       <section className="px-6 py-24 sm:py-28">
         <FadeIn className="mx-auto max-w-2xl">
           <div className="border border-gold/35 p-2.5 sm:p-3">
             <div className="border border-gold/70 px-6 py-16 text-center sm:px-12 sm:py-20">
-              <SectionHeader numeral="V" label="The First Batch" />
+              <SectionHeader numeral="IV" label="The First Batch" />
               <h2 className="type-heading mx-auto mt-9 max-w-xl text-charcoal">
                 Poseidon and Aphrodite. {PRICE}.
               </h2>
