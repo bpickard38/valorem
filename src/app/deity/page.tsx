@@ -116,14 +116,19 @@ export default function Home() {
       </section>
 
       {/* I — THE COLLECTION: full-bleed split */}
-      <section id="parthenon" className="scroll-mt-16 py-24 sm:py-28">
+      <section className="py-24 sm:py-28">
         <FadeIn className="px-6">
           <SectionHeader
             numeral="I"
             title="Collection I — The Parthenon"
           />
         </FadeIn>
-        <div className="mt-10 grid md:grid-cols-2 md:divide-x md:divide-gold/50">
+        {/* #parthenon lands here — on the cards, not the section title — so the
+         * product images and order buttons fill the screen on arrival. */}
+        <div
+          id="parthenon"
+          className="mt-10 grid scroll-mt-20 md:grid-cols-2 md:divide-x md:divide-gold/50"
+        >
           {scents.map((scent, i) => (
             <FadeIn
               key={scent.name}
