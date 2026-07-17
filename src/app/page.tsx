@@ -94,16 +94,15 @@ export default function Home() {
             </FadeIn>
           </div>
           <FadeIn delay={350} duration={900}>
-            <div aria-hidden="true" className="mx-auto w-fit">
+            <div aria-hidden="true" className="mx-auto w-full max-w-sm">
               <Image
-                src="/shopify/aphrodite.webp"
+                src="/shopify/aphrodite-scene.png"
                 alt=""
-                width={512}
-                height={512}
+                width={1024}
+                height={1024}
                 priority
-                className="mx-auto h-auto w-64 sm:w-80"
+                className="h-auto w-full"
               />
-              <div className="mx-auto h-4 w-40 rounded-[100%] bg-charcoal/15 blur-md" />
             </div>
           </FadeIn>
         </div>
