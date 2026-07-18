@@ -79,20 +79,16 @@ export default function Home() {
         <div className="relative z-10 mx-auto w-full max-w-5xl">
           <div className="mx-auto max-w-xl text-center">
             <FadeIn duration={900}>
+              {/* The complete Canva logo lockup — pegasus, VALOREM (Playfair
+               * Display), SOLID FRAGRANCE (Montserrat) — as one image. */}
               <Image
-                src="/valorem-pegasus.png"
-                alt="Valorem pegasus mark"
-                width={572}
-                height={589}
+                src="/brand/valorem-lockup-white.png"
+                alt="Valorem — Solid Fragrance"
+                width={450}
+                height={563}
                 priority
-                className="mx-auto h-auto w-16 opacity-95 brightness-0 invert sm:w-20"
+                className="mx-auto h-auto w-40 sm:w-48"
               />
-              <p className="label-engraved mt-5 font-serif text-ivory">
-                Valorem
-              </p>
-              <p className="mt-2 text-[0.65rem] uppercase tracking-[0.3em] text-ivory/70">
-                Solid Fragrance
-              </p>
               <h1 className="type-display mt-8 text-ivory">
                 Solid fragrance.{" "}
                 <em className="font-light italic text-gold">Carried,</em> not

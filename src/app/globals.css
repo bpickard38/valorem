@@ -22,7 +22,7 @@
   --color-gold-deep: var(--gold-deep);
   --color-stone: var(--stone);
   --color-stone-deep: var(--stone-deep);
-  --font-serif: var(--font-cormorant), Georgia, serif;
+  --font-serif: var(--font-playfair), Georgia, serif;
   --font-sans: var(--font-inter), Arial, sans-serif;
 }
 
@@ -73,7 +73,9 @@ body {
 
 /* Engraved small-caps label — section markers, captions */
 .label-engraved {
-  font-family: var(--font-inter), Arial, sans-serif;
+  /* Montserrat ExtraLight — matches the "SOLID FRAGRANCE" line in the logo */
+  font-family: var(--font-montserrat), Arial, sans-serif;
+  font-weight: 200;
   font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.42em;
@@ -83,7 +85,7 @@ body {
 
 /* Fluid display serif — hero headline */
 .type-display {
-  font-family: var(--font-cormorant), Georgia, serif;
+  font-family: var(--font-playfair), Georgia, serif;
   font-size: clamp(2.75rem, 6.5vw, 5.25rem);
   line-height: 1.06;
   letter-spacing: -0.015em;
@@ -92,7 +94,7 @@ body {
 
 /* Fluid section heading */
 .type-heading {
-  font-family: var(--font-cormorant), Georgia, serif;
+  font-family: var(--font-playfair), Georgia, serif;
   font-size: clamp(1.9rem, 3.6vw, 3rem);
   line-height: 1.15;
   letter-spacing: -0.01em;

@@ -1,13 +1,21 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Playfair_Display, Montserrat, Inter } from "next/font/google";
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
+/* Brand fonts per the Canva logo lockup: Playfair Display for the VALOREM
+ * wordmark and display type, Montserrat ExtraLight for engraved labels. */
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600"],
   style: ["normal", "italic"],
+});
+
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+  weight: ["200", "300"],
 });
 
 const inter = Inter({
@@ -29,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${inter.variable} h-full antialiased`}
+      className={`${playfair.variable} ${montserrat.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}
