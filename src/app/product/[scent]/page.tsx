@@ -98,6 +98,9 @@ export default async function ProductPage({
           <p className="mt-3 font-serif text-lg italic leading-snug text-charcoal">
             {s.comparison}
           </p>
+          {/* Who it's for. Sits with the comparison because both answer the
+              same question; deliberately a line of copy and not a category. */}
+          <p className="label-engraved mt-4 text-gold-deep">{s.wearer}</p>
 
           <p className="mt-6 text-sm text-charcoal/60">
             {STICK_SIZE} solid fragrance · about {WEAR_ESTIMATE} of daily wear

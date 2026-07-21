@@ -162,6 +162,11 @@ export default function Home() {
                 <p className="mx-auto mt-3 max-w-sm text-center font-serif text-base italic leading-snug text-charcoal">
                   {scent.comparison}
                 </p>
+                {/* Who it's for — lets shoppers self-select between the two
+                    cards without splitting them into gendered collections. */}
+                <p className="label-engraved mt-4 text-center text-gold-deep">
+                  {scent.wearer}
+                </p>
 
                 <div className="mt-8 text-center">
                   {/* Rendered as a span: this sits inside the card's <a>, and

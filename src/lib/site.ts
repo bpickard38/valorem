@@ -85,6 +85,10 @@ export interface Scent {
    * like?" line, anchored to a fragrance the customer already knows. Sits
    * directly under the notes everywhere the notes appear. */
   comparison: string;
+  /* Who the scent is made for. Guidance, not a gate: there are no separate
+   * men's/women's collections — with a two-scent catalogue those would be
+   * dead-end categories — so this line does the self-selection instead. */
+  wearer: string;
 }
 
 export const SCENTS: Record<ScentId, Scent> = {
@@ -96,6 +100,7 @@ export const SCENTS: Record<ScentId, Scent> = {
     description:
       "A luminous sweet amber in the spirit of the modern cult classics — saffron and jasmine glowing over crystalline amberwood. The scent of being remembered.",
     comparison: "If you love Baccarat Rouge 540, Aphrodite is your signature.",
+    wearer: "Worn by women",
   },
   poseidon: {
     id: "poseidon",
@@ -105,5 +110,6 @@ export const SCENTS: Record<ScentId, Scent> = {
     description:
       "A crisp aquatic in the spirit of the great blue colognes — bergamot brightness over ambroxan depth. The scent of showing up sure of yourself.",
     comparison: "If you wear Sauvage, Poseidon is your lane.",
+    wearer: "Worn by men",
   },
 };
