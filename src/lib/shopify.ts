@@ -183,6 +183,234 @@ export async function productImage(
   }
 }
 
+/* Every image on the scent's product, in the order they are arranged in the
+ * Shopify admin — image 1 is the gallery's opening shot. Uploading or
+ * re-ordering photos in Shopify is the only step needed to change the
+ * gallery; nothing here encodes how many there are or what they depict.
+ *
+ * The scent ids double as the Shopify product handles (verified against the
+ * live store), so the handle lookup needs no extra env var.
+ *
+ * Returns [] rather than throwing — a product page with no photos is a bad
+ * page, but a product page that 500s is a lost sale. */
+export async function productImages(
+  scent: ScentId,
+): Promise<ProductImage[]> {
+  try {
+    const data = await storefrontQuery<{
+      product: {
+        images: { nodes: ProductImage[] };
+      } | null;
+    }>(
+      `query productMedia($handle: String!) {
+        product(handle: $handle) {
+          images(first: 20) { nodes { url width height altText } }
+        }
+      }`,
+      { handle: scent },
+    );
+    return data.product?.images.nodes ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/* ---- Cart -------------------------------------------------------------
+ * The order buttons used to mint a throwaway cart and redirect immediately,
+ * so there was nothing to show in a drawer. These keep a cart alive across
+ * requests: the browser holds the cart id, the server does the mutating.
+ */
+
+export interface CartLine {
+  id: string;
+  quantity: number;
+  scent: ScentId | null;
+  title: string;
+  image: ProductImage | null;
+  amount: string;
+  currency: string;
+}
+
+export interface Cart {
+  id: string;
+  checkoutUrl: string;
+  totalQuantity: number;
+  subtotal: string;
+  currency: string;
+  lines: CartLine[];
+}
+
+const CART_FIELDS = `
+  id
+  checkoutUrl
+  totalQuantity
+  cost { subtotalAmount { amount currencyCode } }
+  lines(first: 50) {
+    nodes {
+      id
+      quantity
+      merchandise {
+        ... on ProductVariant {
+          id
+          image { url width height altText }
+          product { handle title }
+        }
+      }
+      cost { totalAmount { amount currencyCode } }
+    }
+  }
+`;
+
+type RawCart = {
+  id: string;
+  checkoutUrl: string;
+  totalQuantity: number;
+  cost: { subtotalAmount: { amount: string; currencyCode: string } };
+  lines: {
+    nodes: {
+      id: string;
+      quantity: number;
+      merchandise: {
+        id: string;
+        image: ProductImage | null;
+        product: { handle: string; title: string };
+      };
+      cost: { totalAmount: { amount: string; currencyCode: string } };
+    }[];
+  };
+};
+
+function shapeCart(raw: RawCart): Cart {
+  return {
+    id: raw.id,
+    checkoutUrl: raw.checkoutUrl,
+    totalQuantity: raw.totalQuantity,
+    subtotal: raw.cost.subtotalAmount.amount,
+    currency: raw.cost.subtotalAmount.currencyCode,
+    lines: raw.lines.nodes.map((line) => ({
+      id: line.id,
+      quantity: line.quantity,
+      scent: isScentId(line.merchandise.product.handle)
+        ? line.merchandise.product.handle
+        : null,
+      title: line.merchandise.product.title,
+      image: line.merchandise.image,
+      amount: line.cost.totalAmount.amount,
+      currency: line.cost.totalAmount.currencyCode,
+    })),
+  };
+}
+
+function variantGid(scent: ScentId): string {
+  const variantId = process.env[VARIANT_ENV[scent]];
+  if (!variantId) throw new Error(`${VARIANT_ENV[scent]} is not set`);
+  return `gid://shopify/ProductVariant/${variantId}`;
+}
+
+/* Reads an existing cart. Shopify returns null for a cart that has been
+ * completed or has expired (they last ~10 days) — the caller treats that as
+ * "no cart" and starts a fresh one. */
+export async function getCart(cartId: string): Promise<Cart | null> {
+  const data = await storefrontQuery<{ cart: RawCart | null }>(
+    `query cart($id: ID!) { cart(id: $id) { ${CART_FIELDS} } }`,
+    { id: cartId },
+  );
+  return data.cart ? shapeCart(data.cart) : null;
+}
+
+export async function createCart(
+  scent: ScentId,
+  quantity = 1,
+): Promise<Cart> {
+  const data = await storefrontQuery<{
+    cartCreate: { cart: RawCart | null; userErrors: { message: string }[] };
+  }>(
+    `mutation cartCreate($input: CartInput!) {
+      cartCreate(input: $input) {
+        cart { ${CART_FIELDS} }
+        userErrors { message }
+      }
+    }`,
+    {
+      input: {
+        lines: [{ merchandiseId: variantGid(scent), quantity }],
+      },
+    },
+  );
+  const { cart, userErrors } = data.cartCreate;
+  if (!cart) throw new Error(userErrors[0]?.message ?? "Cart creation failed");
+  return shapeCart(cart);
+}
+
+/* Adds to an existing cart. Shopify merges the line automatically when the
+ * same variant is already present, so adding Poseidon twice yields one line
+ * at quantity 2 rather than two lines. */
+export async function addToCart(
+  cartId: string,
+  scent: ScentId,
+  quantity = 1,
+): Promise<Cart> {
+  const data = await storefrontQuery<{
+    cartLinesAdd: { cart: RawCart | null; userErrors: { message: string }[] };
+  }>(
+    `mutation cartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!) {
+      cartLinesAdd(cartId: $cartId, lines: $lines) {
+        cart { ${CART_FIELDS} }
+        userErrors { message }
+      }
+    }`,
+    {
+      cartId,
+      lines: [{ merchandiseId: variantGid(scent), quantity }],
+    },
+  );
+  const { cart, userErrors } = data.cartLinesAdd;
+  if (!cart) throw new Error(userErrors[0]?.message ?? "Add to cart failed");
+  return shapeCart(cart);
+}
+
+/* Sets a line's quantity; quantity 0 removes it. */
+export async function updateCartLine(
+  cartId: string,
+  lineId: string,
+  quantity: number,
+): Promise<Cart> {
+  if (quantity <= 0) {
+    const data = await storefrontQuery<{
+      cartLinesRemove: {
+        cart: RawCart | null;
+        userErrors: { message: string }[];
+      };
+    }>(
+      `mutation cartLinesRemove($cartId: ID!, $lineIds: [ID!]!) {
+        cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+          cart { ${CART_FIELDS} }
+          userErrors { message }
+        }
+      }`,
+      { cartId, lineIds: [lineId] },
+    );
+    const { cart, userErrors } = data.cartLinesRemove;
+    if (!cart) throw new Error(userErrors[0]?.message ?? "Remove failed");
+    return shapeCart(cart);
+  }
+
+  const data = await storefrontQuery<{
+    cartLinesUpdate: { cart: RawCart | null; userErrors: { message: string }[] };
+  }>(
+    `mutation cartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
+      cartLinesUpdate(cartId: $cartId, lines: $lines) {
+        cart { ${CART_FIELDS} }
+        userErrors { message }
+      }
+    }`,
+    { cartId, lines: [{ id: lineId, quantity }] },
+  );
+  const { cart, userErrors } = data.cartLinesUpdate;
+  if (!cart) throw new Error(userErrors[0]?.message ?? "Update failed");
+  return shapeCart(cart);
+}
+
 /* Creates a single-item cart and returns Shopify's hosted checkout URL. */
 export async function createCheckout(scent: ScentId): Promise<string> {
   const variantId = process.env[VARIANT_ENV[scent]];

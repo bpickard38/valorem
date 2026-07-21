@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import FadeIn from "@/components/FadeIn";
 import EmailForm from "@/components/EmailForm";
+import Link from "next/link";
 import HomeHeader from "@/components/HomeHeader";
 import SocialLinks from "@/components/SocialLinks";
-import { CheckoutZone } from "@/components/OrderButton";
+import Guarantee from "@/components/Guarantee";
 import { HeroRender, CardRender } from "@/components/ProductRender";
 import { ButtonLink, SectionHeader } from "@/components/ui";
 import { PRICE, RETURN_WINDOW, SCENTS } from "@/lib/site";
@@ -135,11 +136,12 @@ export default function Home() {
               delay={i * 150}
               className="group pb-16 last:pb-4 md:pb-4"
             >
-              <CheckoutZone
-                scent={scent.id}
-                buttonLabel={<>Order — {PRICE}</>}
-                note={<>Returns within {RETURN_WINDOW}.</>}
-                className="h-full px-6 pt-4 sm:px-10 lg:px-16"
+              {/* The whole card is one link to the scent's product page —
+                  it used to fire checkout directly, but the gallery, reviews
+                  and guarantee now live on /product/[scent]. */}
+              <Link
+                href={`/product/${scent.id}`}
+                className="block h-full px-6 pt-4 sm:px-10 lg:px-16"
               >
                 <div className="mx-auto w-full max-w-[300px]">
                   <CardRender wax={scent.wax} backdrop={scent.backdrop} scentId={scent.id} />
@@ -156,7 +158,27 @@ export default function Home() {
                 <p className="mt-5 text-center text-[0.65rem] uppercase tracking-[0.28em] text-charcoal/55">
                   {scent.notes.join("  ·  ")}
                 </p>
-              </CheckoutZone>
+                {/* Notes, translated into a fragrance they already know. */}
+                <p className="mx-auto mt-3 max-w-sm text-center font-serif text-base italic leading-snug text-charcoal">
+                  {scent.comparison}
+                </p>
+
+                <div className="mt-8 text-center">
+                  {/* Rendered as a span: this sits inside the card's <a>, and
+                      a nested anchor is invalid HTML. */}
+                  <span className="group/btn relative inline-block w-full cursor-pointer overflow-hidden bg-gold px-10 py-4 text-xs font-medium uppercase tracking-[0.25em] text-ivory transition-colors duration-300 sm:w-auto">
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 origin-left scale-x-0 bg-gold-deep transition-transform duration-300 ease-out group-hover/btn:scale-x-100"
+                    />
+                    <span className="relative z-10">Order — {PRICE}</span>
+                  </span>
+                  <Guarantee className="mx-auto mt-5 max-w-sm" />
+                  <p className="mt-3 text-xs tracking-wide text-charcoal/50">
+                    Returns within {RETURN_WINDOW}.
+                  </p>
+                </div>
+              </Link>
             </FadeIn>
           ))}
         </div>

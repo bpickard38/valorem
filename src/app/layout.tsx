@@ -3,6 +3,8 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Playfair_Display, Montserrat, Inter } from "next/font/google";
+import CartProvider from "@/components/CartProvider";
+import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
 
 /* Brand fonts per the Canva logo lockup: Playfair Display for the VALOREM
@@ -42,7 +44,12 @@ export default function RootLayout({
       className={`${playfair.variable} ${montserrat.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        {/* The cart lives above every route so the drawer survives navigation
+            between /deity and the product pages. */}
+        <CartProvider>
+          {children}
+          <CartDrawer />
+        </CartProvider>
         <Analytics />
         <SpeedInsights />
         <noscript>

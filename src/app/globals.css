@@ -71,6 +71,17 @@ body {
   }
 }
 
+/* Swipeable tracks (product gallery, thumbnail strip) scroll by touch, so the
+   scrollbar is noise — hidden in every engine, not just WebKit. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Engraved small-caps label — section markers, captions */
 .label-engraved {
   /* Montserrat ExtraLight — matches the "SOLID FRAGRANCE" line in the logo */

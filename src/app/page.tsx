@@ -5,6 +5,7 @@ import EmailForm from "@/components/EmailForm";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import ScrollLink from "@/components/ScrollLink";
+import ReviewProofLine from "@/components/ReviewProofLine";
 import { ButtonLink, SectionHeader } from "@/components/ui";
 import {
   PRICE,
@@ -209,6 +210,10 @@ export default function Home() {
           </h2>
           <div className="mt-8">
             <ButtonLink href="/deity#parthenon">Choose Your Scent</ButtonLink>
+          </div>
+          {/* Renders nothing until real reviews exist — see ReviewProofLine. */}
+          <div className="mt-6">
+            <ReviewProofLine />
           </div>
         </FadeIn>
         <FadeIn className="mt-24 text-center">

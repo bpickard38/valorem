@@ -5,6 +5,7 @@
 const ALLOWED_EVENTS = new Set([
   "PageView",
   "ViewContent",
+  "AddToCart",
   "InitiateCheckout",
   "AddPaymentInfo",
   "Purchase",

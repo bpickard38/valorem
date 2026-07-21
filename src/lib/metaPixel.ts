@@ -11,6 +11,7 @@ declare global {
 
 export type MetaEventName =
   | "ViewContent"
+  | "AddToCart"
   | "InitiateCheckout"
   | "AddPaymentInfo"
   | "Purchase"
