@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/components/CartProvider";
 import { GUARANTEE } from "@/lib/site";
-import { trackMetaEvent } from "@/lib/metaPixel";
 
 /* Slide-in cart. Mobile-first: near full-width on a phone, a panel on
  * desktop, dismissable by backdrop tap, Escape, the close button, or a
@@ -65,14 +64,20 @@ export default function CartDrawer() {
   const isEmpty = lines.length === 0;
   const busy = status === "loading";
 
+  /* No InitiateCheckout here on purpose.
+   *
+   * Checkout is hosted on Shopify, where the Facebook & Instagram sales
+   * channel's web pixel fires checkout_started (and later Purchase) against
+   * this same pixel id, browser-side and through the Conversions API.
+   * Firing our own here too would double-count: Meta dedupes on
+   * event_name + event_id, and Shopify mints its own event id that ours can
+   * never match.
+   *
+   * Split of responsibility: this app owns everything up to the cart
+   * (PageView, ViewContent, AddToCart, Lead); Shopify owns checkout onward
+   * (InitiateCheckout, AddPaymentInfo, Purchase). */
   function onCheckout() {
     if (!cart) return;
-    trackMetaEvent("InitiateCheckout", {
-      content_ids: lines.map((l) => l.scent ?? l.title),
-      content_type: "product",
-      value: Number(cart.subtotal),
-      currency: cart.currency,
-    });
     window.location.assign(cart.checkoutUrl);
   }
 
