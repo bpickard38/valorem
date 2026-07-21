@@ -30,6 +30,9 @@ export default function HomeFooter() {
         <Link href="/contact" className={footerLink}>
           Contact
         </Link>
+        <Link href="/privacy" className={footerLink}>
+          Privacy
+        </Link>
       </div>
       <SocialLinks />
       <a
