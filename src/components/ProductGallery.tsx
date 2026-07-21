@@ -12,31 +12,56 @@ import type { ProductImage } from "@/lib/shopify";
  * static class strings and cannot see a computed one. */
 const THUMB_WIDTH = "w-[calc((100%-3rem)/5)]";
 
-/* How long after the last scroll event we treat the carousel as settled and
- * teleport off a clone. Long enough to sit past momentum scrolling on iOS,
- * short enough that nobody sees the clone. */
+/* How long after the last scroll event the phone carousel counts as settled
+ * and teleports off a clone. Long enough to sit past iOS momentum, short
+ * enough that nobody sees the clone. */
 const SETTLE_MS = 120;
+
+/* Desktop ring geometry. Every photo is 62% of the frame wide (written as the
+ * literal `w-[62%]` below, since Tailwind only sees static class strings). The
+ * neighbours sit SIDE_SHIFT to either side — a percentage of their OWN width,
+ * which is how translateX percentages resolve — then shrink and dim so the eye
+ * goes to the middle.
+ *
+ * The frame's aspect ratio falls out of that width: a 4:5 photo at 62% width
+ * is 0.775 of the frame's width tall, hence aspect-[40/31]. Change the width
+ * and this has to be recomputed or the sides get clipped. */
+const SIDE_SHIFT = 68;
+const SIDE_SCALE = 0.86;
+const SIDE_OPACITY = 0.4;
+
+/* Signed distance from the active photo to photo `i`, taking the short way
+ * round the ring. With six photos, photo 0 is one step forward from photo 5,
+ * not five steps back — which is what makes the desktop gallery loop without
+ * any cloned slides. */
+function ringDelta(i: number, active: number, count: number): number {
+  let d = i - active;
+  if (d > count / 2) d -= count;
+  if (d < -count / 2) d += count;
+  return d;
+}
 
 /*
  * Product gallery. Photos and their order come from Shopify — image 1 is the
  * opening shot, and re-arranging them in the admin re-arranges this.
  *
- * The carousel loops. Swiping past the last photo continues into the first
- * and vice versa, with no rubber-banding at either end.
+ * Two presentations of one state, because phones and desktops want different
+ * things and one mechanism cannot do both well:
  *
- * How the loop works: the track renders [lastPhoto, ...photos, firstPhoto].
- * The two extras are clones. We open on the first real photo (index 1), and
- * once scrolling settles on a clone we reset scrollLeft to its real twin with
- * no animation. Because the clone and its twin are identical, the jump is
- * invisible — the shopper only sees a continuous strip.
+ *   Phone   — a native scroll-snap track, so swiping has real momentum and
+ *             rubber-band. Loops by cloning the first and last photos and
+ *             teleporting off the clone once scrolling settles.
+ *   Desktop — a three-up ring. There is nothing to swipe with a mouse, so the
+ *             loop has to be visible: the neighbours sit either side, dimmed,
+ *             and clicking one rotates it into the middle. Positions come from
+ *             modular arithmetic, so it is circular by construction — no
+ *             clones, and no end to hit.
  *
- * A native scroll-snap track does the actual movement, so momentum, rubber
- * band and accessibility all behave the way the platform intends, and one
- * scroll position stays the single source of truth for the dots and the
- * thumbnail highlight. They cannot disagree with the image on screen.
+ * Both read and write the same `active` index, so the dots, the thumbnails and
+ * whatever is on screen can never disagree.
  *
- * No layout shift: every slide is a fixed 4/5 box whether or not its image
- * has loaded.
+ * No layout shift: both frames are fixed aspect boxes whether or not their
+ * images have loaded.
  */
 export default function ProductGallery({
   images,
@@ -55,12 +80,9 @@ export default function ProductGallery({
   const count = images.length;
   const loop = count > 1;
 
-  /* The rendered slides. With a loop the real photos sit at 1..count, so a
-   * real index maps to a slide index by adding one. */
-  const slides = loop
-    ? [images[count - 1], ...images, images[0]]
-    : images;
-
+  /* Phone slides. The real photos sit at 1..count, so a real index maps to a
+   * slide index by adding one. */
+  const slides = loop ? [images[count - 1], ...images, images[0]] : images;
   const slideIndexOf = useCallback(
     (real: number) => (loop ? real + 1 : real),
     [loop],
@@ -73,7 +95,9 @@ export default function ProductGallery({
     track.scrollLeft = track.clientWidth;
   }, [loop]);
 
-  /* Track scroll → active index, plus the teleport that closes the loop. */
+  /* Phone track scroll → active index, plus the teleport that closes the loop.
+   * On desktop the track is display:none, so clientWidth is 0 and this bails
+   * out before doing anything. */
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -88,16 +112,15 @@ export default function ProductGallery({
 
       if (!loop) return;
 
-      /* Teleport only once motion stops. Doing it mid-gesture would fight
-       * the finger; doing it during momentum would stop the scroll dead. */
+      /* Teleport only once motion stops. Doing it mid-gesture would fight the
+       * finger; doing it during momentum would stop the scroll dead. */
       window.clearTimeout(settleRef.current);
       settleRef.current = window.setTimeout(() => {
+        if (!track.clientWidth) return;
         const settled = Math.round(track.scrollLeft / track.clientWidth);
         if (settled === 0) {
-          // Landed on the leading clone of the last photo.
           track.scrollLeft = count * track.clientWidth;
         } else if (settled === count + 1) {
-          // Landed on the trailing clone of the first photo.
           track.scrollLeft = track.clientWidth;
         }
       }, SETTLE_MS);
@@ -111,12 +134,13 @@ export default function ProductGallery({
   }, [loop, count]);
 
   /* Slide positions are measured in track widths, so a resize invalidates
-   * them — without this the carousel lands between two photos after a device
-   * rotation. */
+   * them — without this the phone carousel lands between two photos after a
+   * rotation, and crossing the md breakpoint leaves it mid-slide. */
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
     const onResize = () => {
+      if (!track.clientWidth) return;
       track.scrollLeft = slideIndexOf(active) * track.clientWidth;
     };
     window.addEventListener("resize", onResize);
@@ -125,22 +149,21 @@ export default function ProductGallery({
 
   const goTo = useCallback(
     (real: number) => {
+      setActive(real);
       const track = trackRef.current;
-      if (!track) return;
+      // Zero width means the phone track is hidden — desktop needs no scroll,
+      // the ring is driven by `active` alone.
+      if (!track || !track.clientWidth) return;
       track.scrollTo({
         left: slideIndexOf(real) * track.clientWidth,
         behavior: "smooth",
       });
-      // Set immediately so the highlight answers the tap rather than waiting
-      // for the smooth scroll to arrive.
-      setActive(real);
     },
     [slideIndexOf],
   );
 
-  /* Keep the active thumbnail fully on screen. Aligned flush to whichever
-   * edge it ran past — never parked halfway, so the row always shows whole
-   * thumbnails.
+  /* Keep the active thumbnail fully on screen, flush to whichever edge it ran
+   * past — never parked halfway, so the row always shows whole thumbnails.
    *
    * Measured with getBoundingClientRect, not offsetLeft: the strip is not a
    * positioned element, so the thumbnails' offsetParent is the page body and
@@ -174,17 +197,21 @@ export default function ProductGallery({
     );
   }
 
+  const altFor = (image: ProductImage, real: number) =>
+    image.altText ??
+    `${productName} solid fragrance — photo ${real + 1} of ${count}`;
+
   return (
     <div className="w-full min-w-0">
+      {/* ---------- PHONE: swipe track ---------- */}
       <div
         ref={trackRef}
-        className={`no-scrollbar flex w-full min-w-0 snap-x snap-mandatory overscroll-x-contain ${
+        className={`no-scrollbar flex w-full min-w-0 snap-x snap-mandatory overscroll-x-contain md:hidden ${
           loop ? "overflow-x-auto" : "overflow-x-hidden"
         }`}
         aria-live="polite"
       >
         {slides.map((image, i) => {
-          // Map a slide back to the photo it shows, clones included.
           const real = loop ? (i - 1 + count) % count : i;
           return (
             <div
@@ -193,19 +220,62 @@ export default function ProductGallery({
             >
               <Image
                 src={image.url}
-                alt={
-                  image.altText ??
-                  `${productName} solid fragrance — photo ${real + 1} of ${count}`
-                }
+                alt={altFor(image, real)}
                 fill
-                sizes="(max-width: 768px) 100vw, 512px"
-                /* Only the opening photo is an LCP candidate. The clones and
-                 * later slides load lazily, so a six-photo gallery still
-                 * costs one image on first paint. */
+                sizes="100vw"
                 priority={i === slideIndexOf(0)}
                 className="object-cover"
               />
             </div>
+          );
+        })}
+      </div>
+
+      {/* ---------- DESKTOP: three-up ring ---------- */}
+      <div className="relative hidden aspect-[40/31] w-full overflow-hidden md:block">
+        {images.map((image, i) => {
+          const d = loop ? ringDelta(i, active, count) : 0;
+          const isCentre = d === 0;
+          // Neighbours are interactive; anything further out is parked
+          // invisible so it fades in rather than popping when it rotates up.
+          const onStage = Math.abs(d) <= 1;
+          const inWings = Math.abs(d) === 2;
+
+          return (
+            <button
+              key={image.url}
+              type="button"
+              onClick={() => goTo(i)}
+              tabIndex={onStage && !isCentre ? 0 : -1}
+              aria-hidden={!onStage}
+              /* Deliberately not "View photo N" — the thumbnail strip below
+               * already owns that label, and two controls sharing one name is
+               * ambiguous to a screen reader reading the page in order. */
+              aria-label={isCentre ? undefined : `Bring photo ${i + 1} to the front`}
+              aria-current={isCentre}
+              disabled={isCentre}
+              style={{
+                transform: `translateX(-50%) translateX(${d * SIDE_SHIFT}%) scale(${
+                  isCentre ? 1 : SIDE_SCALE
+                })`,
+                opacity: isCentre ? 1 : onStage ? SIDE_OPACITY : 0,
+                zIndex: isCentre ? 20 : onStage ? 10 : 0,
+                pointerEvents: onStage && !isCentre ? "auto" : "none",
+                visibility: onStage || inWings ? "visible" : "hidden",
+              }}
+              className={`absolute inset-y-0 left-1/2 w-[62%] bg-stone transition-all duration-500 ease-out ${
+                isCentre ? "cursor-default" : "cursor-pointer hover:opacity-70"
+              }`}
+            >
+              <Image
+                src={image.url}
+                alt={isCentre ? altFor(image, i) : ""}
+                fill
+                sizes="300px"
+                priority={i === 0}
+                className="object-cover"
+              />
+            </button>
           );
         })}
       </div>
@@ -234,8 +304,8 @@ export default function ProductGallery({
             ))}
           </div>
 
-          {/* Thumbnails — exactly THUMBS_PER_ROW across, snapping so a scroll
-           * always lands on whole ones. */}
+          {/* Thumbnails — exactly five across, snapping so a scroll always
+           * lands on whole ones. */}
           <div
             ref={stripRef}
             className="no-scrollbar mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:mt-4"
