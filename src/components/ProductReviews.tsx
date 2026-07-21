@@ -1,5 +1,6 @@
 import Stars from "@/components/Stars";
 import { getProductReviews, reviewsConfigured } from "@/lib/reviews";
+import { previewSummary } from "@/lib/reviewsPreview";
 import type { ScentId } from "@/lib/shopify";
 import { SCENTS } from "@/lib/site";
 
@@ -12,14 +13,31 @@ import { SCENTS } from "@/lib/site";
  *   - no provider configured  → an invitation to be the first buyer
  *   - provider live, 0 reviews → same invitation
  *   - provider live, N reviews → the real reviews
+ *
+ * Plus a fourth that exists only on localhost: sample content for laying out
+ * the section. previewSummary() returns null when NODE_ENV is "production",
+ * and Next inlines that check at build time so the samples are stripped from
+ * the deployed bundle entirely. Real reviews always win over the samples.
  */
 export default async function ProductReviews({ scent }: { scent: ScentId }) {
-  const summary = await getProductReviews(scent);
+  const real = await getProductReviews(scent);
   const name = SCENTS[scent].name;
+
+  const isPreview = (real === null || real.count === 0) && previewSummary(scent) !== null;
+  const summary = isPreview ? previewSummary(scent) : real;
   const hasReviews = summary !== null && summary.count > 0;
 
   return (
     <section aria-labelledby="reviews-heading" className="w-full">
+      {isPreview && (
+        /* Impossible to mistake for the real thing in a screenshot, and gone
+         * from the production bundle along with the samples themselves. */
+        <p className="mb-6 border border-red-500 bg-red-50 px-4 py-3 text-xs font-medium uppercase tracking-[0.15em] text-red-700">
+          Local preview only — sample reviews for design work. Never rendered
+          in production, never sent to a browser. houseofvalorem.com shows
+          &ldquo;No reviews yet&rdquo; until a real customer writes one.
+        </p>
+      )}
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2
           id="reviews-heading"

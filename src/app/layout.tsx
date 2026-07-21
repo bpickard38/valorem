@@ -30,7 +30,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Valorem Solid Fragrance",
   description:
-    "A journey through the House of Valorem. Solid fragrance in a twist-up capsule — Poseidon & Aphrodite. Carried, not sprayed.",
+    "A journey through the House of Valorem. Solid fragrance in a twist-up stick — Poseidon & Aphrodite. Carried, not sprayed.",
 };
 
 export default function RootLayout({

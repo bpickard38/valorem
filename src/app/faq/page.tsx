@@ -8,7 +8,7 @@ import { SectionHeader } from "@/components/ui";
 export const metadata: Metadata = {
   title: "FAQ — VALOREM Solid Fragrance",
   description:
-    "How long solid fragrance lasts, shipping, returns, sizing, and what's inside the tin.",
+    "How long solid fragrance lasts, shipping, returns, sizing, and what's inside the twist-up stick.",
 };
 
 export default function FaqPage() {

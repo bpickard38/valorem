@@ -7,8 +7,8 @@ import {
 } from "@/lib/site";
 
 /*
- * Why $70. Stated as arithmetic, not argument — the numbers do the work and
- * the copy stays out of their way.
+ * Why $70. The argument is size and concentration, never cost-per-wear —
+ * quoting a price per use frames a premium product as a cheap one.
  *
  * Mobile-first: stacked cards on a phone (each row readable on its own),
  * a three-column table on desktop. All figures come from lib/site.ts.
@@ -16,8 +16,8 @@ import {
 
 const columns = [
   VALUE_COMPARISON.ours,
-  VALUE_COMPARISON.typicalSolid,
-  VALUE_COMPARISON.designerEdp,
+  VALUE_COMPARISON.otherSolids,
+  VALUE_COMPARISON.designer,
 ] as const;
 
 export default function ValueComparison() {
@@ -30,9 +30,9 @@ export default function ValueComparison() {
         What {PRICE} actually buys.
       </h2>
       <p className="mt-3 max-w-prose text-sm leading-relaxed text-charcoal/65">
-        {STICK_SIZE} at a {FRAGRANCE_LOAD} fragrance load. Most solids carry a
-        fraction of that and are gone in weeks. One stick is about{" "}
-        {WEAR_ESTIMATE} of daily wear.
+        {STICK_SIZE} at a {FRAGRANCE_LOAD} fragrance load. Other premium solids
+        ask the same {PRICE} for a fifth of the wax at half the concentration.
+        One stick is about {WEAR_ESTIMATE} of daily wear.
       </p>
 
       <div className="mt-8 grid gap-px overflow-hidden border border-charcoal/10 bg-charcoal/10 sm:grid-cols-3">
@@ -62,21 +62,12 @@ export default function ValueComparison() {
                   isOurs ? "font-medium text-gold-deep" : "text-charcoal/55"
                 }`}
               >
-                {col.perWear}
+                {col.note}
               </p>
             </div>
           );
         })}
       </div>
-
-      <p className="mt-5 text-sm leading-relaxed text-charcoal/60">
-        {PRICE} ÷ {WEAR_ESTIMATE} of daily wear ={" "}
-        <span className="text-charcoal/80">
-          {VALUE_COMPARISON.ours.perWear.toLowerCase()}
-        </span>
-        . The designer bottle costs more than twice as much and never leaves
-        the house.
-      </p>
     </section>
   );
 }

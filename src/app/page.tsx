@@ -61,7 +61,7 @@ export default function Home() {
     <main id="top" className="flex-1 scroll-mt-24">
       <HomeHeader />
 
-      {/* HERO — full-bleed cinematic image, both tins, white text overlaid */}
+      {/* HERO — full-bleed cinematic image, both sticks, white text overlaid */}
       <section className="relative flex min-h-[88svh] flex-col justify-center overflow-hidden px-6 py-16">
         <Image
           src="/shopify/hero-duo.png"

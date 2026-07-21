@@ -30,7 +30,7 @@ function useCheckout(scent: string) {
       currency: CURRENCY,
     });
     // If Back from Shopify comes home as a fresh load (no bfcache), the whole
-    // experience resets to frame one and the tins vanish. Leave a note so the
+    // experience resets to frame one and the sticks vanish. Leave a note so the
     // film jumps straight back to the finale. Home page only — the product
     // pages keep their own scroll.
     if (window.location.pathname === "/") {

@@ -25,10 +25,16 @@ export const GUARANTEE = {
   sub: "Don't love it? Full refund.",
 } as const;
 
-/* Cost-per-wear maths behind the $70. Every number here is a claim shown to
- * customers, so it stays in one place rather than inline in the JSX.
- * FRAGRANCE_LOAD / STICK_SIZE are Valorem's own spec; the comparison figures
- * are category typicals, deliberately phrased as ranges. */
+/* The case for the $70, argued on size and concentration rather than price.
+ * Every number here is a claim shown to customers, so it stays in one place
+ * rather than inline in the JSX.
+ *
+ * FRAGRANCE_LOAD / STICK_SIZE are Valorem's own spec. The other two columns
+ * are category figures kept as ranges and left unbranded on purpose — naming
+ * a competitor turns a comparison into a claim about them.
+ *
+ * Sizes are all in oz so the columns compare directly; quoting ours in ml and
+ * theirs in grams hides the difference the block exists to show. */
 export const FRAGRANCE_LOAD = "20%";
 
 export const VALUE_COMPARISON = {
@@ -37,21 +43,25 @@ export const VALUE_COMPARISON = {
     size: STICK_SIZE,
     load: `${FRAGRANCE_LOAD} fragrance load`,
     price: PRICE,
-    perWear: "About 78¢ a wear",
+    note: `About ${WEAR_ESTIMATE} of daily wear`,
   },
-  typicalSolid: {
-    label: "A typical solid",
-    size: "7 g",
+  /* Verified 2026-07-21 against the leading premium solid brand's public
+   * catalogue: their solid fragrances list at exactly $70.00 for 0.2 oz.
+   * Left unbranded — naming them turns a comparison into a claim about a
+   * competitor. Re-check before changing the price or size here. */
+  otherSolids: {
+    label: "Other premium solids",
+    size: "0.2 oz",
     load: "5–10% load",
-    price: "$18–$30",
-    perWear: "Runs out in weeks",
+    price: "$70",
+    note: "Gone in weeks",
   },
-  designerEdp: {
-    label: "A designer EDP",
-    size: "50 ml + glass",
+  designer: {
+    label: "Designer perfume",
+    size: "1.7 oz + glass",
     load: "15–20% load",
-    price: "$150",
-    perWear: "Stays on a shelf",
+    price: "$225",
+    note: "Stays on a shelf",
   },
 } as const;
 
