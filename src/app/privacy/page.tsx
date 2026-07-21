@@ -3,7 +3,7 @@ import Link from "next/link";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import { SectionHeader } from "@/components/ui";
-import { CONTACT_EMAIL, RETURN_WINDOW } from "@/lib/site";
+import { CONTACT_EMAIL, LEGAL_ENTITY, RETURN_WINDOW } from "@/lib/site";
 
 /*
  * Privacy policy. Required independently of any cookie banner: Meta's
@@ -55,11 +55,23 @@ export default function PrivacyPage() {
           Last updated {LAST_UPDATED}
         </p>
 
-        <p className="mt-8 text-sm leading-relaxed text-charcoal/70">
-          VALOREM sells solid fragrance at houseofvalorem.com. This page
-          explains what we collect, why, and how to tell us to stop. We sell
-          and ship within the United States only.
-        </p>
+        <div className="mt-8 flex flex-col gap-4 text-sm leading-relaxed text-charcoal/70">
+          <p>
+            {LEGAL_ENTITY} (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or
+            &ldquo;our&rdquo;), trading as VALOREM, operates houseofvalorem.com
+            (the &ldquo;Website&rdquo;). This policy explains what we collect
+            when you visit or buy from the Website, why, who we share it with,
+            and how to tell us to stop. We sell and ship within the United
+            States only.
+          </p>
+          <p>
+            &ldquo;Personal information&rdquo; means information that
+            identifies, relates to, or describes you as an individual — your
+            name, email address, shipping address, or details of what you
+            bought. By using the Website you acknowledge the practices
+            described here.
+          </p>
+        </div>
 
         <Section heading="What we collect">
           <p>
@@ -74,7 +86,9 @@ export default function PrivacyPage() {
             <strong className="font-medium text-charcoal">
               When you contact us or join the list.
             </strong>{" "}
-            Your email address, and whatever you write in a message to us.
+            Your email address, and whatever you write in a message to us. Our
+            contact form is delivered by Web3Forms, which passes your message on
+            to us by email.
           </p>
           <p>
             <strong className="font-medium text-charcoal">
@@ -95,6 +109,35 @@ export default function PrivacyPage() {
             Payment information is entered on Shopify&rsquo;s checkout and
             handled by their payment processors. It never touches our servers
             and we cannot see it.
+          </p>
+        </Section>
+
+        <Section heading="How we use it">
+          <p>We use personal information to:</p>
+          <ul className="ml-5 flex list-disc flex-col gap-2 marker:text-gold">
+            <li>take payment, fulfil your order, and send you tracking</li>
+            <li>
+              handle returns and refunds within the {RETURN_WINDOW} window
+            </li>
+            <li>answer your messages and support requests</li>
+            <li>
+              send marketing email if you asked for it, and invite you to
+              review something you bought
+            </li>
+            <li>
+              measure which ads and pages lead to sales, and improve the
+              Website using that information
+            </li>
+            <li>detect and prevent fraud and abuse</li>
+            <li>
+              meet our legal, tax and accounting obligations, and respond to
+              lawful requests
+            </li>
+          </ul>
+          <p>
+            We do not use your information for automated decisions that produce
+            legal effects, and we do not use it for anything unrelated to
+            running this store.
           </p>
         </Section>
 
@@ -156,12 +199,58 @@ export default function PrivacyPage() {
               <strong className="font-medium text-charcoal">Judge.me</strong> —
               product review requests and published reviews
             </li>
+            <li>
+              <strong className="font-medium text-charcoal">Web3Forms</strong> —
+              delivering messages sent through our contact form
+            </li>
           </ul>
+          <p>
+            Each of these processes your information under its own privacy
+            policy. Because Shopify handles checkout and payment, their terms
+            matter most: see the{" "}
+            <a
+              href="https://www.shopify.com/legal/privacy/consumers"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={linkStyle}
+            >
+              Shopify Consumer Privacy Policy
+            </a>{" "}
+            and, depending on where you live, the{" "}
+            <a
+              href="https://privacy.shopify.com/en"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={linkStyle}
+            >
+              Shopify Privacy Portal
+            </a>
+            .
+          </p>
           <p>
             Sharing browsing activity with Meta for advertising may count as
             &ldquo;sharing&rdquo; or &ldquo;targeted advertising&rdquo; under
             some state privacy laws. You can opt out at any time using the
             methods below.
+          </p>
+          <p>
+            <strong className="font-medium text-charcoal">
+              Legal requests.
+            </strong>{" "}
+            We may disclose personal information where we are required to by
+            law — to comply with a subpoena, warrant, or other lawful request,
+            to enforce our terms, or to protect the rights, property or safety
+            of our customers or of {LEGAL_ENTITY}.
+          </p>
+          <p>
+            <strong className="font-medium text-charcoal">
+              If the business changes hands.
+            </strong>{" "}
+            If {LEGAL_ENTITY} is involved in a merger, acquisition, sale of
+            assets, bankruptcy or similar transaction, personal information may
+            be transferred as part of that business. We will tell you before
+            your information becomes subject to a materially different privacy
+            policy.
           </p>
         </Section>
 
@@ -201,8 +290,45 @@ export default function PrivacyPage() {
               <strong className="font-medium text-charcoal">
                 Block cookies.
               </strong>{" "}
-              Every major browser can block or delete cookies. The store still
-              works without them.
+              Every major browser can block or delete them, and the store still
+              works without them. Cookie settings are per browser, so you will
+              need to do this on each browser and device you use:{" "}
+              <a
+                href="https://support.google.com/chrome/answer/95647"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={linkStyle}
+              >
+                Chrome
+              </a>
+              ,{" "}
+              <a
+                href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={linkStyle}
+              >
+                Safari
+              </a>
+              ,{" "}
+              <a
+                href="https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={linkStyle}
+              >
+                Firefox
+              </a>
+              ,{" "}
+              <a
+                href="https://support.microsoft.com/en-us/microsoft-edge/delete-cookies-in-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={linkStyle}
+              >
+                Edge
+              </a>
+              .
             </li>
             <li>
               <strong className="font-medium text-charcoal">
@@ -222,12 +348,38 @@ export default function PrivacyPage() {
           </ul>
         </Section>
 
+        <Section heading="How we protect it">
+          <p>
+            The Website is served over HTTPS, and payment and order data is
+            held by Shopify rather than by us — which means the most sensitive
+            information you give us is protected by their security rather than
+            depending on ours. We limit access to personal information to the
+            people who need it to run the business.
+          </p>
+          <p>
+            No method of transmitting information over the internet is
+            completely secure, and we cannot guarantee absolute security. Please
+            take care about what you include in a message to us, and in anything
+            you publish publicly, such as a product review.
+          </p>
+        </Section>
+
         <Section heading="How long we keep it">
           <p>
             Order records are kept as long as we need them for tax, accounting
             and returns — the return window is {RETURN_WINDOW} from delivery.
             Marketing contacts are kept until you unsubscribe or ask us to
             delete them.
+          </p>
+        </Section>
+
+        <Section heading="Links to other sites">
+          <p>
+            The Website links to places we do not control — our Instagram,
+            Facebook and TikTok pages, Shopify&rsquo;s checkout, and the opt-out
+            pages listed above. Those sites have their own privacy policies, and
+            we are not responsible for their content or their practices. This
+            policy covers only houseofvalorem.com.
           </p>
         </Section>
 
@@ -249,7 +401,7 @@ export default function PrivacyPage() {
         <Section heading="Contact">
           <p>
             Questions, or a request about your data — write to us and a person
-            will answer.
+            will answer. {LEGAL_ENTITY}, trading as VALOREM.
           </p>
           <p>
             <a href={`mailto:${CONTACT_EMAIL}`} className={linkStyle}>

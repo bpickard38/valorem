@@ -67,6 +67,11 @@ export const VALUE_COMPARISON = {
 
 export const CONTACT_EMAIL = "houseofvalorem@gmail.com";
 
+/* Registered legal entity. This is who the privacy policy and terms bind, and
+ * who a customer would have a claim against — it is not a brand name and must
+ * not be swapped for "VALOREM" in legal copy. */
+export const LEGAL_ENTITY = "Valorem Fragrances LLC";
+
 export const SOCIAL = {
   instagram: "https://www.instagram.com/houseofvalorem/",
   facebook: "https://www.facebook.com/profile.php?id=61592043447665",
