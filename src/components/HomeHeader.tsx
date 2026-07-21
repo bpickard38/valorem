@@ -1,7 +1,8 @@
 import Link from "next/link";
+import CartButton from "@/components/CartButton";
 
-/* Sticky light header shared by the home, /faq, and /contact pages.
- * /deity keeps its own header (Nav.tsx). */
+/* Sticky light header shared by the home, /deity, /product, /faq and
+ * /contact pages. */
 
 const navLink =
   "text-[0.65rem] uppercase tracking-[0.25em] text-charcoal/60 transition-colors hover:text-gold";
@@ -22,16 +23,20 @@ export default function HomeHeader() {
           Valorem
         </a>
 
-        <div className="flex items-center gap-6">
+        {/* All four items cannot share a 375px bar without overflowing, so on
+            a phone the header keeps what shops: Collections and the bag.
+            FAQ and Contact stay one tap away in the footer of every page. */}
+        <div className="flex items-center gap-4 sm:gap-6">
           <Link href="/deity#parthenon" className={navLink}>
             Collections
           </Link>
-          <Link href="/faq" className={navLink}>
+          <Link href="/faq" className={`${navLink} hidden sm:inline`}>
             FAQ
           </Link>
-          <Link href="/contact" className={navLink}>
+          <Link href="/contact" className={`${navLink} hidden sm:inline`}>
             Contact
           </Link>
+          <CartButton />
         </div>
       </nav>
     </header>
