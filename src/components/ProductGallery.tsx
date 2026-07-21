@@ -305,10 +305,15 @@ export default function ProductGallery({
           </div>
 
           {/* Thumbnails — exactly five across, snapping so a scroll always
-           * lands on whole ones. */}
+           * lands on whole ones.
+           *
+           * Phone only. On desktop the three-up ring already shows the
+           * neighbouring photos and is the way you move between them, so a
+           * thumbnail strip underneath would be a second control doing the
+           * same job. */}
           <div
             ref={stripRef}
-            className="no-scrollbar mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:mt-4"
+            className="no-scrollbar mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:hidden"
           >
             {images.map((image, i) => (
               <button
