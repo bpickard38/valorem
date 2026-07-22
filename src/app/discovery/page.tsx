@@ -16,6 +16,7 @@ import {
   DISCOVERY_PRICE,
   DISCOVERY_PRICE_AMOUNT,
   DISCOVERY_SETS,
+  memberCopy,
   PRICE,
   RETURN_WINDOW,
   SHIP_WINDOW,
@@ -139,34 +140,61 @@ export default async function DiscoveryPage() {
                       {set.lead}
                     </p>
 
-                    <ul className="mt-7 flex flex-col gap-3 border-y border-charcoal/10 py-6">
-                      {set.members.map((member) => (
-                        <li
-                          key={member.name}
-                          className="flex items-baseline gap-3"
-                        >
-                          <span
-                            aria-hidden="true"
-                            className="h-px w-4 shrink-0 bg-gold/70"
-                          />
-                          {/* Only the scents with a catalogue entry have a
-                              page to link to; the rest are named and no
-                              more. */}
-                          {member.scent ? (
-                            <Link
-                              href={`/product/${member.scent}`}
-                              className="font-serif text-xl text-charcoal underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
-                            >
-                              {member.name}
-                            </Link>
-                          ) : (
-                            <span className="font-serif text-xl text-charcoal">
-                              {member.name}
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
+                    {/* Native <details> rather than a client component: the
+                        whole page is otherwise static, and this keeps it that
+                        way — open/close works with JS disabled, is keyboard
+                        operable, and announces its own expanded state to a
+                        screen reader without any aria wiring. */}
+                    <div className="mt-7 border-y border-charcoal/10">
+                      {set.members.map((member) => {
+                        const copy = memberCopy(member);
+                        return (
+                          <details
+                            key={copy.name}
+                            className="group border-b border-charcoal/10 last:border-b-0"
+                          >
+                            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 [&::-webkit-details-marker]:hidden">
+                              <span className="font-serif text-xl text-charcoal transition-colors group-hover:text-gold-deep">
+                                {copy.name}
+                              </span>
+                              {/* Plus drawn from two rules so it inherits the
+                                  palette and needs no icon set. `.marker-plus`
+                                  (globals.css) rotates it into a close mark
+                                  when the <details> opens. */}
+                              <span
+                                aria-hidden="true"
+                                className="marker-plus relative h-3 w-3 shrink-0"
+                              >
+                                <span className="absolute left-0 top-1/2 h-px w-3 -translate-y-1/2 bg-gold" />
+                                <span className="absolute left-1/2 top-0 h-3 w-px -translate-x-1/2 bg-gold" />
+                              </span>
+                            </summary>
+
+                            <div className="pb-5">
+                              <p className="font-serif text-lg italic leading-snug text-gold-deep">
+                                {copy.comparison}
+                              </p>
+                              <p className="mt-3 text-sm leading-relaxed text-charcoal/70">
+                                {copy.description}
+                              </p>
+                              {copy.notes.length > 0 && (
+                                <p className="mt-4 text-[0.65rem] uppercase tracking-[0.28em] text-charcoal/55">
+                                  {copy.notes.join("  ·  ")}
+                                </p>
+                              )}
+                              {copy.href && (
+                                <Link
+                                  href={copy.href}
+                                  className="mt-4 inline-block text-xs uppercase tracking-[0.25em] text-charcoal/55 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
+                                >
+                                  See {copy.name} →
+                                </Link>
+                              )}
+                            </div>
+                          </details>
+                        );
+                      })}
+                    </div>
 
                     <p className="mt-6 font-serif text-3xl text-charcoal">
                       {DISCOVERY_PRICE}

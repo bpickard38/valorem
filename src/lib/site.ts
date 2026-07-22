@@ -138,14 +138,52 @@ export const SCENTS: Record<ScentId, Scent> = {
   },
 };
 
-/* A scent inside a discovery set. `scent` is present only for the two that
- * have a catalogue entry and a product page — the other four ship in the sets
- * but have no copy written yet, so they are named and nothing more. Give them
- * SCENTS entries and they become links here with no change to this file's
- * shape. */
+/* A scent inside a discovery set.
+ *
+ * `scent` is set for the two that have a full catalogue entry and a product
+ * page; their copy is read from SCENTS so the set and the product page can
+ * never disagree. The other four carry their copy inline until they earn
+ * entries of their own.
+ *
+ * DRAFT COPY: the four inline descriptions were written from the reference
+ * fragrance each scent is built against, not from a formulation sheet. They
+ * are customer-facing product claims — check them against what is actually in
+ * the wax before this goes in front of traffic. */
 export interface DiscoveryMember {
   name: string;
   scent?: ScentId;
+  /* Only read when `scent` is absent. */
+  comparison?: string;
+  description?: string;
+}
+
+/* The copy to show for a member, wherever it lives. Keeps the page from
+ * having to know which members are catalogued and which are not. */
+export function memberCopy(member: DiscoveryMember): {
+  name: string;
+  comparison: string;
+  description: string;
+  notes: string[];
+  href: string | null;
+} {
+  if (member.scent) {
+    const s = SCENTS[member.scent];
+    return {
+      name: s.name,
+      comparison: s.comparison,
+      description: s.description,
+      notes: s.notes,
+      href: `/product/${s.id}`,
+    };
+  }
+  return {
+    name: member.name,
+    comparison: member.comparison ?? "",
+    description: member.description ?? "",
+    /* No notes until there is a formulation to quote. */
+    notes: [],
+    href: null,
+  };
 }
 
 export interface DiscoverySet {
@@ -165,8 +203,18 @@ export const DISCOVERY_SETS: Record<DiscoverySetId, DiscoverySet> = {
     lead: "Three ways to be remembered.",
     members: [
       { name: "Poseidon", scent: "poseidon" },
-      { name: "Hades" },
-      { name: "Apollo" },
+      {
+        name: "Hades",
+        comparison: "If you wear Aventus, Hades is your lane.",
+        description:
+          "Smoke over fruit — bright blackcurrant and pineapple cut with birch and dry musk. The scent of walking in having already decided.",
+      },
+      {
+        name: "Apollo",
+        comparison: "If you wear Bleu de Chanel, Apollo is your lane.",
+        description:
+          "Clean citrus over cedar and incense — bright at the top, quietly severe underneath. The scent of being the most composed man in the room.",
+      },
     ],
   },
   "discovery-women": {
@@ -176,8 +224,18 @@ export const DISCOVERY_SETS: Record<DiscoverySetId, DiscoverySet> = {
     lead: "Three ways to be remembered.",
     members: [
       { name: "Aphrodite", scent: "aphrodite" },
-      { name: "Artemis" },
-      { name: "Hera" },
+      {
+        name: "Artemis",
+        comparison: "If you live in vanilla, Artemis is your midnight.",
+        description:
+          "Vanilla after dark — warm and resinous rather than sweet, with tonka and a smoky amber underneath. The scent of the last good hour of the night.",
+      },
+      {
+        name: "Hera",
+        comparison: "If you wear Libre, Hera is your signature.",
+        description:
+          "Lavender and orange blossom over warm vanilla — floral with an edge sharp enough to keep it from turning sweet. The scent of taking the room you're owed.",
+      },
     ],
   },
 };

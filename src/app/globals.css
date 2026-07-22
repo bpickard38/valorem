@@ -112,6 +112,24 @@ body {
   font-weight: 400;
 }
 
+/* Accordion marker — the plus beside each scent in a discovery set turns into
+   a close mark when its <details> opens. Written here rather than as a
+   `group-open:` Tailwind utility: under v4 that variant emits no rule for the
+   rotate property, so the marker silently never turned. */
+.marker-plus {
+  transition: rotate 300ms ease;
+}
+
+details[open] > summary .marker-plus {
+  rotate: 45deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marker-plus {
+    transition: none;
+  }
+}
+
 /* Travertine slab — /deity "Format, Owned" section background */
 .texture-travertine {
   background-color: #f1ede4;
