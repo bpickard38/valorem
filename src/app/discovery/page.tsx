@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { productImages } from "@/lib/shopify";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import FadeIn from "@/components/FadeIn";
@@ -27,6 +29,11 @@ import {
  * route exists rather than sending ads at a $70 product page.
  */
 
+/* Set photography lives in Shopify, so the page can't be frozen at build time
+ * forever — it re-fetches hourly and picks up new uploads on its own. Matches
+ * the product pages. */
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Discovery Sets — Try Three Scents for " + DISCOVERY_PRICE,
   description: `Three solid fragrances to try, ${DISCOVERY_PRICE} with free shipping, plus ${DISCOVERY_CREDIT} credit toward any full-size stick. You can't smell a website — don't spend ${PRICE} on a guess.`,
@@ -50,8 +57,13 @@ const steps = [
   },
 ];
 
-export default function DiscoveryPage() {
+export default async function DiscoveryPage() {
   const sets = Object.values(DISCOVERY_SETS);
+  /* Both galleries in parallel — sequential awaits would make the slower of
+   * the two Shopify calls wait on the faster one for no reason. */
+  const galleries = await Promise.all(
+    sets.map((set) => productImages(set.id)),
+  );
 
   return (
     <main className="flex-1">
@@ -95,61 +107,84 @@ export default function DiscoveryPage() {
               <FadeIn key={set.id} delay={i * 100}>
                 {/* h-full + flex so both cards match height and both buttons
                     sit on the same line however long the names run. */}
-                <article className="flex h-full flex-col border border-charcoal/12 bg-stone/25 p-7 md:p-9">
-                  <p className="label-engraved text-gold-deep">
-                    {set.audience}
-                  </p>
-                  <h2 className="type-heading mt-4 text-charcoal">
-                    {set.name}
-                  </h2>
-                  <p className="mt-2 font-serif text-lg italic text-charcoal/70">
-                    {set.lead}
-                  </p>
+                <article className="flex h-full flex-col border border-charcoal/12 bg-stone/25">
+                  {/* Fixed 3:4 frame rather than intrinsic sizing: the two
+                      photos must occupy identical space or the cards below
+                      them fall out of step. A set with no photo yet collapses
+                      the frame entirely instead of leaving a grey hole. */}
+                  {galleries[i][0] ? (
+                    <div className="relative aspect-[3/4] w-full overflow-hidden bg-stone">
+                      <Image
+                        src={galleries[i][0].url}
+                        alt={galleries[i][0].altText ?? set.name}
+                        fill
+                        /* Two-up from md, full-bleed below — tells the
+                           optimiser to stop shipping a 1086px file to a
+                           375px phone. */
+                        sizes="(min-width: 768px) 496px, 100vw"
+                        priority={i === 0}
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : null}
 
-                  <ul className="mt-7 flex flex-col gap-3 border-y border-charcoal/10 py-6">
-                    {set.members.map((member) => (
-                      <li
-                        key={member.name}
-                        className="flex items-baseline gap-3"
+                  <div className="flex flex-1 flex-col p-7 md:p-9">
+                    <p className="label-engraved text-gold-deep">
+                      {set.audience}
+                    </p>
+                    <h2 className="type-heading mt-4 text-charcoal">
+                      {set.name}
+                    </h2>
+                    <p className="mt-2 font-serif text-lg italic text-charcoal/70">
+                      {set.lead}
+                    </p>
+
+                    <ul className="mt-7 flex flex-col gap-3 border-y border-charcoal/10 py-6">
+                      {set.members.map((member) => (
+                        <li
+                          key={member.name}
+                          className="flex items-baseline gap-3"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="h-px w-4 shrink-0 bg-gold/70"
+                          />
+                          {/* Only the scents with a catalogue entry have a
+                              page to link to; the rest are named and no
+                              more. */}
+                          {member.scent ? (
+                            <Link
+                              href={`/product/${member.scent}`}
+                              className="font-serif text-xl text-charcoal underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
+                            >
+                              {member.name}
+                            </Link>
+                          ) : (
+                            <span className="font-serif text-xl text-charcoal">
+                              {member.name}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <p className="mt-6 font-serif text-3xl text-charcoal">
+                      {DISCOVERY_PRICE}
+                    </p>
+                    <p className="mt-1 text-sm text-charcoal/60">
+                      Free shipping · {DISCOVERY_CREDIT} credit toward full size
+                    </p>
+
+                    {/* mt-auto pins the CTA to the card's floor. */}
+                    <div className="mt-7 pt-1 md:mt-auto md:pt-7">
+                      <AddToCartButton
+                        product={set.id}
+                        value={DISCOVERY_PRICE_AMOUNT}
+                        className="w-full"
                       >
-                        <span
-                          aria-hidden="true"
-                          className="h-px w-4 shrink-0 bg-gold/70"
-                        />
-                        {/* Only the scents with a catalogue entry have a page
-                            to link to; the rest are named and nothing more. */}
-                        {member.scent ? (
-                          <Link
-                            href={`/product/${member.scent}`}
-                            className="font-serif text-xl text-charcoal underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
-                          >
-                            {member.name}
-                          </Link>
-                        ) : (
-                          <span className="font-serif text-xl text-charcoal">
-                            {member.name}
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <p className="mt-6 font-serif text-3xl text-charcoal">
-                    {DISCOVERY_PRICE}
-                  </p>
-                  <p className="mt-1 text-sm text-charcoal/60">
-                    Free shipping · {DISCOVERY_CREDIT} credit toward full size
-                  </p>
-
-                  {/* mt-auto pins the CTA to the card's floor. */}
-                  <div className="mt-7 pt-1 md:mt-auto md:pt-7">
-                    <AddToCartButton
-                      product={set.id}
-                      value={DISCOVERY_PRICE_AMOUNT}
-                      className="w-full"
-                    >
-                      Add to Cart — {DISCOVERY_PRICE}
-                    </AddToCartButton>
+                        Add to Cart — {DISCOVERY_PRICE}
+                      </AddToCartButton>
+                    </div>
                   </div>
                 </article>
               </FadeIn>
