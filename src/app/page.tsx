@@ -7,13 +7,21 @@ import HomeFooter from "@/components/HomeFooter";
 import ScrollLink from "@/components/ScrollLink";
 import ReviewProofLine from "@/components/ReviewProofLine";
 import { ButtonLink, SectionHeader } from "@/components/ui";
+import { productImages } from "@/lib/shopify";
 import {
+  DISCOVERY_CREDIT,
+  DISCOVERY_NET_COST,
+  DISCOVERY_PRICE,
   PRICE,
   STICK_SIZE,
   WEAR_ESTIMATE,
   SHIP_WINDOW,
   RETURN_WINDOW,
 } from "@/lib/site";
+
+/* Set photography comes from Shopify, so this can't be frozen at build time
+ * forever — it re-fetches hourly, matching /discovery and the product pages. */
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "VALOREM — Solid Cologne & Perfume in a Twist-Up Stick",
@@ -56,7 +64,10 @@ const steps = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  /* [0] is whichever photo sits first in the Shopify admin. */
+  const [discoveryImage] = await productImages("discovery-men");
+
   return (
     <main id="top" className="flex-1 scroll-mt-24">
       <HomeHeader />
@@ -111,7 +122,11 @@ export default function Home() {
                  * hero image — force ivory (the ! wins the specificity tie).
                  * ScrollLink keeps #learn out of the URL so reloads start at
                  * the top. */}
-                <ScrollLink href="#learn" variant="outline" className="text-ivory!">
+                <ScrollLink
+                  href="#discover"
+                  variant="outline"
+                  className="text-ivory!"
+                >
                   New to solid cologne?
                 </ScrollLink>
               </div>
@@ -120,6 +135,55 @@ export default function Home() {
               </p>
             </FadeIn>
           </div>
+        </div>
+      </section>
+
+      {/* DISCOVERY — where "New to solid cologne?" lands. Someone who pressed
+          that button is telling you they are not ready to spend {PRICE} on a
+          scent they have never smelled, so the first thing they meet is the
+          cheap way in, not the education. */}
+      <section
+        id="discover"
+        className="scroll-mt-20 border-y border-charcoal/10 bg-stone/25 px-6 py-20 sm:py-24"
+      >
+        <div className="mx-auto grid max-w-4xl items-center gap-12 md:grid-cols-2 md:gap-16">
+          <FadeIn>
+            {/* Fixed 3:4 frame so the column keeps its shape before the photo
+                loads, and so swapping the photo in Shopify can't reflow the
+                section. */}
+            {discoveryImage ? (
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-stone">
+                <Image
+                  src={discoveryImage.url}
+                  alt={discoveryImage.altText ?? "The Valorem Discovery Set"}
+                  fill
+                  sizes="(min-width: 768px) 384px, 100vw"
+                  className="object-cover"
+                />
+              </div>
+            ) : null}
+          </FadeIn>
+
+          <FadeIn delay={150}>
+            <p className="label-engraved text-charcoal/50">Start Here</p>
+            <h2 className="type-heading mt-5 text-charcoal">
+              Don&apos;t spend {PRICE} on a guess.
+            </h2>
+            <p className="mt-6 text-sm leading-relaxed text-charcoal/70">
+              You can&apos;t smell a website. The Discovery Set gets you three
+              scents to try for {DISCOVERY_PRICE} with free shipping — then{" "}
+              {DISCOVERY_CREDIT} back toward the full-size stick you keep.
+            </p>
+            <p className="mt-4 font-serif text-xl italic text-gold-deep">
+              Which makes trying all three cost you {DISCOVERY_NET_COST}.
+            </p>
+            <div className="mt-8">
+              <ButtonLink href="/discovery">Discover Your Scent</ButtonLink>
+            </div>
+            <p className="mt-5 text-xs tracking-wide text-charcoal/55">
+              Two sets — one for men, one for women.
+            </p>
+          </FadeIn>
         </div>
       </section>
 
