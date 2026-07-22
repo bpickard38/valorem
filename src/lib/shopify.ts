@@ -133,14 +133,37 @@ export async function adminQuery<T>(
   return json.data;
 }
 
-const VARIANT_ENV = {
+const SCENT_VARIANT_ENV = {
   poseidon: "SHOPIFY_VARIANT_POSEIDON",
   aphrodite: "SHOPIFY_VARIANT_APHRODITE",
 } as const;
 
-export type ScentId = keyof typeof VARIANT_ENV;
+/* The discovery sets are their own Shopify products, not variants of a scent,
+ * so they live in a separate map. Keeping them out of SCENT_VARIANT_ENV is
+ * what stops a set from turning up everywhere the catalogue is enumerated —
+ * /product/[scent] routes, the /deity cards, generateStaticParams. */
+const DISCOVERY_VARIANT_ENV = {
+  "discovery-men": "SHOPIFY_VARIANT_DISCOVERY_MEN",
+  "discovery-women": "SHOPIFY_VARIANT_DISCOVERY_WOMEN",
+} as const;
 
+const VARIANT_ENV = {
+  ...SCENT_VARIANT_ENV,
+  ...DISCOVERY_VARIANT_ENV,
+} as const;
+
+export type ScentId = keyof typeof SCENT_VARIANT_ENV;
+export type DiscoverySetId = keyof typeof DISCOVERY_VARIANT_ENV;
+/* Anything the cart is allowed to hold. */
+export type ProductId = keyof typeof VARIANT_ENV;
+
+/* Narrow: a scent with a catalogue entry and a product page. Routing and the
+ * SCENTS record both key off this, so it must never widen to include a set. */
 export function isScentId(value: unknown): value is ScentId {
+  return typeof value === "string" && value in SCENT_VARIANT_ENV;
+}
+
+export function isProductId(value: unknown): value is ProductId {
   return typeof value === "string" && value in VARIANT_ENV;
 }
 
@@ -301,9 +324,9 @@ function shapeCart(raw: RawCart): Cart {
   };
 }
 
-function variantGid(scent: ScentId): string {
-  const variantId = process.env[VARIANT_ENV[scent]];
-  if (!variantId) throw new Error(`${VARIANT_ENV[scent]} is not set`);
+function variantGid(product: ProductId): string {
+  const variantId = process.env[VARIANT_ENV[product]];
+  if (!variantId) throw new Error(`${VARIANT_ENV[product]} is not set`);
   return `gid://shopify/ProductVariant/${variantId}`;
 }
 
@@ -319,7 +342,7 @@ export async function getCart(cartId: string): Promise<Cart | null> {
 }
 
 export async function createCart(
-  scent: ScentId,
+  product: ProductId,
   quantity = 1,
 ): Promise<Cart> {
   const data = await storefrontQuery<{
@@ -333,7 +356,7 @@ export async function createCart(
     }`,
     {
       input: {
-        lines: [{ merchandiseId: variantGid(scent), quantity }],
+        lines: [{ merchandiseId: variantGid(product), quantity }],
       },
     },
   );
@@ -347,7 +370,7 @@ export async function createCart(
  * at quantity 2 rather than two lines. */
 export async function addToCart(
   cartId: string,
-  scent: ScentId,
+  product: ProductId,
   quantity = 1,
 ): Promise<Cart> {
   const data = await storefrontQuery<{
@@ -361,7 +384,7 @@ export async function addToCart(
     }`,
     {
       cartId,
-      lines: [{ merchandiseId: variantGid(scent), quantity }],
+      lines: [{ merchandiseId: variantGid(product), quantity }],
     },
   );
   const { cart, userErrors } = data.cartLinesAdd;
@@ -412,9 +435,9 @@ export async function updateCartLine(
 }
 
 /* Creates a single-item cart and returns Shopify's hosted checkout URL. */
-export async function createCheckout(scent: ScentId): Promise<string> {
-  const variantId = process.env[VARIANT_ENV[scent]];
-  if (!variantId) throw new Error(`${VARIANT_ENV[scent]} is not set`);
+export async function createCheckout(product: ProductId): Promise<string> {
+  const variantId = process.env[VARIANT_ENV[product]];
+  if (!variantId) throw new Error(`${VARIANT_ENV[product]} is not set`);
 
   const data = await storefrontQuery<{
     cartCreate: {

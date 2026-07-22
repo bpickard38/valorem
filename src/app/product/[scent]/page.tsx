@@ -108,7 +108,9 @@ export default async function ProductPage({
 
           {/* CTA — full-width and thumb-height on mobile, inline on desktop. */}
           <div className="mt-8">
-            <AddToCartButton scent={s.id}>Add to Cart — {PRICE}</AddToCartButton>
+            <AddToCartButton product={s.id}>
+              Add to Cart — {PRICE}
+            </AddToCartButton>
           </div>
 
           <Guarantee className="mt-5" align="left" />

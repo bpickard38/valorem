@@ -2,11 +2,30 @@
  * Launch constants + scent catalog for the shop experience.
  */
 
-import type { ScentId } from "@/lib/shopify";
+import type { DiscoverySetId, ScentId } from "@/lib/shopify";
 
 export const PRICE = "$70";
 export const PRICE_AMOUNT = 70; // numeric twin of PRICE for ad/event tracking
 export const CURRENCY = "USD";
+
+/* ---- Discovery sets ---------------------------------------------------
+ * The paid-traffic entry point. A $70 blind purchase is a hard first ask
+ * from a brand nobody has heard of, so cold ads land here instead: three
+ * scents to try, and a credit that makes the trial nearly free.
+ *
+ * Shipping is inside the price on purpose — a shipping line added at
+ * checkout is the single biggest abandonment driver on a low-ticket order.
+ */
+export const DISCOVERY_PRICE = "$25";
+export const DISCOVERY_PRICE_AMOUNT = 25;
+export const DISCOVERY_CREDIT = "$15";
+/* What the customer actually pays to try a set, once the credit is spent.
+ * This is the number the ads lead with, so it is derived, never typed twice. */
+export const DISCOVERY_NET_COST = `$${DISCOVERY_PRICE_AMOUNT - 15}`;
+/* The credit expires so it creates a reason to come back rather than sitting
+ * unredeemed forever. Stated on the page because an undisclosed expiry on a
+ * promised credit is the kind of thing customers are right to be annoyed by. */
+export const DISCOVERY_CREDIT_WINDOW = "thirty days";
 
 // TODO: CONFIRM BEFORE TRAFFIC — this is a placeholder, not a measured number.
 // It is the only shipping representation the site makes now that the preorder
@@ -116,5 +135,49 @@ export const SCENTS: Record<ScentId, Scent> = {
       "A crisp aquatic in the spirit of the great blue colognes — bergamot brightness over ambroxan depth. The scent of showing up sure of yourself.",
     comparison: "If you wear Sauvage, Poseidon is your lane.",
     wearer: "Worn by men",
+  },
+};
+
+/* A scent inside a discovery set. `scent` is present only for the two that
+ * have a catalogue entry and a product page — the other four ship in the sets
+ * but have no copy written yet, so they are named and nothing more. Give them
+ * SCENTS entries and they become links here with no change to this file's
+ * shape. */
+export interface DiscoveryMember {
+  name: string;
+  scent?: ScentId;
+}
+
+export interface DiscoverySet {
+  id: DiscoverySetId;
+  name: string;
+  /* Who it's for, in the same voice as Scent.wearer — guidance, not a gate. */
+  audience: string;
+  lead: string;
+  members: DiscoveryMember[];
+}
+
+export const DISCOVERY_SETS: Record<DiscoverySetId, DiscoverySet> = {
+  "discovery-men": {
+    id: "discovery-men",
+    name: "The Men's Discovery Set",
+    audience: "Worn by men",
+    lead: "Three ways to be remembered.",
+    members: [
+      { name: "Poseidon", scent: "poseidon" },
+      { name: "Hades" },
+      { name: "Apollo" },
+    ],
+  },
+  "discovery-women": {
+    id: "discovery-women",
+    name: "The Women's Discovery Set",
+    audience: "Worn by women",
+    lead: "Three ways to be remembered.",
+    members: [
+      { name: "Aphrodite", scent: "aphrodite" },
+      { name: "Artemis" },
+      { name: "Hera" },
+    ],
   },
 };

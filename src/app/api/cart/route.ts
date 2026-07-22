@@ -2,7 +2,7 @@ import {
   addToCart,
   createCart,
   getCart,
-  isScentId,
+  isProductId,
   updateCartLine,
 } from "@/lib/shopify";
 import type { Cart } from "@/lib/shopify";
@@ -11,8 +11,12 @@ import type { Cart } from "@/lib/shopify";
  * mutations happen here so the Storefront token stays server-side.
  *
  * GET  ?id=<cartId>  — rehydrate the drawer on page load
- * POST { action: "add",    scent, cartId? }
+ * POST { action: "add",    product, cartId? }
  * POST { action: "update", cartId, lineId, quantity }
+ *
+ * `product` is a scent id or a discovery set id. It was called `scent` before
+ * the sets existed, and a browser holding cached JS from that build will still
+ * post the old field — so both are read.
  */
 
 function ok(cart: Cart) {
@@ -42,8 +46,9 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") return fail("Bad request", 400);
 
-  const { action, scent, cartId, lineId, quantity } = body as {
+  const { action, product, scent, cartId, lineId, quantity } = body as {
     action?: string;
+    product?: unknown;
     scent?: unknown;
     cartId?: unknown;
     lineId?: unknown;
@@ -52,19 +57,20 @@ export async function POST(request: Request) {
 
   try {
     if (action === "add") {
-      if (!isScentId(scent)) return fail("Unknown scent", 400);
+      const item = product ?? scent;
+      if (!isProductId(item)) return fail("Unknown product", 400);
       const qty =
         typeof quantity === "number" && quantity > 0 ? Math.floor(quantity) : 1;
 
       if (typeof cartId === "string" && cartId) {
         try {
-          return ok(await addToCart(cartId, scent, qty));
+          return ok(await addToCart(cartId, item, qty));
         } catch {
           // Stale cart id (expired / completed) — fall through to a new cart
           // rather than surfacing an error the shopper can do nothing about.
         }
       }
-      return ok(await createCart(scent, qty));
+      return ok(await createCart(item, qty));
     }
 
     if (action === "update") {

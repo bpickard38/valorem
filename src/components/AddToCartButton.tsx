@@ -4,13 +4,19 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui";
 import { useCart } from "@/components/CartProvider";
 
-/* Adds the scent and opens the drawer. The label is the caller's. */
+/* Adds the product and opens the drawer. The label is the caller's.
+ *
+ * `product` is a scent id or a discovery set id. `value` is what the item is
+ * worth for ad tracking — omit it for a stick, pass it for anything priced
+ * differently. */
 export default function AddToCartButton({
-  scent,
+  product,
+  value,
   children,
   className = "",
 }: {
-  scent: string;
+  product: string;
+  value?: number;
   children: ReactNode;
   className?: string;
 }) {
@@ -19,7 +25,7 @@ export default function AddToCartButton({
   return (
     <Button
       type="button"
-      onClick={() => addItem(scent)}
+      onClick={() => addItem(product, value)}
       disabled={status === "loading"}
       className={`w-full sm:w-auto ${className}`}
     >

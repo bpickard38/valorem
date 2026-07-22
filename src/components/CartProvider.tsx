@@ -23,7 +23,11 @@ interface CartContextValue {
   status: Status;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (scent: string) => Promise<void>;
+  /* `value` is what the item is worth to Meta's optimiser. It defaults to the
+   * stick price because every caller was a stick before the discovery sets
+   * existed; a set must pass its own, or AddToCart reports $70 for a $25
+   * order and the ROAS the ads are tuned against is fiction. */
+  addItem: (product: string, value?: number) => Promise<void>;
   setLineQuantity: (lineId: string, quantity: number) => Promise<void>;
 }
 
@@ -80,16 +84,16 @@ export default function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addItem = useCallback(
-    async (scent: string) => {
+    async (product: string, value: number = PRICE_AMOUNT) => {
       setStatus("loading");
       // Open immediately — the drawer animates in while the request is in
       // flight and shows its own pending state, which reads far better on a
       // phone than a button that sits dead for half a second.
       setOpen(true);
       trackMetaEvent("AddToCart", {
-        content_ids: [scent],
+        content_ids: [product],
         content_type: "product",
-        value: PRICE_AMOUNT,
+        value,
         currency: CURRENCY,
       });
       try {
@@ -98,7 +102,7 @@ export default function CartProvider({ children }: { children: ReactNode }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "add",
-            scent,
+            product,
             // localStorage is the authoritative cart id — persist() writes it
             // on every mutation, so reading it here keeps this callback from
             // depending on the cart object and re-creating on every change.
