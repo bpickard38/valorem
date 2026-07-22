@@ -133,38 +133,89 @@ export async function adminQuery<T>(
   return json.data;
 }
 
-const SCENT_VARIANT_ENV = {
-  poseidon: "SHOPIFY_VARIANT_POSEIDON",
-  aphrodite: "SHOPIFY_VARIANT_APHRODITE",
+/* ---- Product catalogue ------------------------------------------------
+ * Our ids mapped to Shopify product handles. Variant ids are resolved from
+ * these at runtime (see variantGid) rather than pinned in env vars: a handle
+ * is stable and human-checkable, a numeric variant id is neither, and the env
+ * approach silently 502s the moment someone re-creates a product in Shopify
+ * and the number changes underneath us.
+ *
+ * These products are single-variant. If one ever gains real variants — a size,
+ * a two-pack — this picks the first and that assumption needs revisiting.
+ */
+const SCENT_HANDLE = {
+  poseidon: "poseidon",
+  aphrodite: "aphrodite",
 } as const;
 
 /* The discovery sets are their own Shopify products, not variants of a scent,
- * so they live in a separate map. Keeping them out of SCENT_VARIANT_ENV is
- * what stops a set from turning up everywhere the catalogue is enumerated —
+ * so they live in a separate map. Keeping them out of SCENT_HANDLE is what
+ * stops a set from turning up everywhere the catalogue is enumerated —
  * /product/[scent] routes, the /deity cards, generateStaticParams. */
-const DISCOVERY_VARIANT_ENV = {
-  "discovery-men": "SHOPIFY_VARIANT_DISCOVERY_MEN",
-  "discovery-women": "SHOPIFY_VARIANT_DISCOVERY_WOMEN",
+const DISCOVERY_HANDLE = {
+  "discovery-men": "discovery-set-gods",
+  "discovery-women": "discovery-set-goddesses",
 } as const;
 
-const VARIANT_ENV = {
-  ...SCENT_VARIANT_ENV,
-  ...DISCOVERY_VARIANT_ENV,
+const PRODUCT_HANDLE = {
+  ...SCENT_HANDLE,
+  ...DISCOVERY_HANDLE,
 } as const;
 
-export type ScentId = keyof typeof SCENT_VARIANT_ENV;
-export type DiscoverySetId = keyof typeof DISCOVERY_VARIANT_ENV;
+export type ScentId = keyof typeof SCENT_HANDLE;
+export type DiscoverySetId = keyof typeof DISCOVERY_HANDLE;
 /* Anything the cart is allowed to hold. */
-export type ProductId = keyof typeof VARIANT_ENV;
+export type ProductId = keyof typeof PRODUCT_HANDLE;
 
 /* Narrow: a scent with a catalogue entry and a product page. Routing and the
  * SCENTS record both key off this, so it must never widen to include a set. */
 export function isScentId(value: unknown): value is ScentId {
-  return typeof value === "string" && value in SCENT_VARIANT_ENV;
+  return typeof value === "string" && value in SCENT_HANDLE;
 }
 
 export function isProductId(value: unknown): value is ProductId {
-  return typeof value === "string" && value in VARIANT_ENV;
+  return typeof value === "string" && value in PRODUCT_HANDLE;
+}
+
+/* Handle → variant gid, cached in module memory. Without the cache every
+ * add-to-cart would pay for an extra Storefront round-trip before the one
+ * that actually mutates the cart. The TTL is long enough to make that cost
+ * disappear under load and short enough that re-pointing a handle in Shopify
+ * takes effect without a redeploy.
+ *
+ * Only successful lookups are cached — a miss must stay retryable, or a
+ * product published a minute after boot stays broken until the next deploy. */
+const VARIANT_TTL_MS = 10 * 60 * 1000;
+const variantCache = new Map<ProductId, { gid: string; expiresAt: number }>();
+
+async function variantGid(product: ProductId): Promise<string> {
+  const cached = variantCache.get(product);
+  if (cached && Date.now() < cached.expiresAt) return cached.gid;
+
+  const handle = PRODUCT_HANDLE[product];
+  const data = await storefrontQuery<{
+    product: { variants: { nodes: { id: string }[] } } | null;
+  }>(
+    `query variantByHandle($handle: String!) {
+      product(handle: $handle) {
+        variants(first: 1) { nodes { id } }
+      }
+    }`,
+    { handle },
+  );
+
+  const gid = data.product?.variants.nodes[0]?.id;
+  if (!gid) {
+    // Almost always one of: wrong handle, product unpublished from the
+    // headless sales channel, or the product was deleted. Name the handle so
+    // the log says which of ours is broken rather than just "cart failed".
+    throw new Error(
+      `No Storefront variant for handle "${handle}" (${product}) — check the product exists and is published to the headless channel`,
+    );
+  }
+
+  variantCache.set(product, { gid, expiresAt: Date.now() + VARIANT_TTL_MS });
+  return gid;
 }
 
 export interface ProductImage {
@@ -174,50 +225,47 @@ export interface ProductImage {
   altText: string | null;
 }
 
-/* The scent's product image from Shopify — the variant's own image if one is
- * assigned, else the product's featured image. Returns null (caller falls
+/* The product's lead image from Shopify — the first variant's own image if one
+ * is assigned, else the product's featured image. Returns null (caller falls
  * back to a placeholder) rather than throwing: a missing image must never
  * take the product page down. */
 export async function productImage(
-  scent: ScentId,
+  product: ProductId,
 ): Promise<ProductImage | null> {
-  const variantId = process.env[VARIANT_ENV[scent]];
-  if (!variantId) return null;
   try {
     const data = await storefrontQuery<{
-      node: {
-        image: ProductImage | null;
-        product: { featuredImage: ProductImage | null };
+      product: {
+        featuredImage: ProductImage | null;
+        variants: { nodes: { image: ProductImage | null }[] };
       } | null;
     }>(
-      `query variantImage($id: ID!) {
-        node(id: $id) {
-          ... on ProductVariant {
-            image { url width height altText }
-            product { featuredImage { url width height altText } }
-          }
+      `query productLeadImage($handle: String!) {
+        product(handle: $handle) {
+          featuredImage { url width height altText }
+          variants(first: 1) { nodes { image { url width height altText } } }
         }
       }`,
-      { id: `gid://shopify/ProductVariant/${variantId}` },
+      { handle: PRODUCT_HANDLE[product] },
     );
-    return data.node?.image ?? data.node?.product.featuredImage ?? null;
+    return (
+      data.product?.variants.nodes[0]?.image ??
+      data.product?.featuredImage ??
+      null
+    );
   } catch {
     return null;
   }
 }
 
-/* Every image on the scent's product, in the order they are arranged in the
- * Shopify admin — image 1 is the gallery's opening shot. Uploading or
- * re-ordering photos in Shopify is the only step needed to change the
- * gallery; nothing here encodes how many there are or what they depict.
- *
- * The scent ids double as the Shopify product handles (verified against the
- * live store), so the handle lookup needs no extra env var.
+/* Every image on the product, in the order they are arranged in the Shopify
+ * admin — image 1 is the gallery's opening shot. Uploading or re-ordering
+ * photos in Shopify is the only step needed to change the gallery; nothing
+ * here encodes how many there are or what they depict.
  *
  * Returns [] rather than throwing — a product page with no photos is a bad
  * page, but a product page that 500s is a lost sale. */
 export async function productImages(
-  scent: ScentId,
+  product: ProductId,
 ): Promise<ProductImage[]> {
   try {
     const data = await storefrontQuery<{
@@ -230,7 +278,7 @@ export async function productImages(
           images(first: 20) { nodes { url width height altText } }
         }
       }`,
-      { handle: scent },
+      { handle: PRODUCT_HANDLE[product] },
     );
     return data.product?.images.nodes ?? [];
   } catch {
@@ -324,12 +372,6 @@ function shapeCart(raw: RawCart): Cart {
   };
 }
 
-function variantGid(product: ProductId): string {
-  const variantId = process.env[VARIANT_ENV[product]];
-  if (!variantId) throw new Error(`${VARIANT_ENV[product]} is not set`);
-  return `gid://shopify/ProductVariant/${variantId}`;
-}
-
 /* Reads an existing cart. Shopify returns null for a cart that has been
  * completed or has expired (they last ~10 days) — the caller treats that as
  * "no cart" and starts a fresh one. */
@@ -345,6 +387,7 @@ export async function createCart(
   product: ProductId,
   quantity = 1,
 ): Promise<Cart> {
+  const merchandiseId = await variantGid(product);
   const data = await storefrontQuery<{
     cartCreate: { cart: RawCart | null; userErrors: { message: string }[] };
   }>(
@@ -356,7 +399,7 @@ export async function createCart(
     }`,
     {
       input: {
-        lines: [{ merchandiseId: variantGid(product), quantity }],
+        lines: [{ merchandiseId, quantity }],
       },
     },
   );
@@ -373,6 +416,7 @@ export async function addToCart(
   product: ProductId,
   quantity = 1,
 ): Promise<Cart> {
+  const merchandiseId = await variantGid(product);
   const data = await storefrontQuery<{
     cartLinesAdd: { cart: RawCart | null; userErrors: { message: string }[] };
   }>(
@@ -384,7 +428,7 @@ export async function addToCart(
     }`,
     {
       cartId,
-      lines: [{ merchandiseId: variantGid(product), quantity }],
+      lines: [{ merchandiseId, quantity }],
     },
   );
   const { cart, userErrors } = data.cartLinesAdd;
@@ -436,8 +480,7 @@ export async function updateCartLine(
 
 /* Creates a single-item cart and returns Shopify's hosted checkout URL. */
 export async function createCheckout(product: ProductId): Promise<string> {
-  const variantId = process.env[VARIANT_ENV[product]];
-  if (!variantId) throw new Error(`${VARIANT_ENV[product]} is not set`);
+  const merchandiseId = await variantGid(product);
 
   const data = await storefrontQuery<{
     cartCreate: {
@@ -453,12 +496,7 @@ export async function createCheckout(product: ProductId): Promise<string> {
     }`,
     {
       input: {
-        lines: [
-          {
-            merchandiseId: `gid://shopify/ProductVariant/${variantId}`,
-            quantity: 1,
-          },
-        ],
+        lines: [{ merchandiseId, quantity: 1 }],
       },
     },
   );
