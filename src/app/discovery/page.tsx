@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { productImages } from "@/lib/shopify";
+import { formatMoney, productImages, productPricing } from "@/lib/shopify";
 import HomeHeader from "@/components/HomeHeader";
+import Price from "@/components/Price";
 import HomeFooter from "@/components/HomeFooter";
 import FadeIn from "@/components/FadeIn";
 import Guarantee from "@/components/Guarantee";
@@ -11,13 +12,10 @@ import TrackViewContent from "@/components/TrackViewContent";
 import { SectionHeader } from "@/components/ui";
 import {
   DISCOVERY_CREDIT,
+  DISCOVERY_CREDIT_AMOUNT,
   DISCOVERY_CREDIT_WINDOW,
-  DISCOVERY_NET_COST,
-  DISCOVERY_PRICE,
-  DISCOVERY_PRICE_AMOUNT,
   DISCOVERY_SETS,
   memberCopy,
-  PRICE,
   RETURN_WINDOW,
   SHIP_WINDOW,
 } from "@/lib/site";
@@ -35,35 +33,60 @@ import {
  * the product pages. */
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "Discovery Sets — Try Three Scents for " + DISCOVERY_PRICE,
-  description: `Three solid fragrances to try, ${DISCOVERY_PRICE} with free shipping, plus ${DISCOVERY_CREDIT} credit toward any full-size stick. You can't smell a website — don't spend ${PRICE} on a guess.`,
-};
+/* Metadata is generated rather than static so the price in the search snippet
+ * tracks Shopify like everything else on the page. */
+export async function generateMetadata(): Promise<Metadata> {
+  const [set, stick] = await Promise.all([
+    productPricing("discovery-men"),
+    productPricing("poseidon"),
+  ]);
+  return {
+    title: `Discovery Sets — Try Three Scents for ${set.formatted}`,
+    description: `Three solid fragrances to try, ${set.formatted} with free shipping, plus ${DISCOVERY_CREDIT} credit toward any full-size stick. You can't smell a website — don't spend ${stick.formatted} on a guess.`,
+  };
+}
 
-const steps = [
-  {
-    numeral: "01",
-    lead: "Try all three.",
-    body: `Live with each one for a few days — how it wears, how it settles, how people react.`,
-  },
-  {
-    numeral: "02",
-    lead: "We email your credit.",
-    body: `A ${DISCOVERY_CREDIT} code lands in your inbox after your set ships. It's good for ${DISCOVERY_CREDIT_WINDOW}.`,
-  },
-  {
-    numeral: "03",
-    lead: "Keep the one you love.",
-    body: `Spend it on any full-size stick. Which makes trying all three cost you ${DISCOVERY_NET_COST}.`,
-  },
-];
+/* Built per-request rather than at module scope: step three quotes the net
+ * cost, which is only known once Shopify has been asked the set price. */
+function buildSteps(netCost: string) {
+  return [
+    {
+      numeral: "01",
+      lead: "Try all three.",
+      body: "Live with each one for a few days — how it wears, how it settles, how people react.",
+    },
+    {
+      numeral: "02",
+      lead: "We email your credit.",
+      body: `A ${DISCOVERY_CREDIT} code lands in your inbox after your set ships. It's good for ${DISCOVERY_CREDIT_WINDOW}.`,
+    },
+    {
+      numeral: "03",
+      lead: "Keep the one you love.",
+      body: `Spend it on any full-size stick. Which makes trying all three cost you ${netCost}.`,
+    },
+  ];
+}
 
 export default async function DiscoveryPage() {
   const sets = Object.values(DISCOVERY_SETS);
-  /* Both galleries in parallel — sequential awaits would make the slower of
-   * the two Shopify calls wait on the faster one for no reason. */
-  const galleries = await Promise.all(
-    sets.map((set) => productImages(set.id)),
+  /* Everything in parallel — sequential awaits would make the slowest Shopify
+   * call wait on all the ones before it for no reason. */
+  const [galleries, prices, stickPricing] = await Promise.all([
+    Promise.all(sets.map((set) => productImages(set.id))),
+    Promise.all(sets.map((set) => productPricing(set.id))),
+    /* The full-size price this page argues against. Both scents cost the
+     * same, so one lookup answers for the collection. */
+    productPricing("poseidon"),
+  ]);
+
+  /* The sets are priced together; the hero speaks for both. If they ever
+   * diverge the cards still show their own figures — only this headline
+   * number assumes they match. */
+  const setPrice = prices[0];
+  const netCost = formatMoney(
+    Math.max(0, setPrice.amount - DISCOVERY_CREDIT_AMOUNT),
+    setPrice.currency,
   );
 
   return (
@@ -72,7 +95,7 @@ export default async function DiscoveryPage() {
       <TrackViewContent
         contentId="discovery"
         contentName="Discovery Set"
-        value={DISCOVERY_PRICE_AMOUNT}
+        value={setPrice.amount}
       />
 
       {/* HERO — the offer, stated as arithmetic. No image: this page is reached
@@ -83,16 +106,16 @@ export default async function DiscoveryPage() {
           <FadeIn>
             <p className="label-engraved text-charcoal/50">The Discovery Set</p>
             <h1 className="type-display mt-6 text-charcoal">
-              Trying all three costs you {DISCOVERY_NET_COST}.
+              Trying all three costs you {netCost}.
             </h1>
             <p className="mx-auto mt-7 max-w-xl text-base leading-relaxed text-charcoal/70">
-              {DISCOVERY_PRICE} with free shipping. Try all three scents in your
-              collection, then take {DISCOVERY_CREDIT} off the full-size stick
-              you keep.
+              {setPrice.formatted} with free shipping. Try all three scents in
+              your collection, then take {DISCOVERY_CREDIT} off the full-size
+              stick you keep.
             </p>
             <p className="mt-6 font-serif text-xl italic leading-snug text-gold-deep sm:text-2xl">
-              You can&apos;t smell a website. Don&apos;t spend {PRICE} on a
-              guess.
+              You can&apos;t smell a website. Don&apos;t spend{" "}
+              {stickPricing.formatted} on a guess.
             </p>
           </FadeIn>
         </div>
@@ -196,9 +219,7 @@ export default async function DiscoveryPage() {
                       })}
                     </div>
 
-                    <p className="mt-6 font-serif text-3xl text-charcoal">
-                      {DISCOVERY_PRICE}
-                    </p>
+                    <Price pricing={prices[i]} className="mt-6" />
                     <p className="mt-1 text-sm text-charcoal/60">
                       Free shipping · {DISCOVERY_CREDIT} credit toward full size
                     </p>
@@ -207,10 +228,10 @@ export default async function DiscoveryPage() {
                     <div className="mt-7 pt-1 md:mt-auto md:pt-7">
                       <AddToCartButton
                         product={set.id}
-                        value={DISCOVERY_PRICE_AMOUNT}
+                        value={prices[i].amount}
                         className="w-full"
                       >
-                        Add to Cart — {DISCOVERY_PRICE}
+                        Add to Cart — {prices[i].formatted}
                       </AddToCartButton>
                     </div>
                   </div>
@@ -228,7 +249,7 @@ export default async function DiscoveryPage() {
           <SectionHeader numeral="II" label="How the credit works" />
 
           <div className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
-            {steps.map((step, i) => (
+            {buildSteps(netCost).map((step, i) => (
               <FadeIn key={step.numeral} delay={i * 100}>
                 <div>
                   <p className="font-serif text-sm tracking-[0.2em] text-gold">

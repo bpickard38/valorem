@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isScentId, productImages } from "@/lib/shopify";
+import { isScentId, productImages, productPricing } from "@/lib/shopify";
 import {
-  PRICE,
   RETURN_WINDOW,
   SCENTS,
   STICK_SIZE,
   WEAR_ESTIMATE,
 } from "@/lib/site";
+import Price from "@/components/Price";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import ProductGallery from "@/components/ProductGallery";
@@ -36,10 +36,13 @@ export async function generateMetadata({
   const { scent } = await params;
   if (!isScentId(scent)) return {};
   const s = SCENTS[scent];
-  const images = await productImages(scent);
+  const [images, pricing] = await Promise.all([
+    productImages(scent),
+    productPricing(scent),
+  ]);
   return {
     title: `${s.name} — VALOREM Solid Fragrance`,
-    description: `${s.notes.join(", ")}. ${s.description} ${PRICE}.`,
+    description: `${s.notes.join(", ")}. ${s.description} ${pricing.formatted}.`,
     openGraph: {
       title: `${s.name} — VALOREM Solid Fragrance`,
       description: s.description,
@@ -62,12 +65,19 @@ export default async function ProductPage({
   const s = SCENTS[scent];
   const otherId = scent === "aphrodite" ? "poseidon" : "aphrodite";
   const other = SCENTS[otherId];
-  const images = await productImages(scent);
+  const [images, pricing] = await Promise.all([
+    productImages(scent),
+    productPricing(scent),
+  ]);
 
   return (
     <main className="flex-1">
       <HomeHeader />
-      <TrackViewContent contentId={s.id} contentName={s.name} />
+      <TrackViewContent
+        contentId={s.id}
+        contentName={s.name}
+        value={pricing.amount}
+      />
 
       {/* BUY BLOCK — gallery and details. On a phone this is a single column
           with the gallery first; the two columns only appear from md up. */}
@@ -85,7 +95,7 @@ export default async function ProductPage({
           <p className="mt-2 font-serif text-lg italic text-gold-deep">
             {s.lead}
           </p>
-          <p className="mt-5 font-serif text-3xl text-charcoal">{PRICE}</p>
+          <Price pricing={pricing} className="mt-5" />
 
           <p className="mt-6 text-sm leading-relaxed text-charcoal/70">
             {s.description}
@@ -108,8 +118,8 @@ export default async function ProductPage({
 
           {/* CTA — full-width and thumb-height on mobile, inline on desktop. */}
           <div className="mt-8">
-            <AddToCartButton product={s.id}>
-              Add to Cart — {PRICE}
+            <AddToCartButton product={s.id} value={pricing.amount}>
+              Add to Cart — {pricing.formatted}
             </AddToCartButton>
           </div>
 
@@ -131,7 +141,7 @@ export default async function ProductPage({
       {/* WHY $70 */}
       <div className="border-t border-charcoal/10">
         <div className="mx-auto w-full max-w-5xl px-5 py-16 md:px-6 md:py-20">
-          <ValueComparison />
+          <ValueComparison price={pricing.formatted} />
         </div>
       </div>
 

@@ -16,12 +16,15 @@ export const CURRENCY = "USD";
  * Shipping is inside the price on purpose — a shipping line added at
  * checkout is the single biggest abandonment driver on a low-ticket order.
  */
+/* Fallbacks only. Live prices come from Shopify via productPricing(); these
+ * are what /deity (frozen, no async data) and any outage fall back to. */
 export const DISCOVERY_PRICE = "$25";
 export const DISCOVERY_PRICE_AMOUNT = 25;
+
+/* The credit is our promise, not a Shopify product attribute — it stays a
+ * constant here and must match the discount rule configured in Shopify. */
 export const DISCOVERY_CREDIT = "$15";
-/* What the customer actually pays to try a set, once the credit is spent.
- * This is the number the ads lead with, so it is derived, never typed twice. */
-export const DISCOVERY_NET_COST = `$${DISCOVERY_PRICE_AMOUNT - 15}`;
+export const DISCOVERY_CREDIT_AMOUNT = 15;
 /* The credit expires so it creates a reason to come back rather than sitting
  * unredeemed forever. Stated on the page because an undisclosed expiry on a
  * promised credit is the kind of thing customers are right to be annoyed by. */

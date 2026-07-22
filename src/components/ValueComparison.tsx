@@ -14,24 +14,27 @@ import {
  * a three-column table on desktop. All figures come from lib/site.ts.
  */
 
-const columns = [
-  VALUE_COMPARISON.ours,
-  VALUE_COMPARISON.otherSolids,
-  VALUE_COMPARISON.designer,
-] as const;
+/* `price` lets a caller pass the live Shopify figure so the argument quotes
+ * what the shopper is actually being asked to pay. It falls back to the
+ * constant for callers that have no pricing to hand (/deity). */
+export default function ValueComparison({ price = PRICE }: { price?: string }) {
+  const columns = [
+    { ...VALUE_COMPARISON.ours, price },
+    VALUE_COMPARISON.otherSolids,
+    VALUE_COMPARISON.designer,
+  ];
 
-export default function ValueComparison() {
   return (
     <section aria-labelledby="value-heading" className="w-full">
       <h2
         id="value-heading"
         className="font-serif text-2xl leading-snug text-charcoal sm:text-3xl"
       >
-        What {PRICE} actually buys.
+        What {price} actually buys.
       </h2>
       <p className="mt-3 max-w-prose text-sm leading-relaxed text-charcoal/65">
         {STICK_SIZE} at a {FRAGRANCE_LOAD} fragrance load. Other premium solids
-        ask the same {PRICE} for a fifth of the wax at half the concentration.
+        ask the same {price} for a fifth of the wax at half the concentration.
         One stick is about {WEAR_ESTIMATE} of daily wear.
       </p>
 

@@ -7,12 +7,10 @@ import HomeFooter from "@/components/HomeFooter";
 import ScrollLink from "@/components/ScrollLink";
 import ReviewProofLine from "@/components/ReviewProofLine";
 import { ButtonLink, SectionHeader } from "@/components/ui";
-import { productImages } from "@/lib/shopify";
+import { formatMoney, productImages, productPricing } from "@/lib/shopify";
 import {
   DISCOVERY_CREDIT,
-  DISCOVERY_NET_COST,
-  DISCOVERY_PRICE,
-  PRICE,
+  DISCOVERY_CREDIT_AMOUNT,
   STICK_SIZE,
   WEAR_ESTIMATE,
   SHIP_WINDOW,
@@ -23,10 +21,13 @@ import {
  * forever — it re-fetches hourly, matching /discovery and the product pages. */
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "VALOREM — Solid Cologne & Perfume in a Twist-Up Stick",
-  description: `Solid fragrance you carry, not spray. Poseidon & Aphrodite — ${PRICE}. ${STICK_SIZE}, about ${WEAR_ESTIMATE} of daily wear. No glass, no spills.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const stick = await productPricing("poseidon");
+  return {
+    title: "VALOREM — Solid Cologne & Perfume in a Twist-Up Stick",
+    description: `Solid fragrance you carry, not spray. Poseidon & Aphrodite — ${stick.formatted}. ${STICK_SIZE}, about ${WEAR_ESTIMATE} of daily wear. No glass, no spills.`,
+  };
+}
 
 const hooks = [
   {
@@ -65,8 +66,19 @@ const steps = [
 ];
 
 export default async function Home() {
+  const [images, stickPricing, setPricing] = await Promise.all([
+    productImages("discovery-men"),
+    /* Both scents are priced together, so one lookup speaks for the
+     * collection everywhere this page names a stick price. */
+    productPricing("poseidon"),
+    productPricing("discovery-men"),
+  ]);
   /* [0] is whichever photo sits first in the Shopify admin. */
-  const [discoveryImage] = await productImages("discovery-men");
+  const discoveryImage = images[0];
+  const netCost = formatMoney(
+    Math.max(0, setPricing.amount - DISCOVERY_CREDIT_AMOUNT),
+    setPricing.currency,
+  );
 
   return (
     <main id="top" className="flex-1 scroll-mt-24">
@@ -116,12 +128,12 @@ export default async function Home() {
             <FadeIn delay={200} duration={900}>
               <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
                 <ButtonLink href="/deity#parthenon">
-                  Shop the Collection — {PRICE}
+                  Shop the Collection — {stickPricing.formatted}
                 </ButtonLink>
                 {/* outline variant's charcoal text is unreadable on the dark
                  * hero image — force ivory (the ! wins the specificity tie).
-                 * ScrollLink keeps #learn out of the URL so reloads start at
-                 * the top. */}
+                 * ScrollLink keeps #discover out of the URL so reloads start
+                 * at the top. */}
                 <ScrollLink
                   href="#discover"
                   variant="outline"
@@ -139,7 +151,7 @@ export default async function Home() {
       </section>
 
       {/* DISCOVERY — where "New to solid cologne?" lands. Someone who pressed
-          that button is telling you they are not ready to spend {PRICE} on a
+          that button is telling you they are not ready to spend full price on a
           scent they have never smelled, so the first thing they meet is the
           cheap way in, not the education. */}
       <section
@@ -167,15 +179,15 @@ export default async function Home() {
           <FadeIn delay={150}>
             <p className="label-engraved text-charcoal/50">Start Here</p>
             <h2 className="type-heading mt-5 text-charcoal">
-              Don&apos;t spend {PRICE} on a guess.
+              Don&apos;t spend {stickPricing.formatted} on a guess.
             </h2>
             <p className="mt-6 text-sm leading-relaxed text-charcoal/70">
               You can&apos;t smell a website. The Discovery Set gets you three
-              scents to try for {DISCOVERY_PRICE} with free shipping — then{" "}
+              scents to try for {setPricing.formatted} with free shipping — then{" "}
               {DISCOVERY_CREDIT} back toward the full-size stick you keep.
             </p>
             <p className="mt-4 font-serif text-xl italic text-gold-deep">
-              Which makes trying all three cost you {DISCOVERY_NET_COST}.
+              Which makes trying all three cost you {netCost}.
             </p>
             <div className="mt-8">
               <ButtonLink href="/discovery">Discover Your Scent</ButtonLink>
@@ -231,7 +243,7 @@ export default async function Home() {
               ))}
             </div>
             <p className="mt-14 text-center text-[0.65rem] uppercase tracking-[0.28em] text-charcoal/55">
-              {STICK_SIZE} · about {WEAR_ESTIMATE} of daily wear · {PRICE}
+              {STICK_SIZE} · about {WEAR_ESTIMATE} of daily wear · {stickPricing.formatted}
             </p>
           </FadeIn>
         </section>
@@ -270,7 +282,7 @@ export default async function Home() {
       <section className="px-6 pb-14 pt-24 sm:pt-28">
         <FadeIn className="text-center">
           <h2 className="type-heading mx-auto max-w-xl text-charcoal">
-            Two scents. One format. {PRICE}.
+            Two scents. One format. {stickPricing.formatted}.
           </h2>
           <div className="mt-8">
             <ButtonLink href="/deity#parthenon">Choose Your Scent</ButtonLink>

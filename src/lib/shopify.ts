@@ -177,35 +177,112 @@ export function isProductId(value: unknown): value is ProductId {
   return typeof value === "string" && value in PRODUCT_HANDLE;
 }
 
-/* Handle → variant gid, cached in module memory. Without the cache every
- * add-to-cart would pay for an extra Storefront round-trip before the one
- * that actually mutates the cart. The TTL is long enough to make that cost
- * disappear under load and short enough that re-pointing a handle in Shopify
- * takes effect without a redeploy.
+/* Last-known-good prices, used only when Shopify cannot be reached.
+ *
+ * A page that renders no price at all is worse than one showing a stale
+ * price, so every read falls back to these rather than throwing. Keep them
+ * in step with Shopify; they are what customers see during an outage, and an
+ * order placed against a wrong number here is a real complaint. */
+const FALLBACK_PRICE: Record<ProductId, number> = {
+  poseidon: 70,
+  aphrodite: 70,
+  "discovery-men": 25,
+  "discovery-women": 25,
+};
+
+export interface Pricing {
+  amount: number;
+  currency: string;
+  /* Display string, e.g. "$70" — whole amounts drop the cents so the house
+   * style ("$70", not "$70.00") survives. */
+  formatted: string;
+  /* Shopify's compare-at price. Set it above the price to run a sale; null
+   * or lower means no sale is running. */
+  compareAt: number | null;
+  compareAtFormatted: string | null;
+  onSale: boolean;
+  percentOff: number | null;
+  /* True when these numbers came from the fallback above rather than
+   * Shopify. Pages do not surface it; it exists so a caller can log. */
+  stale: boolean;
+}
+
+/* House money style: "$70", not "$70.00". Exported so a page deriving its own
+ * figure (the discovery net cost) formats it the same way as a Shopify one. */
+export function formatMoney(amount: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+  }).format(amount);
+}
+
+function fallbackPricing(product: ProductId): Pricing {
+  const amount = FALLBACK_PRICE[product];
+  return {
+    amount,
+    currency: "USD",
+    formatted: formatMoney(amount, "USD"),
+    compareAt: null,
+    compareAtFormatted: null,
+    onSale: false,
+    percentOff: null,
+    stale: true,
+  };
+}
+
+/* Handle → variant gid and price, cached together in module memory. One
+ * Storefront query answers both, so a page needing the price and a cart add
+ * needing the id share a single round-trip.
+ *
+ * The TTL is short enough that a price change or a sale switched on in
+ * Shopify reaches the site quickly, and long enough that the lookup cost
+ * disappears under load. Note the page's own `revalidate` is the outer bound:
+ * a cached page will not re-render just because this expired.
  *
  * Only successful lookups are cached — a miss must stay retryable, or a
  * product published a minute after boot stays broken until the next deploy. */
-const VARIANT_TTL_MS = 10 * 60 * 1000;
-const variantCache = new Map<ProductId, { gid: string; expiresAt: number }>();
+const VARIANT_TTL_MS = 5 * 60 * 1000;
+const variantCache = new Map<
+  ProductId,
+  { gid: string; pricing: Pricing; expiresAt: number }
+>();
 
-async function variantGid(product: ProductId): Promise<string> {
+type VariantNode = {
+  id: string;
+  price: { amount: string; currencyCode: string };
+  compareAtPrice: { amount: string; currencyCode: string } | null;
+};
+
+async function loadVariant(
+  product: ProductId,
+): Promise<{ gid: string; pricing: Pricing }> {
   const cached = variantCache.get(product);
-  if (cached && Date.now() < cached.expiresAt) return cached.gid;
+  if (cached && Date.now() < cached.expiresAt) {
+    return { gid: cached.gid, pricing: cached.pricing };
+  }
 
   const handle = PRODUCT_HANDLE[product];
   const data = await storefrontQuery<{
-    product: { variants: { nodes: { id: string }[] } } | null;
+    product: { variants: { nodes: VariantNode[] } } | null;
   }>(
     `query variantByHandle($handle: String!) {
       product(handle: $handle) {
-        variants(first: 1) { nodes { id } }
+        variants(first: 1) {
+          nodes {
+            id
+            price { amount currencyCode }
+            compareAtPrice { amount currencyCode }
+          }
+        }
       }
     }`,
     { handle },
   );
 
-  const gid = data.product?.variants.nodes[0]?.id;
-  if (!gid) {
+  const node = data.product?.variants.nodes[0];
+  if (!node) {
     // Almost always one of: wrong handle, product unpublished from the
     // headless sales channel, or the product was deleted. Name the handle so
     // the log says which of ours is broken rather than just "cart failed".
@@ -214,8 +291,52 @@ async function variantGid(product: ProductId): Promise<string> {
     );
   }
 
-  variantCache.set(product, { gid, expiresAt: Date.now() + VARIANT_TTL_MS });
-  return gid;
+  const amount = Number(node.price.amount);
+  const currency = node.price.currencyCode;
+  const compareAt = node.compareAtPrice
+    ? Number(node.compareAtPrice.amount)
+    : null;
+  /* Shopify lets compare-at sit at or below the price; only treat it as a
+   * sale when it is genuinely higher, otherwise the page shows a struck-out
+   * number identical to the one beside it. */
+  const onSale = compareAt !== null && compareAt > amount;
+
+  const pricing: Pricing = {
+    amount,
+    currency,
+    formatted: formatMoney(amount, currency),
+    compareAt,
+    compareAtFormatted: compareAt ? formatMoney(compareAt, currency) : null,
+    onSale,
+    percentOff: onSale
+      ? Math.round(((compareAt! - amount) / compareAt!) * 100)
+      : null,
+    stale: false,
+  };
+
+  const entry = { gid: node.id, pricing };
+  variantCache.set(product, { ...entry, expiresAt: Date.now() + VARIANT_TTL_MS });
+  return entry;
+}
+
+async function variantGid(product: ProductId): Promise<string> {
+  return (await loadVariant(product)).gid;
+}
+
+/* Live price for a product, straight from Shopify. Change a price or set a
+ * compare-at in the admin and it lands here — no deploy, no code edit.
+ *
+ * Never throws: a Shopify outage falls back to FALLBACK_PRICE so the page
+ * still renders something buyable rather than a blank where the price goes.
+ * The cart and checkout always charge Shopify's real number regardless of
+ * what was rendered. */
+export async function productPricing(product: ProductId): Promise<Pricing> {
+  try {
+    return (await loadVariant(product)).pricing;
+  } catch (error) {
+    console.error(`pricing lookup failed for ${product}:`, error);
+    return fallbackPricing(product);
+  }
 }
 
 export interface ProductImage {
