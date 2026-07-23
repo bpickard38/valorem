@@ -45,7 +45,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {/* The cart lives above every route so the drawer survives navigation
-            between /deity and the product pages. */}
+            between the collection and product pages. */}
         <CartProvider>
           {children}
           <CartDrawer />

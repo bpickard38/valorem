@@ -3,7 +3,7 @@ import CartButton from "@/components/CartButton";
 import MobileNav from "@/components/MobileNav";
 import type { NavItem } from "@/components/MobileNav";
 
-/* Sticky light header shared by the home, /deity, /product, /faq and
+/* Sticky light header shared by the home, /collections, /product, /faq and
  * /contact pages.
  *
  * Phone layout: hamburger + wordmark on the left, bag on the right, links

@@ -16,7 +16,7 @@ import {
 
 /* `price` lets a caller pass the live Shopify figure so the argument quotes
  * what the shopper is actually being asked to pay. It falls back to the
- * constant for callers that have no pricing to hand (/deity). */
+ * constant for callers that have no live pricing to hand. */
 export default function ValueComparison({ price = PRICE }: { price?: string }) {
   const columns = [
     { ...VALUE_COMPARISON.ours, price },

@@ -68,8 +68,7 @@ export default function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /* Coming back from Shopify checkout via the bfcache would otherwise restore
-   * a frozen "loading" button, exactly as the old OrderButton had to guard
-   * against. */
+   * a frozen "loading" button. */
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
       if (e.persisted) setStatus("idle");

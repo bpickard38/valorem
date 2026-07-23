@@ -155,7 +155,7 @@ const SCENT_HANDLE = {
 /* The discovery sets are their own Shopify products, not variants of a scent,
  * so they live in a separate map. Keeping them out of SCENT_HANDLE is what
  * stops a set from turning up everywhere the catalogue is enumerated —
- * /product/[scent] routes, the /deity cards, generateStaticParams. */
+ * /product/[scent] routes, the collection cards, generateStaticParams. */
 const DISCOVERY_HANDLE = {
   "discovery-men": "discovery-set-gods",
   "discovery-women": "discovery-set-goddesses",

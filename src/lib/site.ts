@@ -26,7 +26,7 @@ export const CURRENCY = "USD";
  * checkout is the single biggest abandonment driver on a low-ticket order.
  */
 /* Fallbacks only. Live prices come from Shopify via productPricing(); these
- * are what /deity (frozen, no async data) and any outage fall back to. */
+ * are what a Shopify outage falls back to. */
 export const DISCOVERY_PRICE = "$25";
 export const DISCOVERY_PRICE_AMOUNT = 25;
 
@@ -115,8 +115,8 @@ export function galleryImageMode(index: number) {
 }
 
 /* The return policy, written as a promise instead of a policy. Used verbatim
- * beside every buy button on /deity and the product pages — keep the two
- * halves separate so the styling can lean on the first line. */
+ * beside every buy button — keep the two halves separate so the styling can
+ * lean on the first line. */
 export const GUARANTEE = {
   headline: "Wear it for 30 days.",
   sub: "Don't love it? Full refund.",
@@ -175,8 +175,8 @@ export const SOCIAL = {
   tiktok: "https://www.tiktok.com/@houseofvalorem",
 } as const;
 
-/* Canonical scent copy — the /deity cards and the product pages must read
- * identically, so both pull from here.
+/* Canonical scent copy — the collection cards, discovery sets and product
+ * pages must read identically, so they all pull from here.
  *
  * The note pyramid. Most scents are built as top / middle / base; Artemis is a
  * single accord and is described in one line instead, so `summary` renders in
@@ -197,9 +197,9 @@ export interface Scent {
   lead: string;
   pyramid: NotePyramid;
   /* Flat note list. DERIVED from the pyramid by makeScent() below, never
-   * hand-written: /deity (frozen) and the discovery sets both join it as a
-   * plain string[], and a second hand-kept copy of the notes is exactly the
-   * drift this file exists to prevent. */
+   * hand-written: the discovery sets join it as a plain string[], and a
+   * second hand-kept copy of the notes is exactly the drift this file exists
+   * to prevent. */
   notes: string[];
   /* One line under the price — what it smells like, in a breath. */
   description: string;

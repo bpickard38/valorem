@@ -3,8 +3,7 @@ import Link from "next/link";
 import SocialLinks from "@/components/SocialLinks";
 import { CONTACT_EMAIL, RETURN_WINDOW } from "@/lib/site";
 
-/* Footer for the home, /faq, and /contact pages. Mirrors the /deity footer
- * visually, but stays a separate component. */
+/* Footer shared by the home, collection, product, /faq and /contact pages. */
 
 const footerLink =
   "text-[0.65rem] uppercase tracking-[0.25em] text-charcoal/60 transition-colors hover:text-gold";

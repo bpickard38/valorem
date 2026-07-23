@@ -102,9 +102,9 @@ export default async function CollectionPage({
                   pick one; paragraphs of copy on every card work against that,
                   and the whole card is already the button. */}
               <Link href={`/product/${scent.id}`} className="group block">
-                {/* 4:5 to match the product gallery and ProductRender — every
-                    product surface on the site uses it, and a stick is a tall
-                    object that wastes a square frame's width. */}
+                {/* 4:5 to match the product gallery — every product surface on
+                    the site uses it, and a stick is a tall object that wastes
+                    a square frame's width. */}
                 <div
                   className={`relative aspect-[4/5] w-full ${productImageFrame}`}
                 >

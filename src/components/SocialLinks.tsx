@@ -1,6 +1,7 @@
 import { SOCIAL } from "@/lib/site";
 
-/* Instagram / Facebook / TikTok icon row, shared by the home and /deity footers. */
+/* Instagram / Facebook / TikTok icon row, shared by the site footer and the
+ * /contact page. */
 export default function SocialLinks() {
   return (
     <div className="flex items-center gap-6 text-charcoal/60">
