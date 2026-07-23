@@ -194,15 +194,12 @@ export default async function DiscoveryPage() {
                             </summary>
 
                             <div className="pb-5">
-                              <p className="font-serif text-lg italic leading-snug text-gold-deep">
-                                {copy.comparison}
-                              </p>
                               {/* Three notes, not the full pyramid — see
                                   memberCopy(). Three scents open at once here,
                                   and three complete note lists is thirty-odd
                                   notes nobody reads. */}
                               {copy.notes.length > 0 && (
-                                <p className="mt-3 text-[0.65rem] uppercase tracking-[0.28em] text-charcoal/55">
+                                <p className="text-[0.65rem] uppercase tracking-[0.28em] text-charcoal/55">
                                   {copy.notes.join("  ·  ")}
                                 </p>
                               )}

@@ -128,10 +128,6 @@ export default async function ProductPage({
           <p className="mt-6 text-sm leading-relaxed text-charcoal/75">
             {s.inspiration}
           </p>
-          {/* The notes translated into a scent people already own. */}
-          <p className="mt-4 font-serif text-lg italic leading-snug text-charcoal">
-            {s.comparison}
-          </p>
 
           <p className="mt-6 text-sm text-charcoal/60">
             {STICK_SIZE} solid fragrance · about {WEAR_ESTIMATE} of daily wear

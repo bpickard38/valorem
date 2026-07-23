@@ -203,11 +203,8 @@ export interface Scent {
   notes: string[];
   /* One line under the price — what it smells like, in a breath. */
   description: string;
-  /* The long-form story, shown in the INSPIRATION disclosure. */
+  /* The long-form story, shown under the price on the product page. */
   inspiration: string;
-  /* Plain-language translation of the notes — the "so what does it smell
-   * like?" line, anchored to a fragrance the customer already knows. */
-  comparison: string;
   /* Who the scent is made for. Guidance, not a gate — the Gods / Goddesses
    * split below is the same guidance expressed as navigation, and this line
    * repeats it on the card and the product page. */
@@ -239,7 +236,6 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Elegant, sensual, and unmistakably magnetic.",
     inspiration:
       "Named for the goddess of love and beauty, Aphrodite captures her magnetic, luxurious presence — a scent that lingers in a room the way she lingered in myth. Warm vanilla orchid opens into jasmine and amberwood, settling into a rich oakmoss and opulent wood base. Elegant, sensual, and unmistakably magnetic.",
-    comparison: "If you love Baccarat Rouge 540, Aphrodite is your signature.",
     wearer: "Worn by women",
   }),
   poseidon: makeScent({
@@ -254,7 +250,6 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Fresh, forceful, and full of raw energy.",
     inspiration:
       "Poseidon commands the sea — untamed, powerful, and impossible to ignore. Zesty bergamot crashes into spiced Sichuan pepper, lavender, and star anise, before settling into a warm, ambroxan-driven base. Fresh, forceful, and full of raw energy.",
-    comparison: "If you wear Sauvage, Poseidon is your lane.",
     wearer: "Worn by men",
   }),
   hades: makeScent({
@@ -269,7 +264,6 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Bold, layered, and sophisticated.",
     inspiration:
       "Hades ruled the underworld with a quiet, commanding intensity — depth beneath the surface. This scent opens sharp and fruity with bergamot, black currant, and pink pepper, moves into pineapple and jasmine, then descends into a smoky base of birch, oak moss, and cedarwood. Bold, layered, and sophisticated.",
-    comparison: "If you wear Aventus, Hades is your lane.",
     wearer: "Worn by men",
   }),
   apollo: makeScent({
@@ -284,7 +278,6 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Fresh, radiant, and effortlessly sharp.",
     inspiration:
       "Apollo, god of sun and light, brings clarity wherever he goes. Sparkling grapefruit, lemon, and mint open bright and clean, spiced with ginger and black pepper, before resolving into a grounded blue cedar and musk base. Fresh, radiant, and effortlessly sharp.",
-    comparison: "If you wear Bleu de Chanel, Apollo is your lane.",
     wearer: "Worn by men",
   }),
   artemis: makeScent({
@@ -299,7 +292,6 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Cozy, warm vanilla with a soft amber base.",
     inspiration:
       "Artemis, goddess of the moon and the wild, moves through the dark with quiet confidence. This scent channels that stillness — a cozy, comforting vanilla wrapped in soft amber, like moonlight settling in for the night.",
-    comparison: "If you live in vanilla, Artemis is your midnight.",
     wearer: "Worn by women",
   }),
   hera: makeScent({
@@ -314,7 +306,6 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Strong, feminine, and regal.",
     inspiration:
       "Hera, queen of the gods, ruled with both authority and grace — the balance this scent is built on. Bright lavender and mandarin open with confidence, orange blossom and jasmine soften the edges, and a warm base of vanilla, cedarwood, and musk grounds it all. Strong, feminine, and regal.",
-    comparison: "If you wear Libre, Hera is your signature.",
     wearer: "Worn by women",
   }),
 };
@@ -417,14 +408,13 @@ export function collectionOf(scent: ScentId): Collection {
  *
  * All six now have a full catalogue entry and a product page, so every member
  * sets `scent` and reads its copy from SCENTS — the set, the collection page
- * and the product page can never disagree. The inline `comparison` /
- * `description` fields survive for a member that gets added to a set before it
- * earns a SCENTS entry. */
+ * and the product page can never disagree. The inline `description` field
+ * survives for a member that gets added to a set before it earns a SCENTS
+ * entry. */
 export interface DiscoveryMember {
   name: string;
   scent?: ScentId;
   /* Only read when `scent` is absent. */
-  comparison?: string;
   description?: string;
 }
 
@@ -437,7 +427,6 @@ export interface DiscoveryMember {
  * product page, one tap away through `href`. */
 export function memberCopy(member: DiscoveryMember): {
   name: string;
-  comparison: string;
   inspiration: string;
   notes: string[];
   href: string | null;
@@ -446,7 +435,6 @@ export function memberCopy(member: DiscoveryMember): {
     const s = SCENTS[member.scent];
     return {
       name: s.name,
-      comparison: s.comparison,
       inspiration: s.inspiration,
       notes: noteTeaser(s),
       href: `/product/${s.id}`,
@@ -456,7 +444,6 @@ export function memberCopy(member: DiscoveryMember): {
    * that stands in for the inspiration. */
   return {
     name: member.name,
-    comparison: member.comparison ?? "",
     inspiration: member.description ?? "",
     /* No notes until there is a formulation to quote. */
     notes: [],
