@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { ProductImage } from "@/lib/shopify";
+import { galleryImageMode } from "@/lib/site";
 
 /* Exactly five thumbnails per row, edge to edge — never a sliver of a sixth,
  * which reads as a rendering fault rather than an invitation to scroll.
@@ -213,10 +214,11 @@ export default function ProductGallery({
       >
         {slides.map((image, i) => {
           const real = loop ? (i - 1 + count) % count : i;
+          const mode = galleryImageMode(real);
           return (
             <div
               key={`slide-${i}`}
-              className="relative aspect-[4/5] w-full shrink-0 snap-center bg-stone"
+              className={`relative aspect-[4/5] w-full shrink-0 snap-center bg-stone ${mode.frame}`}
             >
               <Image
                 src={image.url}
@@ -224,7 +226,7 @@ export default function ProductGallery({
                 fill
                 sizes="100vw"
                 priority={i === slideIndexOf(0)}
-                className="object-cover"
+                className={mode.image}
               />
             </div>
           );
@@ -264,6 +266,8 @@ export default function ProductGallery({
                 visibility: onStage || inWings ? "visible" : "hidden",
               }}
               className={`absolute inset-y-0 left-1/2 w-[62%] bg-stone transition-all duration-500 ease-out ${
+                galleryImageMode(i).frame
+              } ${
                 isCentre ? "cursor-default" : "cursor-pointer hover:opacity-70"
               }`}
             >
@@ -273,7 +277,7 @@ export default function ProductGallery({
                 fill
                 sizes="300px"
                 priority={i === 0}
-                className="object-cover"
+                className={galleryImageMode(i).image}
               />
             </button>
           );
@@ -333,7 +337,7 @@ export default function ProductGallery({
                   alt=""
                   fill
                   sizes="20vw"
-                  className="object-cover"
+                  className={galleryImageMode(i).thumb}
                 />
               </button>
             ))}

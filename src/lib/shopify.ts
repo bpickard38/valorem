@@ -146,6 +146,10 @@ export async function adminQuery<T>(
 const SCENT_HANDLE = {
   poseidon: "poseidon",
   aphrodite: "aphrodite",
+  hades: "hades",
+  apollo: "apollo",
+  artemis: "artemis",
+  hera: "hera",
 } as const;
 
 /* The discovery sets are their own Shopify products, not variants of a scent,
@@ -186,6 +190,10 @@ export function isProductId(value: unknown): value is ProductId {
 const FALLBACK_PRICE: Record<ProductId, number> = {
   poseidon: 70,
   aphrodite: 70,
+  hades: 70,
+  apollo: 70,
+  artemis: 70,
+  hera: 70,
   "discovery-men": 25,
   "discovery-women": 25,
 };

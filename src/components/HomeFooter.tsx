@@ -21,7 +21,7 @@ export default function HomeFooter() {
       />
       <p className="label-engraved font-serif text-charcoal/80">Valorem</p>
       <div className="flex items-center gap-6">
-        <Link href="/deity#parthenon" className={footerLink}>
+        <Link href="/collections" className={footerLink}>
           Collections
         </Link>
         <Link href="/faq" className={footerLink}>

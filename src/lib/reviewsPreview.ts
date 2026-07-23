@@ -126,7 +126,10 @@ const APHRODITE: Review[] = [
   },
 ];
 
-const PREVIEW_REVIEWS: Record<ScentId, Review[]> = {
+/* Partial on purpose: sample copy exists only for the two original scents.
+ * A scent with no entry gets no preview rather than borrowed reviews — this
+ * file must never be the reason a scent appears to have social proof. */
+const PREVIEW_REVIEWS: Partial<Record<ScentId, Review[]>> = {
   poseidon: POSEIDON,
   aphrodite: APHRODITE,
 };
@@ -136,6 +139,7 @@ export function previewSummary(scent: ScentId): ReviewSummary | null {
   if (process.env.NODE_ENV === "production") return null;
 
   const reviews = PREVIEW_REVIEWS[scent];
+  if (!reviews) return null;
   const average =
     reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
 

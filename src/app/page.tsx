@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const stick = await productPricing("poseidon");
   return {
     title: "VALOREM — Solid Cologne & Perfume in a Twist-Up Stick",
-    description: `Solid fragrance you carry, not spray. Poseidon & Aphrodite — ${stick.formatted}. ${STICK_SIZE}, about ${WEAR_ESTIMATE} of daily wear. No glass, no spills.`,
+    description: `Solid fragrance you carry, not spray. The Deity Collection — six scents, ${stick.formatted} each. ${STICK_SIZE}, about ${WEAR_ESTIMATE} of daily wear. No glass, no spills.`,
   };
 }
 
@@ -127,7 +127,7 @@ export default async function Home() {
             </FadeIn>
             <FadeIn delay={200} duration={900}>
               <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                <ButtonLink href="/deity#parthenon">
+                <ButtonLink href="/collections">
                   Shop the Collection — {stickPricing.formatted}
                 </ButtonLink>
                 {/* outline variant's charcoal text is unreadable on the dark
@@ -263,7 +263,8 @@ export default async function Home() {
             </p>
             <p className="mt-5 text-center text-sm leading-relaxed text-charcoal/70 md:text-left">
               We make fragrance worth keeping. Our first collection, the Deity
-              Collection, has two scents — named after Poseidon and Aphrodite.
+              Collection, runs to six scents in two houses — the Gods and the
+              Goddesses.
             </p>
           </FadeIn>
           <FadeIn delay={150}>
@@ -282,10 +283,10 @@ export default async function Home() {
       <section className="px-6 pb-14 pt-24 sm:pt-28">
         <FadeIn className="text-center">
           <h2 className="type-heading mx-auto max-w-xl text-charcoal">
-            Two scents. One format. {stickPricing.formatted}.
+            Six scents. One format. {stickPricing.formatted}.
           </h2>
           <div className="mt-8">
-            <ButtonLink href="/deity#parthenon">Choose Your Scent</ButtonLink>
+            <ButtonLink href="/collections">Choose Your Scent</ButtonLink>
           </div>
           {/* Renders nothing until real reviews exist — see ReviewProofLine. */}
           <div className="mt-6">

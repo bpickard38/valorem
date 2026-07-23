@@ -15,7 +15,7 @@ import type { NavItem } from "@/components/MobileNav";
  * in some other way. */
 const NAV_ITEMS: NavItem[] = [
   { href: "/discovery", label: "Discovery Set" },
-  { href: "/deity#parthenon", label: "Collections" },
+  { href: "/collections", label: "Collections" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];

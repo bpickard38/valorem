@@ -7,6 +7,9 @@ import {
   SCENTS,
   STICK_SIZE,
   WEAR_ESTIMATE,
+  collectionOf,
+  noteRows,
+  productTitle,
 } from "@/lib/site";
 import Price from "@/components/Price";
 import HomeHeader from "@/components/HomeHeader";
@@ -16,6 +19,7 @@ import AddToCartButton from "@/components/AddToCartButton";
 import Guarantee from "@/components/Guarantee";
 import ValueComparison from "@/components/ValueComparison";
 import ProductReviews from "@/components/ProductReviews";
+import Disclosure from "@/components/Disclosure";
 import TrackViewContent from "@/components/TrackViewContent";
 
 export const dynamicParams = false;
@@ -41,10 +45,10 @@ export async function generateMetadata({
     productPricing(scent),
   ]);
   return {
-    title: `${s.name} — VALOREM Solid Fragrance`,
+    title: `${productTitle(s)} — VALOREM Solid Fragrance`,
     description: `${s.notes.join(", ")}. ${s.description} ${pricing.formatted}.`,
     openGraph: {
-      title: `${s.name} — VALOREM Solid Fragrance`,
+      title: `${productTitle(s)} — VALOREM Solid Fragrance`,
       description: s.description,
       images: images.slice(0, 1).map((i) => ({
         url: i.url,
@@ -63,7 +67,13 @@ export default async function ProductPage({
   const { scent } = await params;
   if (!isScentId(scent)) notFound();
   const s = SCENTS[scent];
-  const otherId = scent === "aphrodite" ? "poseidon" : "aphrodite";
+  /* The next scent in the same house, wrapping at the end — so the three
+   * scents of a collection form a loop a shopper can walk without going back
+   * to the grid. Derived from COLLECTIONS, so re-ordering a collection
+   * re-orders these links too. */
+  const collection = collectionOf(scent);
+  const siblings = collection.scents;
+  const otherId = siblings[(siblings.indexOf(scent) + 1) % siblings.length];
   const other = SCENTS[otherId];
   const [images, pricing] = await Promise.all([
     productImages(scent),
@@ -90,27 +100,38 @@ export default async function ProductPage({
         </div>
 
         <div>
-          <p className="label-engraved text-charcoal/50">The Parthenon</p>
-          <h1 className="type-heading mt-3 text-charcoal">{s.name}</h1>
+          {/* Eyebrow doubles as the way back up to the collection the shopper
+              came down from. */}
+          <Link
+            href={`/collections/${collection.id}`}
+            className="label-engraved text-charcoal/50 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
+          >
+            {collection.name}
+          </Link>
+          <h1 className="type-heading mt-3 text-charcoal">{productTitle(s)}</h1>
+          {/* Only Artemis carries a sub-name today ("Midnight Vanilla"). */}
+          {s.subtitle ? (
+            <p className="label-engraved mt-3 text-charcoal/55">
+              {s.subtitle}
+            </p>
+          ) : null}
           <p className="mt-2 font-serif text-lg italic text-gold-deep">
             {s.lead}
           </p>
           <Price pricing={pricing} className="mt-5" />
 
-          <p className="mt-6 text-sm leading-relaxed text-charcoal/70">
-            {s.description}
-          </p>
-
-          <p className="mt-6 text-[0.65rem] uppercase tracking-[0.28em] text-charcoal/55">
-            {s.notes.join("  ·  ")}
+          {/* The story, in full and in the open — not behind a disclosure. It
+              is the one piece of copy that sells the scent, so it sits where a
+              shopper's eye already is: directly under the price. Set as body
+              copy rather than the display serif; a paragraph this long in
+              italic 18px is a wall. */}
+          <p className="mt-6 text-sm leading-relaxed text-charcoal/75">
+            {s.inspiration}
           </p>
           {/* The notes translated into a scent people already own. */}
-          <p className="mt-3 font-serif text-lg italic leading-snug text-charcoal">
+          <p className="mt-4 font-serif text-lg italic leading-snug text-charcoal">
             {s.comparison}
           </p>
-          {/* Who it's for. Sits with the comparison because both answer the
-              same question; deliberately a line of copy and not a category. */}
-          <p className="label-engraved mt-4 text-gold-deep">{s.wearer}</p>
 
           <p className="mt-6 text-sm text-charcoal/60">
             {STICK_SIZE} solid fragrance · about {WEAR_ESTIMATE} of daily wear
@@ -128,6 +149,31 @@ export default async function ProductPage({
           <p className="mt-4 text-xs tracking-wide text-charcoal/50">
             Returns accepted within {RETURN_WINDOW} of delivery.
           </p>
+
+          {/* THE DETAIL — the pyramid, below the buy block. The story used to
+              sit beside this in a second disclosure; it now runs in the open
+              under the price, so this is the only one left. */}
+          <div className="mt-10">
+            <Disclosure title="Fragrance Notes" defaultOpen>
+              <dl className="space-y-3">
+                {noteRows(s.pyramid).map((row) => (
+                  <div
+                    key={row.label ?? "summary"}
+                    className="sm:flex sm:gap-4"
+                  >
+                    {row.label ? (
+                      <dt className="label-engraved shrink-0 pt-1 text-charcoal/50 sm:w-20">
+                        {row.label}
+                      </dt>
+                    ) : null}
+                    <dd className="text-sm leading-relaxed text-charcoal/75">
+                      {row.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </Disclosure>
+          </div>
 
           <Link
             href={`/product/${otherId}`}

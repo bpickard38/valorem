@@ -17,3 +17,6 @@ scripts/_tmp_frames/
 # misc
 .DS_Store
 npm-debug.log*
+
+# Cutout working directory — source and normalised PNGs, not part of the build.
+scripts/_cutouts/

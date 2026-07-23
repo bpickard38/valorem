@@ -130,6 +130,27 @@ details[open] > summary .marker-plus {
   }
 }
 
+/* Product cutouts — background-free PNGs with the shadow drawn by the browser
+   rather than baked into the file.
+
+   `filter: drop-shadow` follows the image's ALPHA CHANNEL, so it traces the
+   bottle's silhouette. box-shadow would trace the <img> element's rectangle
+   and give you a shadowed grey box. That difference is the whole reason this
+   approach works.
+
+   Two stacked shadows because one never reads as real: a tight, dark contact
+   shadow that sits the object on a surface, and a wide soft one for ambient
+   falloff. Shadow colour is charcoal (#1a1917), not black — a neutral-black
+   shadow goes visibly cold against the warm ivory/stone palette.
+
+   Only applies when CUTOUT_PHOTOGRAPHY is on (src/lib/site.ts). Against an
+   opaque photo this would shadow the photo's rectangle, which is why the two
+   are wired to the same switch. */
+.product-cutout {
+  filter: drop-shadow(0 1px 1px rgb(26 25 23 / 0.1))
+    drop-shadow(0 12px 16px rgb(26 25 23 / 0.16));
+}
+
 /* Travertine slab — /deity "Format, Owned" section background */
 .texture-travertine {
   background-color: #f1ede4;
