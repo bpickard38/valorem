@@ -1,7 +1,8 @@
-// Server-side Meta Conversions API sender. Shared by the browser-event relay
-// (/api/events) and the Shopify orders/paid webhook (/api/webhooks/orders) so
-// both speak to Meta the same way. Returns a result object instead of throwing
-// — tracking must never take down the caller.
+// Server-side Meta Conversions API sender, used by the browser-event relay
+// (/api/events) to mirror the pixel's browsing events (ViewContent, AddToCart,
+// Lead) server-side with a shared event_id. Returns a result object instead of
+// throwing — tracking must never take down the caller. (Purchase is NOT sent
+// from here; the native Shopify Facebook channel owns it — see CartDrawer.)
 
 import crypto from "node:crypto";
 

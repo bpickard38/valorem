@@ -68,15 +68,15 @@ export default function CartDrawer() {
    *
    * Checkout is hosted on Shopify, so we can't fire an accurate checkout event
    * from this app anyway. Split of responsibility:
-   *  - This app owns browsing (PageView, ViewContent, AddToCart, Lead) via the
-   *    pixel + CAPI relay, each with a shared event_id (see lib/metaPixel.ts).
-   *  - Purchase is owned SERVER-SIDE by the orders/paid webhook
-   *    (app/api/webhooks/orders), keyed on the Shopify order id. That is the
-   *    single source of truth for Purchase — the Facebook & Instagram sales
-   *    channel's Purchase must stay OFF, or it double-counts (Shopify mints its
-   *    own event id that our order-id-based one can never dedupe against).
-   *  - InitiateCheckout / AddPaymentInfo happen on Shopify's hosted checkout;
-   *    they only reach Meta if that channel pixel is left enabled. */
+   *  - This app owns BROWSING only (PageView, ViewContent, AddToCart, Lead) via
+   *    the pixel + CAPI relay, each with a shared event_id (see lib/metaPixel.ts).
+   *    Native Shopify can't see these — they happen on our custom frontend, not
+   *    Shopify's storefront — so this app is their only source.
+   *  - Checkout onward (InitiateCheckout, AddPaymentInfo, Purchase) is owned by
+   *    the native Facebook & Instagram sales channel on Shopify's hosted
+   *    checkout, which fires a deduped browser+CAPI pair. It is the SINGLE
+   *    Purchase source — do not add another (an orders/paid webhook, a Stape
+   *    gateway, a second pixel), or it double-counts. Removed 2026-07-24. */
   function onCheckout() {
     if (!cart) return;
     window.location.assign(cart.checkoutUrl);
