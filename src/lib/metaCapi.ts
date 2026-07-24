@@ -48,8 +48,15 @@ export async function sendMetaCapiEvent(
     return { ok: false, status: 503, error: "Not configured" };
   }
 
+  // When META_TEST_EVENT_CODE is set, events route to Events Manager's Test
+  // Events tab instead of live data — for verifying a new integration without
+  // polluting real metrics. REMOVE it from the environment once verified, or
+  // all real events stop counting toward live optimization.
+  const testEventCode = process.env.META_TEST_EVENT_CODE;
+
   const payload = {
     data: [{ action_source: "website", ...event }],
+    ...(testEventCode ? { test_event_code: testEventCode } : {}),
   };
 
   try {

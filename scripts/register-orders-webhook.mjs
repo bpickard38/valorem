@@ -18,7 +18,10 @@ import { dirname, join } from "node:path";
 
 const API_VERSION = "2025-07";
 const TOPIC = "ORDERS_PAID";
-const DEFAULT_URL = "https://houseofvalorem.com/api/webhooks/orders";
+// Canonical live domain (houseofvalorem.com 308-redirects here, and Shopify
+// webhook delivery does not reliably follow redirects — always use the final
+// URL). Pass a different URL as argv[2] if this changes.
+const DEFAULT_URL = "https://www.valoremfragrances.com/api/webhooks/orders";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
