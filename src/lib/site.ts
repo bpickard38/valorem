@@ -142,10 +142,17 @@ export const VALUE_COMPARISON = {
     price: PRICE,
     note: `About ${WEAR_ESTIMATE} of daily wear`,
   },
-  /* Verified 2026-07-21 against the leading premium solid brand's public
-   * catalogue: their solid fragrances list at exactly $70.00 for 0.2 oz.
-   * Left unbranded — naming them turns a comparison into a claim about a
-   * competitor. Re-check before changing the price or size here. */
+  /* TODO: UNVERIFIED — do not quote these figures as fact until they are
+   * re-checked against a competitor's live catalogue.
+   *
+   * An earlier comment here claimed they were verified on 2026-07-21. That
+   * claim has been withdrawn: the size and load numbers below may be
+   * materially wrong, and they are the only numbers on the site making an
+   * assertion about someone else's product.
+   *
+   * They stay in this constant, and nowhere else, so a correction is a
+   * one-place edit rather than a hunt through JSX. Left unbranded — naming a
+   * competitor turns a comparison into a claim about them. */
   otherSolids: {
     label: "Other premium solids",
     size: "0.2 oz",
@@ -205,10 +212,13 @@ export interface Scent {
   description: string;
   /* The long-form story, shown under the price on the product page. */
   inspiration: string;
-  /* Who the scent is made for. Guidance, not a gate — the Gods / Goddesses
-   * split below is the same guidance expressed as navigation, and this line
-   * repeats it on the card and the product page. */
-  wearer: string;
+  /* The scent's character in three words — what it smells like, not who is
+   * allowed to wear it. The brand is unisex, so nothing here describes a
+   * gender; `Collection.audience` below carries the same rule for a house.
+   *
+   * Currently held but not rendered anywhere. Kept because it is the natural
+   * home for a character line if a card ever wants one. */
+  character: string;
 }
 
 /* Fills in the derived `notes` list. A scent may pass its own — Artemis has no
@@ -236,7 +246,7 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Elegant, sensual, and unmistakably magnetic.",
     inspiration:
       "Named for the goddess of love and beauty, Aphrodite captures her magnetic, luxurious presence — a scent that lingers in a room the way she lingered in myth. Warm vanilla orchid opens into jasmine and amberwood, settling into a rich oakmoss and opulent wood base. Elegant, sensual, and unmistakably magnetic.",
-    wearer: "Worn by women",
+    character: "Warm · Floral · Sensual",
   }),
   poseidon: makeScent({
     id: "poseidon",
@@ -250,7 +260,7 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Fresh, forceful, and full of raw energy.",
     inspiration:
       "Poseidon commands the sea — untamed, powerful, and impossible to ignore. Zesty bergamot crashes into spiced Sichuan pepper, lavender, and star anise, before settling into a warm, ambroxan-driven base. Fresh, forceful, and full of raw energy.",
-    wearer: "Worn by men",
+    character: "Fresh · Spiced · Warm",
   }),
   hades: makeScent({
     id: "hades",
@@ -264,7 +274,7 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Bold, layered, and sophisticated.",
     inspiration:
       "Hades ruled the underworld with a quiet, commanding intensity — depth beneath the surface. This scent opens sharp and fruity with bergamot, black currant, and pink pepper, moves into pineapple and jasmine, then descends into a smoky base of birch, oak moss, and cedarwood. Bold, layered, and sophisticated.",
-    wearer: "Worn by men",
+    character: "Fruity · Smoky · Deep",
   }),
   apollo: makeScent({
     id: "apollo",
@@ -278,7 +288,7 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Fresh, radiant, and effortlessly sharp.",
     inspiration:
       "Apollo, god of sun and light, brings clarity wherever he goes. Sparkling grapefruit, lemon, and mint open bright and clean, spiced with ginger and black pepper, before resolving into a grounded blue cedar and musk base. Fresh, radiant, and effortlessly sharp.",
-    wearer: "Worn by men",
+    character: "Citrus · Fresh · Sharp",
   }),
   artemis: makeScent({
     id: "artemis",
@@ -292,7 +302,7 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Cozy, warm vanilla with a soft amber base.",
     inspiration:
       "Artemis, goddess of the moon and the wild, moves through the dark with quiet confidence. This scent channels that stillness — a cozy, comforting vanilla wrapped in soft amber, like moonlight settling in for the night.",
-    wearer: "Worn by women",
+    character: "Warm · Vanilla · Soft",
   }),
   hera: makeScent({
     id: "hera",
@@ -306,7 +316,7 @@ export const SCENTS: Record<ScentId, Scent> = {
     description: "Strong, feminine, and regal.",
     inspiration:
       "Hera, queen of the gods, ruled with both authority and grace — the balance this scent is built on. Bright lavender and mandarin open with confidence, orange blossom and jasmine soften the edges, and a warm base of vanilla, cedarwood, and musk grounds it all. Strong, feminine, and regal.",
-    wearer: "Worn by women",
+    character: "Floral · Bright · Warm",
   }),
 };
 
@@ -345,7 +355,14 @@ export function noteRows(
 export interface Collection {
   id: CollectionId;
   name: string;
-  /* Who it's for, in the same voice as Scent.wearer. */
+  /* The house's character in three words, in the same voice as
+   * Scent.character. Rendered as the eyebrow on the /collections cards.
+   *
+   * These described the WEARER until 2026-07-25 ("Worn by men" / "Worn by
+   * women"), which argued against a unisex brand and halved each house's
+   * audience on the one screen where a shopper picks a side. The two-house
+   * structure and the deity names are unchanged — only the label is. Keep it
+   * about the scent. */
   audience: string;
   lead: string;
   description: string;
@@ -373,7 +390,7 @@ export const COLLECTIONS: Record<CollectionId, Collection> = {
   gods: {
     id: "gods",
     name: "The Gods",
-    audience: "Worn by men",
+    audience: "Fresh · Sharp · Smoky",
     lead: "Three ways to be remembered.",
     description:
       "Hades, Poseidon and Apollo — smoke, salt water and clean light. Three full-size sticks, each a different way of being the one people remember.",
@@ -383,7 +400,7 @@ export const COLLECTIONS: Record<CollectionId, Collection> = {
   goddesses: {
     id: "goddesses",
     name: "The Goddesses",
-    audience: "Worn by women",
+    audience: "Warm · Vanilla · Floral",
     lead: "Three ways to be remembered.",
     description:
       "Artemis, Hera and Aphrodite — midnight vanilla, sharpened florals and luminous amber. Three full-size sticks, each a different way of being the one people remember.",
@@ -454,7 +471,8 @@ export function memberCopy(member: DiscoveryMember): {
 export interface DiscoverySet {
   id: DiscoverySetId;
   name: string;
-  /* Who it's for, in the same voice as Scent.wearer — guidance, not a gate. */
+  /* The set's character in three words, in the same voice as
+   * Scent.character. Never who it's for. */
   audience: string;
   lead: string;
   members: DiscoveryMember[];
@@ -464,7 +482,7 @@ export const DISCOVERY_SETS: Record<DiscoverySetId, DiscoverySet> = {
   "discovery-men": {
     id: "discovery-men",
     name: "The Men's Discovery Set",
-    audience: "Worn by men",
+    audience: "Fresh · Sharp · Smoky",
     lead: "Three ways to be remembered.",
     members: [
       { name: "Hades", scent: "hades" },
@@ -475,7 +493,7 @@ export const DISCOVERY_SETS: Record<DiscoverySetId, DiscoverySet> = {
   "discovery-women": {
     id: "discovery-women",
     name: "The Women's Discovery Set",
-    audience: "Worn by women",
+    audience: "Warm · Vanilla · Floral",
     lead: "Three ways to be remembered.",
     members: [
       { name: "Artemis", scent: "artemis" },

@@ -18,7 +18,7 @@ const items = [
   },
   {
     q: "Is it really 20% fragrance oil?",
-    a: "Yes. A beeswax and carnauba base, alcohol-free, skin-safe. Most solids run 5–10%. Ours doesn't whisper.",
+    a: "Yes. A beeswax and carnauba base, skin-safe. No denatured alcohol — the wax holds the oil against your skin instead of flashing off the way a spray does. Most solids run 5–10%. Ours doesn't whisper.",
   },
   {
     q: "How big is it?",

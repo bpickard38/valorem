@@ -35,7 +35,7 @@ const POSEIDON: Review[] = [
     id: "preview-p1",
     rating: 5,
     title: "Exactly the lane I wanted",
-    body: "I have worn Sauvage for years and wanted something I could keep on me. This is that, without the alcohol bite. Lasts through a workday on my wrists.",
+    body: "I have worn Sauvage for years and wanted something I could keep on me. This is that, without the spray's sharp opening. Lasts through a workday on my wrists.",
     author: "Marcus T.",
     createdAt: "2026-06-14T00:00:00Z",
     verified: true,

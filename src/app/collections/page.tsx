@@ -53,7 +53,7 @@ export default async function CollectionsPage() {
           </h1>
           <p className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-charcoal/65 sm:text-base">
             Six fragrances, two houses. Every one a {STICK_SIZE} twist-up
-            stick — no glass, no alcohol, about {WEAR_ESTIMATE} of daily wear.
+            stick — no glass, no spray, about {WEAR_ESTIMATE} of daily wear.
           </p>
         </FadeIn>
       </section>
