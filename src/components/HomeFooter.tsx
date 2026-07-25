@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import SocialLinks from "@/components/SocialLinks";
 import { CONTACT_EMAIL, RETURN_WINDOW, SHIPPING_NOTE } from "@/lib/site";
+import { IMAGES } from "@/lib/images";
 
 /* Footer shared by the home, collection, product, /faq and /contact pages. */
 
@@ -12,7 +13,7 @@ export default function HomeFooter() {
   return (
     <footer className="mx-auto mt-28 flex max-w-4xl flex-col items-center gap-7 border-t border-charcoal/10 pt-14">
       <Image
-        src="/valorem-pegasus.png"
+        src={IMAGES.pegasus}
         alt="Valorem"
         width={572}
         height={589}

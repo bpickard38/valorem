@@ -9,6 +9,7 @@ import ReviewProofLine from "@/components/ReviewProofLine";
 import { ButtonLink, SectionHeader } from "@/components/ui";
 import { lowestPricing, productPricing, productVariants } from "@/lib/shopify";
 import { homeSeo, toMetadata } from "@/lib/seo";
+import { IMAGES } from "@/lib/images";
 import {
   SAMPLE_SIZE,
   STICK_SIZE,
@@ -80,7 +81,7 @@ export default async function Home() {
       {/* HERO — full-bleed cinematic image, both sticks, white text overlaid */}
       <section className="relative flex min-h-[88svh] flex-col justify-center overflow-hidden px-6 py-16">
         <Image
-          src="/shopify/hero-duo.png"
+          src={IMAGES.hero}
           alt="Valorem Poseidon and Aphrodite solid fragrance sticks"
           fill
           priority
@@ -99,7 +100,7 @@ export default async function Home() {
               {/* The complete Canva logo lockup — pegasus, VALOREM (Playfair
                * Display), SOLID FRAGRANCE (Montserrat) — as one image. */}
               <Image
-                src="/brand/valorem-lockup-white.png"
+                src={IMAGES.logoLockupWhite}
                 alt="Valorem — Solid Fragrance"
                 width={450}
                 height={563}
@@ -246,7 +247,7 @@ export default async function Home() {
           </FadeIn>
           <FadeIn delay={150}>
             <Image
-              src="/valorem-pegasus.png"
+              src={IMAGES.pegasus}
               alt="Valorem pegasus mark"
               width={572}
               height={589}

@@ -8,6 +8,7 @@ import HomeFooter from "@/components/HomeFooter";
 import Guarantee from "@/components/Guarantee";
 import { lowestPricing, productImage, productVariants } from "@/lib/shopify";
 import { collectionSeo, toMetadata } from "@/lib/seo";
+import { IMAGES } from "@/lib/images";
 import {
   COLLECTIONS,
   COLLECTION_TITLE,
@@ -122,7 +123,7 @@ export default async function CollectionPage({
                   ) : (
                     <div className="texture-travertine absolute inset-0 flex items-center justify-center">
                       <Image
-                        src="/valorem-pegasus.png"
+                        src={IMAGES.pegasus}
                         alt=""
                         width={572}
                         height={589}
