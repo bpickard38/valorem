@@ -8,6 +8,7 @@ import ScrollLink from "@/components/ScrollLink";
 import ReviewProofLine from "@/components/ReviewProofLine";
 import { ButtonLink, SectionHeader } from "@/components/ui";
 import { lowestPricing, productPricing, productVariants } from "@/lib/shopify";
+import { homeSeo, toMetadata } from "@/lib/seo";
 import {
   SAMPLE_SIZE,
   STICK_SIZE,
@@ -21,11 +22,8 @@ import {
 export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const stick = await productPricing("poseidon");
-  return {
-    title: "VALOREM — Solid Cologne & Perfume in a Twist-Up Stick",
-    description: `Solid fragrance you carry, not spray. The Deity Collection — six scents, ${stick.formatted} each. ${STICK_SIZE}, about ${WEAR_ESTIMATE} of daily wear. No glass, no spills.`,
-  };
+  const from = lowestPricing(await productVariants("poseidon"));
+  return toMetadata(homeSeo(from.formatted));
 }
 
 const hooks = [

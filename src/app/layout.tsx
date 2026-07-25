@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Playfair_Display, Montserrat, Inter } from "next/font/google";
+import { SITE_URL } from "@/lib/seo";
 import CartProvider from "@/components/CartProvider";
 import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
@@ -28,9 +29,15 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  /* metadataBase is what resolves the relative canonical and OG urls every
+   * route sets via toMetadata(); without it Next emits no canonical at all,
+   * which is how this site had none. */
+  metadataBase: new URL(SITE_URL),
   title: "Valorem Solid Fragrance",
   description:
-    "A journey through the House of Valorem. Solid fragrance in a twist-up stick — Poseidon & Aphrodite. Carried, not sprayed.",
+    "A journey through the House of Valorem. Solid fragrance in a twist-up stick. Carried, not sprayed.",
+  /* Declared rather than left for crawlers to infer from the OG image. */
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({

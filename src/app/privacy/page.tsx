@@ -4,6 +4,7 @@ import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import { SectionHeader } from "@/components/ui";
 import { CONTACT_EMAIL, LEGAL_ENTITY, RETURN_WINDOW } from "@/lib/site";
+import { PRIVACY_SEO, toMetadata } from "@/lib/seo";
 
 /*
  * Privacy policy. Required independently of any cookie banner: Meta's
@@ -17,11 +18,7 @@ import { CONTACT_EMAIL, LEGAL_ENTITY, RETURN_WINDOW } from "@/lib/site";
 
 const LAST_UPDATED = "21 July 2026";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy — VALOREM",
-  description:
-    "What VALOREM collects, why, who we share it with, and how to opt out.",
-};
+export const metadata: Metadata = toMetadata(PRIVACY_SEO);
 
 function Section({
   heading,

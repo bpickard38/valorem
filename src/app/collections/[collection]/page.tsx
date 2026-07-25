@@ -7,6 +7,7 @@ import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import Guarantee from "@/components/Guarantee";
 import { lowestPricing, productImage, productVariants } from "@/lib/shopify";
+import { collectionSeo, toMetadata } from "@/lib/seo";
 import {
   COLLECTIONS,
   COLLECTION_TITLE,
@@ -38,12 +39,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { collection } = await params;
   if (!isCollectionId(collection)) return {};
-  const c = COLLECTIONS[collection];
-  const names = c.scents.map((s) => productTitle(SCENTS[s])).join(", ");
-  return {
-    title: `${c.name} — ${COLLECTION_TITLE} — VALOREM`,
-    description: `${names}. ${c.description}`,
-  };
+  const from = lowestPricing(await productVariants(COLLECTIONS[collection].scents[0]));
+  return toMetadata(collectionSeo(collection, from.formatted));
 }
 
 export default async function CollectionPage({

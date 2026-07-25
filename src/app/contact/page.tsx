@@ -5,12 +5,9 @@ import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import SocialLinks from "@/components/SocialLinks";
 import { SectionHeader } from "@/components/ui";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { CONTACT_SEO, toMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Contact — VALOREM Solid Fragrance",
-  description: `Questions, orders, anything — write to ${CONTACT_EMAIL}.`,
-};
+export const metadata: Metadata = toMetadata(CONTACT_SEO);
 
 export default function ContactPage() {
   return (

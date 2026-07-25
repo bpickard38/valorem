@@ -4,12 +4,9 @@ import Faq from "@/components/Faq";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import { SectionHeader } from "@/components/ui";
+import { FAQ_SEO, toMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "FAQ — VALOREM Solid Fragrance",
-  description:
-    "How long solid fragrance lasts, shipping, returns, sizing, and what's inside the twist-up stick.",
-};
+export const metadata: Metadata = toMetadata(FAQ_SEO);
 
 export default function FaqPage() {
   return (

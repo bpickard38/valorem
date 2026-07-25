@@ -22,11 +22,17 @@ const nextConfig: NextConfig = {
        * The page was indexed and linked from ads, so it must not 404 —
        * anyone arriving on it lands on the collection grid, where the 5 ml
        * sample that replaced the set is one tap away. Permanent (301) so the
-       * ranking signal transfers rather than being held open. */
+       * ranking signal transfers rather than being held open.
+       *
+       * statusCode: 301 rather than `permanent: true`, which emits a 308.
+       * Both are permanent and Google treats them alike, but 308 preserves
+       * the request method and is understood by less of the older tooling
+       * that will crawl these ad links. `permanent` and `statusCode` are
+       * mutually exclusive — setting both is a config error. */
       {
         source: "/discovery",
         destination: "/collections",
-        permanent: true,
+        statusCode: 301,
       },
     ];
   },

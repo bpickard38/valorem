@@ -7,6 +7,7 @@ import HomeFooter from "@/components/HomeFooter";
 import Guarantee from "@/components/Guarantee";
 import { collectionImage } from "@/lib/collectionImage";
 import { lowestPricing, productVariants } from "@/lib/shopify";
+import { collectionsIndexSeo, toMetadata } from "@/lib/seo";
 import {
   COLLECTIONS,
   COLLECTION_TITLE,
@@ -27,10 +28,7 @@ const collections = [COLLECTIONS.gods, COLLECTIONS.goddesses];
 
 export async function generateMetadata(): Promise<Metadata> {
   const pricing = lowestPricing(await productVariants("poseidon"));
-  return {
-    title: `${COLLECTION_TITLE} — VALOREM`,
-    description: `Six solid fragrances in two houses — the Gods and the Goddesses. ${STICK_SIZE} twist-up sticks, from ${pricing.formatted}.`,
-  };
+  return toMetadata(collectionsIndexSeo(pricing.formatted));
 }
 
 export default async function CollectionsPage() {

@@ -15,6 +15,12 @@ import {
   noteRows,
   productTitle,
 } from "@/lib/site";
+import {
+  SITE_NAME,
+  productJsonLd,
+  productSeo,
+  toMetadata,
+} from "@/lib/seo";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import ProductGallery from "@/components/ProductGallery";
@@ -48,19 +54,18 @@ export async function generateMetadata({
     productVariants(scent),
   ]);
   const from = lowestPricing(variants);
-  return {
-    title: `${productTitle(s)} — VALOREM Solid Fragrance`,
-    description: `${s.notes.join(", ")}. ${s.description} From ${from.formatted}.`,
-    openGraph: {
-      title: `${productTitle(s)} — VALOREM Solid Fragrance`,
-      description: s.description,
-      images: images.slice(0, 1).map((i) => ({
-        url: i.url,
-        width: i.width,
-        height: i.height,
-      })),
-    },
-  };
+  return toMetadata(productSeo(scent, from.formatted), {
+    /* Social keeps the on-page product name, edition mark and all — a share
+     * card reads better as "Poseidon I — Valorem" than as a keyword string,
+     * and the short tagline is already written for exactly this slot. */
+    title: `${productTitle(s)} — ${SITE_NAME}`,
+    description: s.description,
+    images: images.slice(0, 1).map((i) => ({
+      url: i.url,
+      width: i.width,
+      height: i.height,
+    })),
+  });
 }
 
 export default async function ProductPage({
@@ -91,6 +96,27 @@ export default async function ProductPage({
 
   return (
     <main className="flex-1">
+      {/* Product structured data. Server-rendered into the HTML so a crawler
+          sees it without executing anything. The offer range is built from the
+          live variants, so it can never disagree with the selector below. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            productJsonLd({
+              name: productTitle(s),
+              description: s.description,
+              image: images.slice(0, 4).map((i) => i.url),
+              url: `/product/${s.id}`,
+              offers: variants.map((v) => ({
+                price: v.pricing.amount,
+                currency: v.pricing.currency,
+                available: v.availableForSale,
+              })),
+            }),
+          ),
+        }}
+      />
       <HomeHeader />
       <TrackViewContent
         contentId={s.id}
