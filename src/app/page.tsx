@@ -7,9 +7,8 @@ import HomeFooter from "@/components/HomeFooter";
 import ScrollLink from "@/components/ScrollLink";
 import ReviewProofLine from "@/components/ReviewProofLine";
 import { ButtonLink, SectionHeader } from "@/components/ui";
-import { productPricing } from "@/lib/shopify";
+import { lowestPricing, productPricing, productVariants } from "@/lib/shopify";
 import {
-  SAMPLE_PRICE,
   SAMPLE_SIZE,
   STICK_SIZE,
   WEAR_ESTIMATE,
@@ -67,8 +66,14 @@ const steps = [
 
 export default async function Home() {
   /* Every scent is priced together, so one lookup speaks for all six
-   * everywhere this page names a stick price. */
-  const stickPricing = await productPricing("poseidon");
+   * everywhere this page names a price. `stickPricing` is the full size the
+   * hero and closing CTA quote; `samplePricing` is the entry price the
+   * "you can't smell a website" block answers with. */
+  const [stickPricing, variants] = await Promise.all([
+    productPricing("poseidon"),
+    productVariants("poseidon"),
+  ]);
+  const samplePricing = lowestPricing(variants);
 
   return (
     <main id="top" className="flex-1 scroll-mt-24">
@@ -163,7 +168,7 @@ export default async function Home() {
           </h2>
           <p className="mt-6 text-sm leading-relaxed text-charcoal/70">
             So don&apos;t spend {stickPricing.formatted} on a guess. Every scent
-            comes in a {SAMPLE_SIZE} sample for {SAMPLE_PRICE} —
+            comes in a {SAMPLE_SIZE} sample for {samplePricing.formatted} —
             wear it for a couple of weeks, then buy the full stick if it&apos;s
             yours.
           </p>

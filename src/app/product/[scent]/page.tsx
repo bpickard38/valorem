@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isScentId, productImages, productPricing } from "@/lib/shopify";
+import {
+  isScentId,
+  lowestPricing,
+  productImages,
+  productVariants,
+} from "@/lib/shopify";
 import {
   RETURN_WINDOW,
   SCENTS,
-  STICK_SIZE,
-  WEAR_ESTIMATE,
   collectionOf,
   noteRows,
   productTitle,
 } from "@/lib/site";
-import Price from "@/components/Price";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import ProductGallery from "@/components/ProductGallery";
-import AddToCartButton from "@/components/AddToCartButton";
+import SizeSelector from "@/components/SizeSelector";
 import Guarantee from "@/components/Guarantee";
 import ValueComparison from "@/components/ValueComparison";
 import ProductReviews from "@/components/ProductReviews";
@@ -40,13 +42,14 @@ export async function generateMetadata({
   const { scent } = await params;
   if (!isScentId(scent)) return {};
   const s = SCENTS[scent];
-  const [images, pricing] = await Promise.all([
+  const [images, variants] = await Promise.all([
     productImages(scent),
-    productPricing(scent),
+    productVariants(scent),
   ]);
+  const from = lowestPricing(variants);
   return {
     title: `${productTitle(s)} — VALOREM Solid Fragrance`,
-    description: `${s.notes.join(", ")}. ${s.description} ${pricing.formatted}.`,
+    description: `${s.notes.join(", ")}. ${s.description} From ${from.formatted}.`,
     openGraph: {
       title: `${productTitle(s)} — VALOREM Solid Fragrance`,
       description: s.description,
@@ -75,10 +78,15 @@ export default async function ProductPage({
   const siblings = collection.scents;
   const otherId = siblings[(siblings.indexOf(scent) + 1) % siblings.length];
   const other = SCENTS[otherId];
-  const [images, pricing] = await Promise.all([
+  const [images, variants] = await Promise.all([
     productImages(scent),
-    productPricing(scent),
+    productVariants(scent),
   ]);
+  /* The default size anchors the page's non-interactive figures — the
+   * ViewContent value and the comparison heading. The selector owns every
+   * price a shopper can change. */
+  const defaultPricing =
+    (variants.find((v) => v.size === "30ml") ?? variants[0]).pricing;
 
   return (
     <main className="flex-1">
@@ -86,7 +94,7 @@ export default async function ProductPage({
       <TrackViewContent
         contentId={s.id}
         contentName={s.name}
-        value={pricing.amount}
+        value={defaultPricing.amount}
       />
 
       {/* BUY BLOCK — gallery and details. On a phone this is a single column
@@ -118,27 +126,11 @@ export default async function ProductPage({
           <p className="mt-2 font-serif text-lg italic text-gold-deep">
             {s.lead}
           </p>
-          <Price pricing={pricing} className="mt-5" />
-
-          {/* The story, in full and in the open — not behind a disclosure. It
-              is the one piece of copy that sells the scent, so it sits where a
-              shopper's eye already is: directly under the price. Set as body
-              copy rather than the display serif; a paragraph this long in
-              italic 18px is a wall. */}
-          <p className="mt-6 text-sm leading-relaxed text-charcoal/75">
-            {s.inspiration}
-          </p>
-
-          <p className="mt-6 text-sm text-charcoal/60">
-            {STICK_SIZE} solid fragrance · about {WEAR_ESTIMATE} of daily wear
-          </p>
-
-          {/* CTA — full-width and thumb-height on mobile, inline on desktop. */}
-          <div className="mt-8">
-            <AddToCartButton product={s.id} value={pricing.amount}>
-              Add to Cart — {pricing.formatted}
-            </AddToCartButton>
-          </div>
+          {/* BUY BLOCK — price, size, what that size buys, and the button, in
+              one contiguous run. Splitting the price from the selector would
+              leave a figure on screen that silently stops describing what is
+              about to be added to the cart. */}
+          <SizeSelector product={s.id} variants={variants} />
 
           <Guarantee className="mt-5" align="left" />
 
@@ -146,9 +138,21 @@ export default async function ProductPage({
             Returns accepted within {RETURN_WINDOW} of delivery.
           </p>
 
+          {/* The story, in full and in the open — not behind a disclosure. It
+              is the one piece of copy that sells the scent, so it stays high:
+              directly under the buy block, which is where a shopper's eye
+              already is. It sat between the price and the button until sizes
+              arrived; a paragraph wedged between choosing a size and paying
+              for it is an interruption, so it moved below the CTA rather than
+              splitting the buy block in half. Set as body copy rather than the
+              display serif; a paragraph this long in italic 18px is a wall. */}
+          <p className="mt-8 text-sm leading-relaxed text-charcoal/75">
+            {s.inspiration}
+          </p>
+
           {/* THE DETAIL — the pyramid, below the buy block. The story used to
               sit beside this in a second disclosure; it now runs in the open
-              under the price, so this is the only one left. */}
+              above, so this is the only one left. */}
           <div className="mt-10">
             <Disclosure title="Fragrance Notes" defaultOpen>
               <dl className="space-y-3">
@@ -183,7 +187,7 @@ export default async function ProductPage({
       {/* WHY $70 */}
       <div className="border-t border-charcoal/10">
         <div className="mx-auto w-full max-w-5xl px-5 py-16 md:px-6 md:py-20">
-          <ValueComparison price={pricing.formatted} />
+          <ValueComparison price={defaultPricing.formatted} />
         </div>
       </div>
 

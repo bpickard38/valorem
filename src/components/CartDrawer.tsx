@@ -149,6 +149,13 @@ export default function CartDrawer() {
                     <p className="font-serif text-lg text-charcoal">
                       {line.title}
                     </p>
+                    {/* Which size — without it two lines of the same scent
+                        are indistinguishable in the drawer. */}
+                    {line.size ? (
+                      <p className="label-engraved mt-1 text-charcoal/50">
+                        {line.size}
+                      </p>
+                    ) : null}
                     <p className="mt-0.5 text-sm text-charcoal/60">
                       ${Number(line.amount).toFixed(2)}
                     </p>

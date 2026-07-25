@@ -11,7 +11,8 @@ import {
 import type { ReactNode } from "react";
 import type { Cart } from "@/lib/shopify";
 import { trackMetaEvent } from "@/lib/metaPixel";
-import { CURRENCY, PRICE_AMOUNT } from "@/lib/site";
+import { CURRENCY, DEFAULT_SIZE, PRICE_AMOUNT } from "@/lib/site";
+import type { SizeId } from "@/lib/site";
 
 const STORAGE_KEY = "valorem-cart-id";
 
@@ -24,10 +25,14 @@ interface CartContextValue {
   openCart: () => void;
   closeCart: () => void;
   /* `value` is what the item is worth to Meta's optimiser. It defaults to the
-   * stick price because every caller was a stick before the discovery sets
-   * existed; a set must pass its own, or AddToCart reports $70 for a $25
-   * order and the ROAS the ads are tuned against is fiction. */
-  addItem: (product: string, value?: number) => Promise<void>;
+   * full-size price because that is what every caller sold before sizes
+   * existed; a caller adding a 5 ml MUST pass its own, or AddToCart reports
+   * $70 for a $16 order and the ROAS the ads are tuned against is fiction. */
+  addItem: (
+    product: string,
+    size?: SizeId,
+    value?: number,
+  ) => Promise<void>;
   setLineQuantity: (lineId: string, quantity: number) => Promise<void>;
 }
 
@@ -83,7 +88,11 @@ export default function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addItem = useCallback(
-    async (product: string, value: number = PRICE_AMOUNT) => {
+    async (
+      product: string,
+      size: SizeId = DEFAULT_SIZE,
+      value: number = PRICE_AMOUNT,
+    ) => {
       setStatus("loading");
       // Open immediately — the drawer animates in while the request is in
       // flight and shows its own pending state, which reads far better on a
@@ -102,6 +111,7 @@ export default function CartProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({
             action: "add",
             product,
+            size,
             // localStorage is the authoritative cart id — persist() writes it
             // on every mutation, so reading it here keeps this callback from
             // depending on the cart object and re-creating on every change.

@@ -6,7 +6,7 @@ import FadeIn from "@/components/FadeIn";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import Guarantee from "@/components/Guarantee";
-import { productImage, productPricing } from "@/lib/shopify";
+import { lowestPricing, productImage, productVariants } from "@/lib/shopify";
 import {
   COLLECTIONS,
   COLLECTION_TITLE,
@@ -60,11 +60,15 @@ export default async function CollectionPage({
      cards cost a single round of requests rather than three sequential ones. */
   const scents = await Promise.all(
     c.scents.map(async (id) => {
-      const [image, pricing] = await Promise.all([
+      const [image, variants] = await Promise.all([
         productImage(id),
-        productPricing(id),
+        productVariants(id),
       ]);
-      return { ...SCENTS[id], image, pricing };
+      /* The card quotes the ENTRY price, not the full size. A grid exists to
+       * get someone onto a product page, and "From $16" clears a lower bar to
+       * do that than "$70" does; the selector on the page itself does the
+       * upselling. Change it here and the collection index follows. */
+      return { ...SCENTS[id], image, pricing: lowestPricing(variants) };
     }),
   );
 
@@ -154,7 +158,7 @@ export default async function CollectionPage({
                       sale price is still the real price, and the full sale
                       treatment runs on the product page. */}
                   <p className="mt-2 font-serif text-lg text-charcoal/70">
-                    {scent.pricing.formatted}
+                    From {scent.pricing.formatted}
                   </p>
                 </div>
               </Link>

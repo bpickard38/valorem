@@ -6,6 +6,9 @@
  * Ported verbatim from ../valorem/src/lib/shopify.ts — keep in sync.
  */
 
+import { DEFAULT_SIZE, SIZES, SIZE_OPTION } from "@/lib/site";
+import type { SizeId } from "@/lib/site";
+
 const API_VERSION = "2025-07";
 
 function storeDomain(): string {
@@ -234,51 +237,27 @@ function fallbackPricing(product: ScentId): Pricing {
 const VARIANT_TTL_MS = 5 * 60 * 1000;
 const variantCache = new Map<
   ScentId,
-  { gid: string; pricing: Pricing; expiresAt: number }
+  { variants: SizeVariant[]; expiresAt: number }
 >();
 
 type VariantNode = {
   id: string;
+  availableForSale: boolean;
+  selectedOptions: { name: string; value: string }[];
   price: { amount: string; currencyCode: string };
   compareAtPrice: { amount: string; currencyCode: string } | null;
 };
 
-async function loadVariant(
-  product: ScentId,
-): Promise<{ gid: string; pricing: Pricing }> {
-  const cached = variantCache.get(product);
-  if (cached && Date.now() < cached.expiresAt) {
-    return { gid: cached.gid, pricing: cached.pricing };
-  }
+/* One buyable size of one scent. `size` is our id ("30ml"); `gid` is the
+ * Shopify ProductVariant id that a cart line actually needs. */
+export interface SizeVariant {
+  size: SizeId;
+  gid: string;
+  pricing: Pricing;
+  availableForSale: boolean;
+}
 
-  const handle = SCENT_HANDLE[product];
-  const data = await storefrontQuery<{
-    product: { variants: { nodes: VariantNode[] } } | null;
-  }>(
-    `query variantByHandle($handle: String!) {
-      product(handle: $handle) {
-        variants(first: 1) {
-          nodes {
-            id
-            price { amount currencyCode }
-            compareAtPrice { amount currencyCode }
-          }
-        }
-      }
-    }`,
-    { handle },
-  );
-
-  const node = data.product?.variants.nodes[0];
-  if (!node) {
-    // Almost always one of: wrong handle, product unpublished from the
-    // headless sales channel, or the product was deleted. Name the handle so
-    // the log says which of ours is broken rather than just "cart failed".
-    throw new Error(
-      `No Storefront variant for handle "${handle}" (${product}) — check the product exists and is published to the headless channel`,
-    );
-  }
-
+function shapePricing(node: VariantNode): Pricing {
   const amount = Number(node.price.amount);
   const currency = node.price.currencyCode;
   const compareAt = node.compareAtPrice
@@ -289,7 +268,7 @@ async function loadVariant(
    * number identical to the one beside it. */
   const onSale = compareAt !== null && compareAt > amount;
 
-  const pricing: Pricing = {
+  return {
     amount,
     currency,
     formatted: formatMoney(amount, currency),
@@ -301,14 +280,143 @@ async function loadVariant(
       : null,
     stale: false,
   };
-
-  const entry = { gid: node.id, pricing };
-  variantCache.set(product, { ...entry, expiresAt: Date.now() + VARIANT_TTL_MS });
-  return entry;
 }
 
-async function variantGid(product: ScentId): Promise<string> {
-  return (await loadVariant(product)).gid;
+/* Every size of one scent, in SIZES order, resolved from Shopify.
+ *
+ * This used to ask for `variants(first: 1)` and treat whatever came back as
+ * the product — which is why the site sold only the 30 ml and quoted $70
+ * everywhere. It now reads the whole option set and matches each variant to a
+ * row in SIZES by its "Size" option value.
+ *
+ * Matching is deliberately one-directional: a Shopify variant whose value is
+ * not in SIZES is dropped, and a SIZES row with no Shopify variant is simply
+ * absent from the result. That is what makes the selector degrade cleanly to
+ * however many sizes actually exist rather than rendering a dead option. */
+async function loadVariants(product: ScentId): Promise<SizeVariant[]> {
+  const cached = variantCache.get(product);
+  if (cached && Date.now() < cached.expiresAt) return cached.variants;
+
+  const handle = SCENT_HANDLE[product];
+  const data = await storefrontQuery<{
+    product: { variants: { nodes: VariantNode[] } } | null;
+  }>(
+    `query variantsByHandle($handle: String!) {
+      product(handle: $handle) {
+        variants(first: 20) {
+          nodes {
+            id
+            availableForSale
+            selectedOptions { name value }
+            price { amount currencyCode }
+            compareAtPrice { amount currencyCode }
+          }
+        }
+      }
+    }`,
+    { handle },
+  );
+
+  const nodes = data.product?.variants.nodes ?? [];
+  if (nodes.length === 0) {
+    // Almost always one of: wrong handle, product unpublished from the
+    // headless sales channel, or the product was deleted. Name the handle so
+    // the log says which of ours is broken rather than just "cart failed".
+    throw new Error(
+      `No Storefront variant for handle "${handle}" (${product}) — check the product exists and is published to the headless channel`,
+    );
+  }
+
+  const variants: SizeVariant[] = [];
+  for (const row of SIZES) {
+    const node = nodes.find((n) =>
+      n.selectedOptions.some(
+        (o) => o.name === SIZE_OPTION && o.value === row.option,
+      ),
+    );
+    if (!node) continue;
+    variants.push({
+      size: row.id,
+      gid: node.id,
+      pricing: shapePricing(node),
+      availableForSale: node.availableForSale,
+    });
+  }
+
+  /* A product with exactly one variant and no "Size" option at all — the
+   * shape every scent had before 2026-07-25 — matches nothing above. Treat
+   * that single variant as the default size so the page still sells. */
+  if (variants.length === 0) {
+    variants.push({
+      size: DEFAULT_SIZE,
+      gid: nodes[0].id,
+      pricing: shapePricing(nodes[0]),
+      availableForSale: nodes[0].availableForSale,
+    });
+  }
+
+  variantCache.set(product, {
+    variants,
+    expiresAt: Date.now() + VARIANT_TTL_MS,
+  });
+  return variants;
+}
+
+/* The variant a cart line needs. Falls back to the first available size when
+ * the requested one has gone — never silently substitutes a DIFFERENT price
+ * without the caller knowing, because the caller is the cart and Shopify
+ * charges its own number regardless of what we rendered. */
+async function variantGid(product: ScentId, size: SizeId): Promise<string> {
+  const variants = await loadVariants(product);
+  const match = variants.find((v) => v.size === size);
+  if (!match) {
+    throw new Error(
+      `No ${size} variant for ${product} — check the Size option in Shopify`,
+    );
+  }
+  return match.gid;
+}
+
+/* Every size of a scent, for the product page's selector.
+ *
+ * Never throws: a Shopify outage yields a single fallback-priced default size
+ * so the page still renders something buyable. */
+export async function productVariants(
+  product: ScentId,
+): Promise<SizeVariant[]> {
+  try {
+    return await loadVariants(product);
+  } catch (error) {
+    console.error(`variant lookup failed for ${product}:`, error);
+    return [
+      {
+        size: DEFAULT_SIZE,
+        gid: "",
+        pricing: fallbackPricing(product),
+        availableForSale: false,
+      },
+    ];
+  }
+}
+
+/* The cheapest size a shopper can actually buy — what "From $16" quotes.
+ * Falls back to the default size's price if nothing is in stock, so the
+ * figure is never blank. */
+export function lowestPricing(variants: SizeVariant[]): Pricing {
+  const buyable = variants.filter((v) => v.availableForSale);
+  const pool = buyable.length > 0 ? buyable : variants;
+  return pool.reduce((low, v) =>
+    v.pricing.amount < low.pricing.amount ? v : low,
+  ).pricing;
+}
+
+async function loadVariant(
+  product: ScentId,
+): Promise<{ gid: string; pricing: Pricing }> {
+  const variants = await loadVariants(product);
+  const preferred =
+    variants.find((v) => v.size === DEFAULT_SIZE) ?? variants[0];
+  return { gid: preferred.gid, pricing: preferred.pricing };
 }
 
 /* Live price for a product, straight from Shopify. Change a price or set a
@@ -406,6 +514,10 @@ export interface CartLine {
   quantity: number;
   scent: ScentId | null;
   title: string;
+  /* The variant's own name — "30 ml". Shopify sends "Default Title" for a
+   * product with no options; normalised to null so the drawer can just test
+   * for it rather than filtering that string itself. */
+  size: string | null;
   image: ProductImage | null;
   amount: string;
   currency: string;
@@ -432,6 +544,7 @@ const CART_FIELDS = `
       merchandise {
         ... on ProductVariant {
           id
+          title
           image { url width height altText }
           product { handle title }
         }
@@ -452,6 +565,7 @@ type RawCart = {
       quantity: number;
       merchandise: {
         id: string;
+        title: string;
         image: ProductImage | null;
         product: { handle: string; title: string };
       };
@@ -474,6 +588,10 @@ function shapeCart(raw: RawCart): Cart {
         ? line.merchandise.product.handle
         : null,
       title: line.merchandise.product.title,
+      size:
+        line.merchandise.title && line.merchandise.title !== "Default Title"
+          ? line.merchandise.title
+          : null,
       image: line.merchandise.image,
       amount: line.cost.totalAmount.amount,
       currency: line.cost.totalAmount.currencyCode,
@@ -494,9 +612,10 @@ export async function getCart(cartId: string): Promise<Cart | null> {
 
 export async function createCart(
   product: ScentId,
+  size: SizeId,
   quantity = 1,
 ): Promise<Cart> {
-  const merchandiseId = await variantGid(product);
+  const merchandiseId = await variantGid(product, size);
   const data = await storefrontQuery<{
     cartCreate: { cart: RawCart | null; userErrors: { message: string }[] };
   }>(
@@ -523,9 +642,10 @@ export async function createCart(
 export async function addToCart(
   cartId: string,
   product: ScentId,
+  size: SizeId,
   quantity = 1,
 ): Promise<Cart> {
-  const merchandiseId = await variantGid(product);
+  const merchandiseId = await variantGid(product, size);
   const data = await storefrontQuery<{
     cartLinesAdd: { cart: RawCart | null; userErrors: { message: string }[] };
   }>(
@@ -588,8 +708,11 @@ export async function updateCartLine(
 }
 
 /* Creates a single-item cart and returns Shopify's hosted checkout URL. */
-export async function createCheckout(product: ScentId): Promise<string> {
-  const merchandiseId = await variantGid(product);
+export async function createCheckout(
+  product: ScentId,
+  size: SizeId = DEFAULT_SIZE,
+): Promise<string> {
+  const merchandiseId = await variantGid(product, size);
 
   const data = await storefrontQuery<{
     cartCreate: {

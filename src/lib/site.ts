@@ -32,15 +32,71 @@ export const RETURN_WINDOW = "thirty days";
 export const STICK_SIZE = "30 ml (1 oz)";
 export const WEAR_ESTIMATE = "three months";
 
-/* The entry size — what answers "you can't smell a website" now that the
- * Discovery Set is gone. Named here rather than typed into the homepage so
- * the block and the product-page selector can never quote different sizes.
+/* ---- Sizes ------------------------------------------------------------
+ * Every scent is one Shopify product with three variants on a single option
+ * named "Size". This table is the bridge between our ids and that option, and
+ * the display order on the product page.
  *
- * SAMPLE_PRICE is a FALLBACK in the same sense as PRICE above: the real
- * figure comes from Shopify. TODO: the homepage still renders this constant;
- * swap it for the live 5 ml variant price once productVariants() exists. */
-export const SAMPLE_SIZE = "5 ml";
-export const SAMPLE_PRICE = "$16";
+ * `option` must match the Shopify option VALUE byte for byte — "30 ml", with
+ * the space. A variant whose value isn't in this table is ignored, and a size
+ * listed here with no matching Shopify variant simply doesn't render, which
+ * is what lets the selector degrade to a single option rather than break.
+ *
+ * `gift` is a FULFILMENT PROMISE, not a cart mechanism. Nothing in Shopify
+ * adds these samples to the order — they are packed by hand. Say "included"
+ * plainly, but do not build UI that implies a line item the cart will show,
+ * because it won't. */
+/* The Shopify product option these values live under. One option, one name,
+ * on all six products — change it in the admin and change it here. */
+export const SIZE_OPTION = "Size";
+
+export const SIZES = [
+  {
+    id: "30ml",
+    option: "30 ml",
+    label: "30 ml",
+    name: "Full size",
+    wear: `about ${WEAR_ESTIMATE} of daily wear`,
+    gift: "Includes two free 5 ml samples of scents you haven't tried.",
+  },
+  {
+    id: "15ml",
+    option: "15 ml",
+    label: "15 ml",
+    name: "Travel",
+    wear: "about six weeks of daily wear",
+    gift: "Includes one free 5 ml sample of a scent you haven't tried.",
+  },
+  {
+    id: "5ml",
+    option: "5 ml",
+    label: "5 ml",
+    name: "Sample",
+    wear: "about two weeks of daily wear",
+    gift: null,
+  },
+] as const;
+
+export type SizeId = (typeof SIZES)[number]["id"];
+
+/* The flagship. Preselected on load — it is the product the brand is built
+ * around, and opening on the cheapest option invites a shopper to anchor
+ * there before they have read anything. */
+export const DEFAULT_SIZE: SizeId = "30ml";
+
+export function isSizeId(value: unknown): value is SizeId {
+  return typeof value === "string" && SIZES.some((s) => s.id === value);
+}
+
+export function sizeById(id: SizeId) {
+  /* Non-null: SIZES is the definition of SizeId, so a valid id always hits. */
+  return SIZES.find((s) => s.id === id)!;
+}
+
+/* The entry size — what answers "you can't smell a website" now that the
+ * Discovery Set is gone. The PRICE comes from Shopify via lowestPricing();
+ * only the size label lives here. */
+export const SAMPLE_SIZE = sizeById("5ml").label;
 
 /* ---- Product photography ----------------------------------------------
  * ONE SWITCH, FLIP IT WHEN THE CUTOUTS ARE UPLOADED.

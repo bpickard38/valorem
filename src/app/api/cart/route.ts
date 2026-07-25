@@ -6,13 +6,19 @@ import {
   updateCartLine,
 } from "@/lib/shopify";
 import type { Cart } from "@/lib/shopify";
+import { DEFAULT_SIZE, isSizeId } from "@/lib/site";
 
 /* The cart drawer's backend. The browser holds only the cart id; all Shopify
  * mutations happen here so the Storefront token stays server-side.
  *
  * GET  ?id=<cartId>  — rehydrate the drawer on page load
- * POST { action: "add",    product, cartId? }
+ * POST { action: "add",    product, size?, cartId? }
  * POST { action: "update", cartId, lineId, quantity }
+ *
+ * The browser sends a scent id and a size id, never a Shopify variant gid.
+ * Both are validated here and the variant is resolved server-side, so the
+ * set of things that can be bought stays defined in one place rather than
+ * being whatever the client posts.
  *
  * `product` is a scent id. It was called `scent` before the discovery sets
  * existed and was widened to `product` while they did; both are still read,
@@ -47,10 +53,11 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") return fail("Bad request", 400);
 
-  const { action, product, scent, cartId, lineId, quantity } = body as {
+  const { action, product, scent, size, cartId, lineId, quantity } = body as {
     action?: string;
     product?: unknown;
     scent?: unknown;
+    size?: unknown;
     cartId?: unknown;
     lineId?: unknown;
     quantity?: unknown;
@@ -60,18 +67,23 @@ export async function POST(request: Request) {
     if (action === "add") {
       const item = product ?? scent;
       if (!isScentId(item)) return fail("Unknown product", 400);
+      /* Absent size means a browser running JS from before sizes existed.
+       * Default rather than reject — that build could only ever have meant
+       * the full size, which is what DEFAULT_SIZE is. */
+      const chosen = size === undefined ? DEFAULT_SIZE : size;
+      if (!isSizeId(chosen)) return fail("Unknown size", 400);
       const qty =
         typeof quantity === "number" && quantity > 0 ? Math.floor(quantity) : 1;
 
       if (typeof cartId === "string" && cartId) {
         try {
-          return ok(await addToCart(cartId, item, qty));
+          return ok(await addToCart(cartId, item, chosen, qty));
         } catch {
           // Stale cart id (expired / completed) — fall through to a new cart
           // rather than surfacing an error the shopper can do nothing about.
         }
       }
-      return ok(await createCart(item, qty));
+      return ok(await createCart(item, chosen, qty));
     }
 
     if (action === "update") {

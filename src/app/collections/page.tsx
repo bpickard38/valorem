@@ -6,7 +6,7 @@ import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import Guarantee from "@/components/Guarantee";
 import { collectionImage } from "@/lib/collectionImage";
-import { productPricing } from "@/lib/shopify";
+import { lowestPricing, productVariants } from "@/lib/shopify";
 import {
   COLLECTIONS,
   COLLECTION_TITLE,
@@ -25,16 +25,18 @@ export const revalidate = 3600;
 const collections = [COLLECTIONS.gods, COLLECTIONS.goddesses];
 
 export async function generateMetadata(): Promise<Metadata> {
-  const pricing = await productPricing("poseidon");
+  const pricing = lowestPricing(await productVariants("poseidon"));
   return {
     title: `${COLLECTION_TITLE} — VALOREM`,
-    description: `Six solid fragrances in two houses — the Gods and the Goddesses. ${STICK_SIZE} twist-up sticks, ${pricing.formatted} each.`,
+    description: `Six solid fragrances in two houses — the Gods and the Goddesses. ${STICK_SIZE} twist-up sticks, from ${pricing.formatted}.`,
   };
 }
 
 export default async function CollectionsPage() {
-  /* Every scent is priced together, so one lookup speaks for all six. */
-  const pricing = await productPricing("poseidon");
+  /* Every scent is priced together, so one lookup speaks for all six. The
+   * entry price leads here for the same reason it does on the scent cards —
+   * this page's job is to get someone onto a product page. */
+  const pricing = lowestPricing(await productVariants("poseidon"));
 
   return (
     <main className="flex-1">
@@ -141,7 +143,7 @@ export default async function CollectionsPage() {
                         </span>
                       </span>
                       <p className="mt-4 text-xs tracking-wide text-charcoal/50">
-                        Three scents · {pricing.formatted} each
+                        Three scents · from {pricing.formatted}
                       </p>
                     </div>
                   </div>
