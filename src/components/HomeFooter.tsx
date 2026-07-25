@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import SocialLinks from "@/components/SocialLinks";
-import { CONTACT_EMAIL, RETURN_WINDOW } from "@/lib/site";
+import { CONTACT_EMAIL, RETURN_WINDOW, SHIPPING_NOTE } from "@/lib/site";
 
 /* Footer shared by the home, collection, product, /faq and /contact pages. */
 
@@ -41,7 +41,7 @@ export default function HomeFooter() {
         {CONTACT_EMAIL}
       </a>
       <p className="max-w-md text-center text-xs leading-relaxed text-charcoal/45">
-        Returns accepted within {RETURN_WINDOW} of delivery.
+        {SHIPPING_NOTE} Returns accepted within {RETURN_WINDOW} of delivery.
       </p>
       <p className="text-xs tracking-[0.2em] text-charcoal/45">© 2026 VALOREM</p>
     </footer>

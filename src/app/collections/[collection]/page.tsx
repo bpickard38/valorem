@@ -12,6 +12,7 @@ import {
   COLLECTION_TITLE,
   RETURN_WINDOW,
   SCENTS,
+  SHIPPING_NOTE,
   SHIP_WINDOW,
   isCollectionId,
   noteTeaser,
@@ -172,8 +173,8 @@ export default async function CollectionPage({
         <FadeIn className="mx-auto w-full max-w-xl text-center">
           <Guarantee />
           <p className="mt-6 text-sm text-charcoal/60">
-            Ships in {SHIP_WINDOW}. Returns accepted within {RETURN_WINDOW} of
-            delivery.
+            Ships in {SHIP_WINDOW}. {SHIPPING_NOTE} Returns accepted within{" "}
+            {RETURN_WINDOW} of delivery.
           </p>
           <p className="mt-8 text-xs uppercase tracking-[0.25em] text-charcoal/45">
             <Link

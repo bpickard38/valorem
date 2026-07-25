@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/components/CartProvider";
-import { GUARANTEE } from "@/lib/site";
+import {
+  CURRENCY,
+  FREE_SHIPPING_THRESHOLD,
+  GUARANTEE,
+  formatMoney,
+} from "@/lib/site";
 
 /* Slide-in cart. Mobile-first: near full-width on a phone, a panel on
  * desktop, dismissable by backdrop tap, Escape, the close button, or a
@@ -63,6 +68,16 @@ export default function CartDrawer() {
   const lines = cart?.lines ?? [];
   const isEmpty = lines.length === 0;
   const busy = status === "loading";
+
+  /* Progress toward free shipping. Measured on the SUBTOTAL, which is what
+   * Shopify's own rate is measured against — using the line total or a
+   * post-discount figure would promise a threshold checkout then refuses.
+   *
+   * Only the sample sits below $40, so for most carts this line exists to
+   * confirm free shipping rather than to chase it. */
+  const subtotal = Number(cart?.subtotal ?? 0);
+  const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+  const hasFreeShipping = remaining <= 0;
 
   /* No InitiateCheckout here on purpose.
    *
@@ -215,15 +230,54 @@ export default function CartDrawer() {
             className="border-t border-charcoal/10 px-5 pt-5"
             style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
           >
+            {/* Free-shipping progress, above the subtotal so it reads as a
+                condition on the number rather than a footnote to it. A track
+                that fills is the whole point — "$24 away" alone doesn't say
+                how close that is. aria-live so the message is announced when
+                a quantity change crosses the threshold. */}
+            <div aria-live="polite" className="mb-4">
+              <p className="text-xs leading-relaxed text-charcoal/65">
+                {hasFreeShipping ? (
+                  <>
+                    <span className="font-medium text-gold-deep">
+                      Free shipping applied.
+                    </span>{" "}
+                    Taxes calculated at checkout.
+                  </>
+                ) : (
+                  <>
+                    <span className="font-medium text-charcoal/80">
+                      {formatMoney(remaining, CURRENCY)} away
+                    </span>{" "}
+                    from free shipping.
+                  </>
+                )}
+              </p>
+              <div
+                aria-hidden="true"
+                className="mt-2 h-px w-full overflow-hidden bg-charcoal/12"
+              >
+                <div
+                  className="h-full bg-gold transition-transform duration-500 ease-out"
+                  style={{
+                    /* scaleX rather than width: it animates on the compositor
+                       and can't reflow the drawer footer mid-transition. */
+                    transform: `scaleX(${Math.min(
+                      1,
+                      Math.max(0, subtotal / FREE_SHIPPING_THRESHOLD),
+                    )})`,
+                    transformOrigin: "left",
+                  }}
+                />
+              </div>
+            </div>
+
             <div className="flex items-baseline justify-between">
               <span className="label-engraved text-charcoal/60">Subtotal</span>
               <span className="font-serif text-2xl text-charcoal">
                 ${Number(cart?.subtotal ?? 0).toFixed(2)}
               </span>
             </div>
-            <p className="mt-1 text-right text-xs text-charcoal/50">
-              Shipping &amp; taxes calculated at checkout.
-            </p>
 
             <button
               type="button"

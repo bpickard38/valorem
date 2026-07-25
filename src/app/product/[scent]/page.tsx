@@ -10,6 +10,7 @@ import {
 import {
   RETURN_WINDOW,
   SCENTS,
+  SHIPPING_NOTE,
   collectionOf,
   noteRows,
   productTitle,
@@ -134,8 +135,9 @@ export default async function ProductPage({
 
           <Guarantee className="mt-5" align="left" />
 
-          <p className="mt-4 text-xs tracking-wide text-charcoal/50">
-            Returns accepted within {RETURN_WINDOW} of delivery.
+          <p className="mt-4 text-xs leading-relaxed tracking-wide text-charcoal/50">
+            {SHIPPING_NOTE} Returns accepted within {RETURN_WINDOW} of
+            delivery.
           </p>
 
           {/* The story, in full and in the open — not behind a disclosure. It

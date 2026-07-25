@@ -6,7 +6,7 @@
  * Ported verbatim from ../valorem/src/lib/shopify.ts — keep in sync.
  */
 
-import { DEFAULT_SIZE, SIZES, SIZE_OPTION } from "@/lib/site";
+import { DEFAULT_SIZE, SIZES, SIZE_OPTION, formatMoney } from "@/lib/site";
 import type { SizeId } from "@/lib/site";
 
 const API_VERSION = "2025-07";
@@ -198,16 +198,11 @@ export interface Pricing {
   stale: boolean;
 }
 
-/* House money style: "$70", not "$70.00". Exported so a page deriving its own
- * figure formats it the same way as a Shopify one. */
-export function formatMoney(amount: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2,
-  }).format(amount);
-}
+/* House money style: "$70", not "$70.00". Defined in site.ts — this module
+ * already imports that one, so the implementation lives there to keep the two
+ * from becoming a runtime cycle. Re-exported here because every existing
+ * caller reaches for it alongside Pricing. */
+export { formatMoney } from "@/lib/site";
 
 function fallbackPricing(product: ScentId): Pricing {
   const amount = FALLBACK_PRICE[product];

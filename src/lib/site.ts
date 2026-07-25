@@ -13,6 +13,21 @@ export function isCollectionId(value: unknown): value is CollectionId {
   return value === "gods" || value === "goddesses";
 }
 
+/* House money style: "$70", not "$70.00".
+ *
+ * Lives here rather than in shopify.ts because shopify.ts already imports
+ * this module for SIZES; putting it the other way round would make the two
+ * files a runtime cycle. shopify.ts re-exports it, so `formatMoney` from
+ * either module is the same function. */
+export function formatMoney(amount: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+  }).format(amount);
+}
+
 export const PRICE = "$70";
 export const PRICE_AMOUNT = 70; // numeric twin of PRICE for ad/event tracking
 export const CURRENCY = "USD";
@@ -28,6 +43,23 @@ export const CURRENCY = "USD";
 // framing is gone, so it needs to be true.
 export const SHIP_WINDOW = "2–5 business days";
 export const RETURN_WINDOW = "thirty days";
+
+/* ---- Shipping ---------------------------------------------------------
+ * Free at $40 and over, flat $5 below it. The threshold sits deliberately
+ * between the 5 ml ($16) and the 15 ml ($48): it puts a shipping line on the
+ * sample alone and narrows the felt gap between the two, so trading up is
+ * $32 for three times the wax rather than $32 plus a delivery charge.
+ *
+ * These MUST match the rates configured in the Shopify admin. Nothing here
+ * charges anything — Shopify does — so a mismatch shows a promise at the
+ * cart that checkout then breaks, which is worse than showing nothing. */
+export const FREE_SHIPPING_THRESHOLD = 40;
+export const FLAT_SHIPPING_RATE = 5;
+
+export const SHIPPING_NOTE = `Free shipping on orders ${formatMoney(
+  FREE_SHIPPING_THRESHOLD,
+  CURRENCY,
+)} and over. ${formatMoney(FLAT_SHIPPING_RATE, CURRENCY)} flat below that.`;
 
 export const STICK_SIZE = "30 ml (1 oz)";
 export const WEAR_ESTIMATE = "three months";

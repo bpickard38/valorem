@@ -11,6 +11,7 @@ import {
   COLLECTIONS,
   COLLECTION_TITLE,
   RETURN_WINDOW,
+  SHIPPING_NOTE,
   SHIP_WINDOW,
   STICK_SIZE,
   WEAR_ESTIMATE,
@@ -159,8 +160,8 @@ export default async function CollectionsPage() {
         <FadeIn className="mx-auto w-full max-w-xl text-center">
           <Guarantee />
           <p className="mt-6 text-sm text-charcoal/60">
-            Ships in {SHIP_WINDOW}. Returns accepted within {RETURN_WINDOW} of
-            delivery.
+            Ships in {SHIP_WINDOW}. {SHIPPING_NOTE} Returns accepted within{" "}
+            {RETURN_WINDOW} of delivery.
           </p>
         </FadeIn>
       </section>
