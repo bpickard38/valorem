@@ -2,7 +2,7 @@ import {
   addToCart,
   createCart,
   getCart,
-  isProductId,
+  isScentId,
   updateCartLine,
 } from "@/lib/shopify";
 import type { Cart } from "@/lib/shopify";
@@ -14,9 +14,10 @@ import type { Cart } from "@/lib/shopify";
  * POST { action: "add",    product, cartId? }
  * POST { action: "update", cartId, lineId, quantity }
  *
- * `product` is a scent id or a discovery set id. It was called `scent` before
- * the sets existed, and a browser holding cached JS from that build will still
- * post the old field — so both are read.
+ * `product` is a scent id. It was called `scent` before the discovery sets
+ * existed and was widened to `product` while they did; both are still read,
+ * because a browser holding cached JS from either build will post the older
+ * field name.
  */
 
 function ok(cart: Cart) {
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
   try {
     if (action === "add") {
       const item = product ?? scent;
-      if (!isProductId(item)) return fail("Unknown product", 400);
+      if (!isScentId(item)) return fail("Unknown product", 400);
       const qty =
         typeof quantity === "number" && quantity > 0 ? Math.floor(quantity) : 1;
 

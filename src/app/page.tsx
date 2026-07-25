@@ -7,18 +7,18 @@ import HomeFooter from "@/components/HomeFooter";
 import ScrollLink from "@/components/ScrollLink";
 import ReviewProofLine from "@/components/ReviewProofLine";
 import { ButtonLink, SectionHeader } from "@/components/ui";
-import { formatMoney, productImages, productPricing } from "@/lib/shopify";
+import { productPricing } from "@/lib/shopify";
 import {
-  DISCOVERY_CREDIT,
-  DISCOVERY_CREDIT_AMOUNT,
+  SAMPLE_PRICE,
+  SAMPLE_SIZE,
   STICK_SIZE,
   WEAR_ESTIMATE,
   SHIP_WINDOW,
   RETURN_WINDOW,
 } from "@/lib/site";
 
-/* Set photography comes from Shopify, so this can't be frozen at build time
- * forever — it re-fetches hourly, matching /discovery and the product pages. */
+/* Prices come from Shopify, so this can't be frozen at build time forever —
+ * it re-fetches hourly, matching the product pages. */
 export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -66,19 +66,9 @@ const steps = [
 ];
 
 export default async function Home() {
-  const [images, stickPricing, setPricing] = await Promise.all([
-    productImages("discovery-men"),
-    /* Both scents are priced together, so one lookup speaks for the
-     * collection everywhere this page names a stick price. */
-    productPricing("poseidon"),
-    productPricing("discovery-men"),
-  ]);
-  /* [0] is whichever photo sits first in the Shopify admin. */
-  const discoveryImage = images[0];
-  const netCost = formatMoney(
-    Math.max(0, setPricing.amount - DISCOVERY_CREDIT_AMOUNT),
-    setPricing.currency,
-  );
+  /* Every scent is priced together, so one lookup speaks for all six
+   * everywhere this page names a stick price. */
+  const stickPricing = await productPricing("poseidon");
 
   return (
     <main id="top" className="flex-1 scroll-mt-24">
@@ -150,53 +140,37 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* DISCOVERY — where "New to solid cologne?" lands. Someone who pressed
-          that button is telling you they are not ready to spend full price on a
+      {/* SAMPLE — where "New to solid cologne?" lands. Someone who pressed that
+          button is telling you they are not ready to spend full price on a
           scent they have never smelled, so the first thing they meet is the
-          cheap way in, not the education. */}
+          cheap way in, not the education.
+
+          This replaced the Discovery Set block on 2026-07-25. The objection is
+          the same one — you cannot smell a website — but it is now answered by
+          the 5 ml size on each product page rather than by a separate route,
+          so this block is deliberately three lines and a button. Anything more
+          rebuilds the discovery page in disguise, which is the thing being
+          undone. Single centred column because the photograph this section
+          used to carry was the set's. */}
       <section
         id="discover"
         className="scroll-mt-20 border-y border-charcoal/10 bg-stone/25 px-6 py-20 sm:py-24"
       >
-        <div className="mx-auto grid max-w-4xl items-center gap-12 md:grid-cols-2 md:gap-16">
-          <FadeIn>
-            {/* Fixed 3:4 frame so the column keeps its shape before the photo
-                loads, and so swapping the photo in Shopify can't reflow the
-                section. */}
-            {discoveryImage ? (
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-stone">
-                <Image
-                  src={discoveryImage.url}
-                  alt={discoveryImage.altText ?? "The Valorem Discovery Set"}
-                  fill
-                  sizes="(min-width: 768px) 384px, 100vw"
-                  className="object-cover"
-                />
-              </div>
-            ) : null}
-          </FadeIn>
-
-          <FadeIn delay={150}>
-            <p className="label-engraved text-charcoal/50">Start Here</p>
-            <h2 className="type-heading mt-5 text-charcoal">
-              Don&apos;t spend {stickPricing.formatted} on a guess.
-            </h2>
-            <p className="mt-6 text-sm leading-relaxed text-charcoal/70">
-              You can&apos;t smell a website. The Discovery Set gets you three
-              scents to try for {setPricing.formatted} with free shipping — then{" "}
-              {DISCOVERY_CREDIT} back toward the full-size stick you keep.
-            </p>
-            <p className="mt-4 font-serif text-xl italic text-gold-deep">
-              Which makes trying all three cost you {netCost}.
-            </p>
-            <div className="mt-8">
-              <ButtonLink href="/discovery">Discover Your Scent</ButtonLink>
-            </div>
-            <p className="mt-5 text-xs tracking-wide text-charcoal/55">
-              Two sets — one for men, one for women.
-            </p>
-          </FadeIn>
-        </div>
+        <FadeIn className="mx-auto max-w-xl text-center">
+          <p className="label-engraved text-charcoal/50">Start Here</p>
+          <h2 className="type-heading mt-5 text-charcoal">
+            You can&apos;t smell a website.
+          </h2>
+          <p className="mt-6 text-sm leading-relaxed text-charcoal/70">
+            So don&apos;t spend {stickPricing.formatted} on a guess. Every scent
+            comes in a {SAMPLE_SIZE} sample for {SAMPLE_PRICE} —
+            wear it for a couple of weeks, then buy the full stick if it&apos;s
+            yours.
+          </p>
+          <div className="mt-8">
+            <ButtonLink href="/collections">Find Your Scent</ButtonLink>
+          </div>
+        </FadeIn>
       </section>
 
       {/* EDUCATION */}

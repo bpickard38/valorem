@@ -10,11 +10,10 @@ import type { NavItem } from "@/components/MobileNav";
  * behind the hamburger. From sm up the links sit inline and the hamburger
  * disappears. One NAV_ITEMS list feeds both so they can't drift apart. */
 
-/* Discovery leads: it is the cheapest way into the house and where the paid
- * traffic lands, so it should be the first thing offered to anyone who came
- * in some other way. */
+/* Collections leads. The Discovery Set used to sit above it as the cheap way
+ * in; that route was retired on 2026-07-25 and the cheap way in is now the
+ * 5 ml size on each product page, which is behind this same link. */
 const NAV_ITEMS: NavItem[] = [
-  { href: "/discovery", label: "Discovery Set" },
   { href: "/collections", label: "Collections" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },

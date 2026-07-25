@@ -160,15 +160,6 @@ export default async function CollectionsPage() {
             Ships in {SHIP_WINDOW}. Returns accepted within {RETURN_WINDOW} of
             delivery.
           </p>
-          <p className="mt-8 text-xs uppercase tracking-[0.25em] text-charcoal/45">
-            Not sure yet?{" "}
-            <Link
-              href="/discovery"
-              className="text-charcoal/60 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
-            >
-              Try the Discovery Set
-            </Link>
-          </p>
         </FadeIn>
       </section>
 

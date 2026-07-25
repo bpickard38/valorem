@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 /*
  * Expanding section — "Fragrance Notes", "Inspiration".
  *
- * Native <details> rather than a client component, matching the accordion on
- * /discovery: this keeps the product page a server component with no
+ * Native <details> rather than a client component: this keeps the product
+ * page a server component with no
  * hydration, and open/close still works with JS disabled, is keyboard
  * operable, and announces its own expanded state to a screen reader without
  * any aria wiring.

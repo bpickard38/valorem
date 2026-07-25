@@ -139,9 +139,6 @@ export async function adminQuery<T>(
  * is stable and human-checkable, a numeric variant id is neither, and the env
  * approach silently 502s the moment someone re-creates a product in Shopify
  * and the number changes underneath us.
- *
- * These products are single-variant. If one ever gains real variants — a size,
- * a two-pack — this picks the first and that assumption needs revisiting.
  */
 const SCENT_HANDLE = {
   poseidon: "poseidon",
@@ -152,33 +149,18 @@ const SCENT_HANDLE = {
   hera: "hera",
 } as const;
 
-/* The discovery sets are their own Shopify products, not variants of a scent,
- * so they live in a separate map. Keeping them out of SCENT_HANDLE is what
- * stops a set from turning up everywhere the catalogue is enumerated —
- * /product/[scent] routes, the collection cards, generateStaticParams. */
-const DISCOVERY_HANDLE = {
-  "discovery-men": "discovery-set-gods",
-  "discovery-women": "discovery-set-goddesses",
-} as const;
-
-const PRODUCT_HANDLE = {
-  ...SCENT_HANDLE,
-  ...DISCOVERY_HANDLE,
-} as const;
-
+/* The six scents are the entire catalogue. There used to be a second map for
+ * the discovery sets — they were their own Shopify products rather than
+ * variants — and a `ScentId` union over both. The sets were retired on
+ * 2026-07-25 and sampling moved onto the product page as the 5 ml size, so
+ * the union collapsed back to exactly the scents. Everything the cart can
+ * hold is now a scent plus a size. */
 export type ScentId = keyof typeof SCENT_HANDLE;
-export type DiscoverySetId = keyof typeof DISCOVERY_HANDLE;
-/* Anything the cart is allowed to hold. */
-export type ProductId = keyof typeof PRODUCT_HANDLE;
 
-/* Narrow: a scent with a catalogue entry and a product page. Routing and the
- * SCENTS record both key off this, so it must never widen to include a set. */
+/* Narrow: a scent with a catalogue entry and a product page. Routing, the
+ * SCENTS record and the cart all key off this. */
 export function isScentId(value: unknown): value is ScentId {
   return typeof value === "string" && value in SCENT_HANDLE;
-}
-
-export function isProductId(value: unknown): value is ProductId {
-  return typeof value === "string" && value in PRODUCT_HANDLE;
 }
 
 /* Last-known-good prices, used only when Shopify cannot be reached.
@@ -187,15 +169,13 @@ export function isProductId(value: unknown): value is ProductId {
  * price, so every read falls back to these rather than throwing. Keep them
  * in step with Shopify; they are what customers see during an outage, and an
  * order placed against a wrong number here is a real complaint. */
-const FALLBACK_PRICE: Record<ProductId, number> = {
+const FALLBACK_PRICE: Record<ScentId, number> = {
   poseidon: 70,
   aphrodite: 70,
   hades: 70,
   apollo: 70,
   artemis: 70,
   hera: 70,
-  "discovery-men": 25,
-  "discovery-women": 25,
 };
 
 export interface Pricing {
@@ -216,7 +196,7 @@ export interface Pricing {
 }
 
 /* House money style: "$70", not "$70.00". Exported so a page deriving its own
- * figure (the discovery net cost) formats it the same way as a Shopify one. */
+ * figure formats it the same way as a Shopify one. */
 export function formatMoney(amount: number, currency: string): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -226,7 +206,7 @@ export function formatMoney(amount: number, currency: string): string {
   }).format(amount);
 }
 
-function fallbackPricing(product: ProductId): Pricing {
+function fallbackPricing(product: ScentId): Pricing {
   const amount = FALLBACK_PRICE[product];
   return {
     amount,
@@ -253,7 +233,7 @@ function fallbackPricing(product: ProductId): Pricing {
  * product published a minute after boot stays broken until the next deploy. */
 const VARIANT_TTL_MS = 5 * 60 * 1000;
 const variantCache = new Map<
-  ProductId,
+  ScentId,
   { gid: string; pricing: Pricing; expiresAt: number }
 >();
 
@@ -264,14 +244,14 @@ type VariantNode = {
 };
 
 async function loadVariant(
-  product: ProductId,
+  product: ScentId,
 ): Promise<{ gid: string; pricing: Pricing }> {
   const cached = variantCache.get(product);
   if (cached && Date.now() < cached.expiresAt) {
     return { gid: cached.gid, pricing: cached.pricing };
   }
 
-  const handle = PRODUCT_HANDLE[product];
+  const handle = SCENT_HANDLE[product];
   const data = await storefrontQuery<{
     product: { variants: { nodes: VariantNode[] } } | null;
   }>(
@@ -327,7 +307,7 @@ async function loadVariant(
   return entry;
 }
 
-async function variantGid(product: ProductId): Promise<string> {
+async function variantGid(product: ScentId): Promise<string> {
   return (await loadVariant(product)).gid;
 }
 
@@ -338,7 +318,7 @@ async function variantGid(product: ProductId): Promise<string> {
  * still renders something buyable rather than a blank where the price goes.
  * The cart and checkout always charge Shopify's real number regardless of
  * what was rendered. */
-export async function productPricing(product: ProductId): Promise<Pricing> {
+export async function productPricing(product: ScentId): Promise<Pricing> {
   try {
     return (await loadVariant(product)).pricing;
   } catch (error) {
@@ -359,7 +339,7 @@ export interface ProductImage {
  * back to a placeholder) rather than throwing: a missing image must never
  * take the product page down. */
 export async function productImage(
-  product: ProductId,
+  product: ScentId,
 ): Promise<ProductImage | null> {
   try {
     const data = await storefrontQuery<{
@@ -374,7 +354,7 @@ export async function productImage(
           variants(first: 1) { nodes { image { url width height altText } } }
         }
       }`,
-      { handle: PRODUCT_HANDLE[product] },
+      { handle: SCENT_HANDLE[product] },
     );
     return (
       data.product?.variants.nodes[0]?.image ??
@@ -394,7 +374,7 @@ export async function productImage(
  * Returns [] rather than throwing — a product page with no photos is a bad
  * page, but a product page that 500s is a lost sale. */
 export async function productImages(
-  product: ProductId,
+  product: ScentId,
 ): Promise<ProductImage[]> {
   try {
     const data = await storefrontQuery<{
@@ -407,7 +387,7 @@ export async function productImages(
           images(first: 20) { nodes { url width height altText } }
         }
       }`,
-      { handle: PRODUCT_HANDLE[product] },
+      { handle: SCENT_HANDLE[product] },
     );
     return data.product?.images.nodes ?? [];
   } catch {
@@ -513,7 +493,7 @@ export async function getCart(cartId: string): Promise<Cart | null> {
 }
 
 export async function createCart(
-  product: ProductId,
+  product: ScentId,
   quantity = 1,
 ): Promise<Cart> {
   const merchandiseId = await variantGid(product);
@@ -542,7 +522,7 @@ export async function createCart(
  * at quantity 2 rather than two lines. */
 export async function addToCart(
   cartId: string,
-  product: ProductId,
+  product: ScentId,
   quantity = 1,
 ): Promise<Cart> {
   const merchandiseId = await variantGid(product);
@@ -608,7 +588,7 @@ export async function updateCartLine(
 }
 
 /* Creates a single-item cart and returns Shopify's hosted checkout URL. */
-export async function createCheckout(product: ProductId): Promise<string> {
+export async function createCheckout(product: ScentId): Promise<string> {
   const merchandiseId = await variantGid(product);
 
   const data = await storefrontQuery<{

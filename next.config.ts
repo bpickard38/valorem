@@ -15,6 +15,21 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  async redirects() {
+    return [
+      /* The Discovery Set was retired on 2026-07-25 and its route deleted.
+       * The page was indexed and linked from ads, so it must not 404 —
+       * anyone arriving on it lands on the collection grid, where the 5 ml
+       * sample that replaced the set is one tap away. Permanent (301) so the
+       * ranking signal transfers rather than being held open. */
+      {
+        source: "/discovery",
+        destination: "/collections",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

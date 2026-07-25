@@ -2,7 +2,7 @@
  * Launch constants + scent catalog for the shop experience.
  */
 
-import type { DiscoverySetId, ScentId } from "@/lib/shopify";
+import type { ScentId } from "@/lib/shopify";
 
 /* The two houses of the Deity Collection. A presentation grouping, not a
  * Shopify entity — there are no Shopify collections behind these, just the
@@ -17,27 +17,11 @@ export const PRICE = "$70";
 export const PRICE_AMOUNT = 70; // numeric twin of PRICE for ad/event tracking
 export const CURRENCY = "USD";
 
-/* ---- Discovery sets ---------------------------------------------------
- * The paid-traffic entry point. A $70 blind purchase is a hard first ask
- * from a brand nobody has heard of, so cold ads land here instead: three
- * scents to try, and a credit that makes the trial nearly free.
- *
- * Shipping is inside the price on purpose — a shipping line added at
- * checkout is the single biggest abandonment driver on a low-ticket order.
- */
-/* Fallbacks only. Live prices come from Shopify via productPricing(); these
- * are what a Shopify outage falls back to. */
-export const DISCOVERY_PRICE = "$25";
-export const DISCOVERY_PRICE_AMOUNT = 25;
-
-/* The credit is our promise, not a Shopify product attribute — it stays a
- * constant here and must match the discount rule configured in Shopify. */
-export const DISCOVERY_CREDIT = "$15";
-export const DISCOVERY_CREDIT_AMOUNT = 15;
-/* The credit expires so it creates a reason to come back rather than sitting
- * unredeemed forever. Stated on the page because an undisclosed expiry on a
- * promised credit is the kind of thing customers are right to be annoyed by. */
-export const DISCOVERY_CREDIT_WINDOW = "thirty days";
+/* The Discovery Set was retired on 2026-07-25. It fragmented the funnel and
+ * needed a second hand-poured SKU a solo operator can't sustain. Sampling now
+ * lives on the product page as the 5 ml size — see SIZES — so the "you can't
+ * smell a website" objection is answered where the buying decision is made,
+ * one tap from the full size, instead of on a route of its own. */
 
 // TODO: CONFIRM BEFORE TRAFFIC — this is a placeholder, not a measured number.
 // It is the only shipping representation the site makes now that the preorder
@@ -47,6 +31,16 @@ export const RETURN_WINDOW = "thirty days";
 
 export const STICK_SIZE = "30 ml (1 oz)";
 export const WEAR_ESTIMATE = "three months";
+
+/* The entry size — what answers "you can't smell a website" now that the
+ * Discovery Set is gone. Named here rather than typed into the homepage so
+ * the block and the product-page selector can never quote different sizes.
+ *
+ * SAMPLE_PRICE is a FALLBACK in the same sense as PRICE above: the real
+ * figure comes from Shopify. TODO: the homepage still renders this constant;
+ * swap it for the live 5 ml variant price once productVariants() exists. */
+export const SAMPLE_SIZE = "5 ml";
+export const SAMPLE_PRICE = "$16";
 
 /* ---- Product photography ----------------------------------------------
  * ONE SWITCH, FLIP IT WHEN THE CUTOUTS ARE UPLOADED.
@@ -420,85 +414,3 @@ export function collectionOf(scent: ScentId): Collection {
    * product page. */
   return found ?? COLLECTIONS.gods;
 }
-
-/* A scent inside a discovery set.
- *
- * All six now have a full catalogue entry and a product page, so every member
- * sets `scent` and reads its copy from SCENTS — the set, the collection page
- * and the product page can never disagree. The inline `description` field
- * survives for a member that gets added to a set before it earns a SCENTS
- * entry. */
-export interface DiscoveryMember {
-  name: string;
-  scent?: ScentId;
-  /* Only read when `scent` is absent. */
-  description?: string;
-}
-
-/* The copy to show for a member, wherever it lives. Keeps the page from
- * having to know which members are catalogued and which are not.
- *
- * `notes` is the three-note TEASER, not the full pyramid — a discovery set
- * lists three scents at once, and three complete note lists stacked in one
- * card is thirty-odd notes that nobody reads. The full pyramid is on the
- * product page, one tap away through `href`. */
-export function memberCopy(member: DiscoveryMember): {
-  name: string;
-  inspiration: string;
-  notes: string[];
-  href: string | null;
-} {
-  if (member.scent) {
-    const s = SCENTS[member.scent];
-    return {
-      name: s.name,
-      inspiration: s.inspiration,
-      notes: noteTeaser(s),
-      href: `/product/${s.id}`,
-    };
-  }
-  /* Uncatalogued member: its inline `description` is the only prose it has, so
-   * that stands in for the inspiration. */
-  return {
-    name: member.name,
-    inspiration: member.description ?? "",
-    /* No notes until there is a formulation to quote. */
-    notes: [],
-    href: null,
-  };
-}
-
-export interface DiscoverySet {
-  id: DiscoverySetId;
-  name: string;
-  /* The set's character in three words, in the same voice as
-   * Scent.character. Never who it's for. */
-  audience: string;
-  lead: string;
-  members: DiscoveryMember[];
-}
-
-export const DISCOVERY_SETS: Record<DiscoverySetId, DiscoverySet> = {
-  "discovery-men": {
-    id: "discovery-men",
-    name: "The Men's Discovery Set",
-    audience: "Fresh · Sharp · Smoky",
-    lead: "Three ways to be remembered.",
-    members: [
-      { name: "Hades", scent: "hades" },
-      { name: "Poseidon", scent: "poseidon" },
-      { name: "Apollo", scent: "apollo" },
-    ],
-  },
-  "discovery-women": {
-    id: "discovery-women",
-    name: "The Women's Discovery Set",
-    audience: "Warm · Vanilla · Floral",
-    lead: "Three ways to be remembered.",
-    members: [
-      { name: "Artemis", scent: "artemis" },
-      { name: "Hera", scent: "hera" },
-      { name: "Aphrodite", scent: "aphrodite" },
-    ],
-  },
-};

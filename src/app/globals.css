@@ -112,8 +112,8 @@ body {
   font-weight: 400;
 }
 
-/* Accordion marker — the plus beside each scent in a discovery set turns into
-   a close mark when its <details> opens. Written here rather than as a
+/* Accordion marker — the plus beside a <details> summary turns into a close
+   mark when it opens. Written here rather than as a
    `group-open:` Tailwind utility: under v4 that variant emits no rule for the
    rotate property, so the marker silently never turned. */
 .marker-plus {
