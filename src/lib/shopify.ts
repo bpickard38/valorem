@@ -181,6 +181,27 @@ const FALLBACK_PRICE: Record<ScentId, number> = {
   hera: 70,
 };
 
+/* The same last-known-good prices, per SIZE rather than per scent.
+ *
+ * FALLBACK_PRICE above answers "what does this scent cost", which is the full
+ * size. That was the only fallback there was, so productVariants() degraded to
+ * a list of ONE variant — the 30 ml — and lowestPricing() therefore reported
+ * $70 during an outage. Every "From $X" on the site quotes lowestPricing(),
+ * so an outage silently repriced the entry point from $16 to $70 and turned
+ * the home page's primary CTA into "Start with a $70 Sample".
+ *
+ * Keyed by size and not by scent because all six are priced identically; if
+ * that ever stops being true this becomes a per-scent table. The 30 ml figure
+ * MUST equal the values in FALLBACK_PRICE above.
+ *
+ * Same standing rule as FALLBACK_PRICE: these are what customers see when
+ * Shopify is unreachable, so keep them in step with the admin. */
+const FALLBACK_SIZE_PRICE: Record<SizeId, number> = {
+  "30ml": 70,
+  "15ml": 48,
+  "5ml": 16,
+};
+
 export interface Pricing {
   amount: number;
   currency: string;
@@ -204,8 +225,15 @@ export interface Pricing {
  * caller reaches for it alongside Pricing. */
 export { formatMoney } from "@/lib/site";
 
+function fallbackSizePricing(size: SizeId): Pricing {
+  return shapeFallback(FALLBACK_SIZE_PRICE[size]);
+}
+
 function fallbackPricing(product: ScentId): Pricing {
-  const amount = FALLBACK_PRICE[product];
+  return shapeFallback(FALLBACK_PRICE[product]);
+}
+
+function shapeFallback(amount: number): Pricing {
   return {
     amount,
     currency: "USD",
@@ -383,14 +411,17 @@ export async function productVariants(
     return await loadVariants(product);
   } catch (error) {
     console.error(`variant lookup failed for ${product}:`, error);
-    return [
-      {
-        size: DEFAULT_SIZE,
-        gid: "",
-        pricing: fallbackPricing(product),
-        availableForSale: false,
-      },
-    ];
+    /* Every size, not just the default one. The selector renders all three
+     * greyed out rather than collapsing to a lone 30 ml, and — the reason this
+     * matters — lowestPricing() can still find the 5 ml, so "From $16" stays
+     * $16 while Shopify is down. gid is empty and availableForSale is false on
+     * all of them, so nothing here is addable to a cart. */
+    return SIZES.map((size) => ({
+      size: size.id,
+      gid: "",
+      pricing: fallbackSizePricing(size.id),
+      availableForSale: false,
+    }));
   }
 }
 

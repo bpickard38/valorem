@@ -128,11 +128,19 @@ export function collectionsIndexSeo(from: string) {
   };
 }
 
+/* The title keeps its keyword shape on purpose. The hero moved from a format
+ * message ("carried, not sprayed") to a benefit one, and the DESCRIPTION
+ * follows it — but a title still has to contain the phrase someone typed, and
+ * "solid cologne" / "solid perfume" are the phrases with volume. A benefit
+ * headline in the title tag would match the page and rank for nothing.
+ *
+ * The description now leads with where the scent goes rather than how it is
+ * applied, so the snippet and the H1 make the same promise. */
 export function homeSeo(from: string) {
   return {
     title: "VALOREM — Solid Cologne & Perfume in a Twist-Up Stick",
     description: withPrice(
-      "Solid fragrance you carry, not spray. The Deity Collection — six twist-up sticks. 30 ml, about three months of daily wear. No glass, no spills.",
+      "Solid fragrance that sits on your skin, not in the room. Six twist-up sticks in the Deity Collection — 30 ml, about three months of daily wear.",
       from,
     ),
     canonical: "/",

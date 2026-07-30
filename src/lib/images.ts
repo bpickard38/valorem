@@ -24,10 +24,36 @@
  */
 
 export const IMAGES = {
-  /* Full-bleed homepage hero, both sticks. Cropped with object-cover and
-   * overlaid with white type on a dark scrim, so the centre must stay calm
-   * and nothing important can sit near an edge. */
-  hero: "/shopify/hero-duo.png",
+  /* Homepage hero product shot — the branded stick, cap off, wax raised.
+   *
+   * A CUTOUT with a real alpha channel (verified: corner alpha 0, ~70% of the
+   * canvas fully clear). It sits on the page's own ivory with object-contain
+   * and the CSS drop-shadow from `.product-cutout`, exactly like the product
+   * cards. A file with a background baked in would shadow as a grey rectangle
+   * here — see CUTOUT_PHOTOGRAPHY in site.ts.
+   *
+   * 1600x1600, and that is fine: the 4:5 rule in AGENTS.md governs PRODUCT
+   * SURFACES — gallery, slides, thumbnails, cards — where a mixed ratio makes
+   * a grid look broken. The hero is marketing art in a frame of its own and
+   * has no neighbour to line up with. Do not copy this exemption to a card.
+   *
+   * Replaced the full-bleed `hero-duo.png` lifestyle shot on 2026-07-28. That
+   * image needed a dark scrim and white type over it; this one is the product
+   * itself against the page, which is what a first-time visitor from a cold ad
+   * actually needs to see.
+   *
+   * DERIVED, not the original. `public/Valorem_transparent.png` was keyed
+   * against magenta and kept the key colour in its edge pixels — 5.5k of them,
+   * including ~400 at near-full opacity. Invisible on magenta; a purple
+   * outline the moment it sits on ivory. `scripts/defringe-cutout.mjs`
+   * produced this file from it. Re-run that script on any future cutout that
+   * shows a coloured rim, and keep the untouched source where it is. */
+  hero: "/brand/hero-stick.png",
+
+  /* The previous full-bleed lifestyle hero. Kept because it is still the only
+   * wide brand image in the repo and the shoot list still calls for one — but
+   * nothing renders it today. */
+  heroLifestyle: "/shopify/hero-duo.png",
 
   /* The complete Canva logo lockup — pegasus, VALOREM, SOLID FRAGRANCE — as
    * one white image, for use on the dark hero only. Not photography; this one

@@ -9,10 +9,13 @@ export default function EmailForm() {
     "idle" | "loading" | "done" | "error"
   >("idle");
 
+  /* The offer is a scent guide sent now, not early access to a product that
+   * doesn't exist yet — so the confirmation promises delivery, not membership.
+   * "You are on the list" belonged to the old next-collection framing. */
   if (status === "done") {
     return (
       <p className="py-4 font-serif text-xl text-charcoal">
-        You are on the list.
+        Sent. Check your inbox.
       </p>
     );
   }
@@ -57,7 +60,7 @@ export default function EmailForm() {
           disabled={status === "loading"}
           className="shrink-0"
         >
-          {status === "loading" ? "One moment" : "Get Access"}
+          {status === "loading" ? "One moment" : "Send the Scent Guide"}
         </Button>
       </form>
       {status === "error" && (

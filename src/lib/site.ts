@@ -198,10 +198,20 @@ export function galleryImageMode(index: number) {
 
 /* The return policy, written as a promise instead of a policy. Used verbatim
  * beside every buy button — keep the two halves separate so the styling can
- * lean on the first line. */
+ * lean on the first line.
+ *
+ * "Even used" is a deliberate, owner-confirmed commitment (2026-07-28), not
+ * marketing softening: opened and worn product comes back. It is the single
+ * strongest thing on the page for cold traffic, and it is also an operational
+ * promise someone has to honour — do not strengthen or weaken it without the
+ * owner saying so.
+ *
+ * The window is spelled out here rather than interpolated from RETURN_WINDOW
+ * because it opens a sentence and needs the capital. RETURN_WINDOW is the same
+ * thirty days; change one and change the other. */
 export const GUARANTEE = {
-  headline: "Wear it for 30 days.",
-  sub: "Don't love it? Full refund.",
+  headline: "Wear it for two weeks.",
+  sub: "If it isn't yours, send it back — even used. Thirty days from delivery.",
 } as const;
 
 /* The case for the $70, argued on size and concentration rather than price.
