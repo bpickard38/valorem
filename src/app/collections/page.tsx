@@ -17,8 +17,6 @@ import {
   SHIP_WINDOW,
   STICK_SIZE,
   WEAR_ESTIMATE,
-  productImageFit,
-  productImageFrame,
 } from "@/lib/site";
 
 /* Price comes from Shopify, so this can't be frozen at build time — hourly,
@@ -72,27 +70,40 @@ export default async function CollectionsPage() {
                   href={`/collections/${collection.id}`}
                   className="group flex h-full flex-col"
                 >
-                  {/* 4:3, not the 4:5 used everywhere else on the site. These
-                      are three-bottle group shots — landscape content — and a
-                      portrait frame strands half its height as empty air
-                      between the bottles and the copy beneath them. The
-                      artwork is normalised to a matching 1600x1200 canvas.
-                      Fixed either way: the two must occupy identical space or
-                      the copy below falls out of step, and the frame has to
-                      hold its shape before the art loads. */}
-                  <div
-                    className={`relative aspect-[4/3] w-full ${productImageFrame}`}
-                  >
+                  {/* 4:3, not the 4:5 used everywhere else on the site. This
+                      is landscape content — an ingredient still-life, tin and
+                      raw materials side by side — and a portrait frame strands
+                      half its height as empty air between the shot and the copy
+                      beneath it. Fixed either way: the two cards must occupy
+                      identical space or the copy below falls out of step, and
+                      the frame has to hold its shape before the art loads.
+
+                      BLEED, and deliberately NOT productImageFrame /
+                      productImageFit. Those two follow CUTOUT_PHOTOGRAPHY,
+                      which is true, so they resolve to `p-[3%]` and
+                      `object-contain product-cutout` — an inset and a CSS
+                      drop-shadow. That is right for a background-free product
+                      cutout and wrong for these: the artwork here is an opaque
+                      photograph with its own slate and travertine baked in, and
+                      a drop-shadow on an opaque image shadows its rectangle.
+
+                      The cost of hardcoding it is that these cards no longer
+                      follow that global switch. That is the correct trade —
+                      collection artwork is a different KIND of image from a
+                      product cutout, and flipping CUTOUT_PHOTOGRAPHY for the
+                      catalogue should not reach in here. Swap in cutout
+                      artwork and you change these two classes by hand. */}
+                  <div className="relative aspect-[4/3] w-full overflow-hidden">
                     {image ? (
                       <Image
                         src={image}
                         alt={collection.name}
                         fill
-                        /* Two-up from md, full-bleed below — stops a 1600px
+                        /* Two-up from md, full-bleed below — stops the full
                            file being shipped to a 375px phone. */
                         sizes="(min-width: 768px) 496px, 100vw"
                         priority={i === 0}
-                        className={`${productImageFit} transition-transform duration-700 ease-out group-hover:scale-[1.03]`}
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                       />
                     ) : (
                       /* No photograph yet. An engraved plate rather than a grey

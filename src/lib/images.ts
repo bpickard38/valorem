@@ -151,17 +151,13 @@ export const PEGASUS_SIZE = { width: 1037, height: 957 } as const;
  * lib/collectionImage.ts, which looks for public/collections/<id>.<ext> and
  * falls back to an engraved plate when there is no file. That indirection is
  * deliberate — dropping in gods.jpg is the whole swap — so the paths are not
- * repeated here. The files themselves are on the shoot list below. */
+ * repeated here. See public/collections/README.md for the ratio and the reason
+ * that card is the site's one bleed exception to CUTOUT_PHOTOGRAPHY. */
 
 /* ---- What still needs shooting ----------------------------------------
  * Ratios are not suggestions: each frame is fixed in the layout so the page
  * holds its shape before the image loads, and a file at the wrong ratio gets
  * cropped to fit rather than fitting.
- *
- *   public/collections/gods.png        4:3, 1600x1200. Three-bottle group
- *   public/collections/goddesses.png   shot, landscape. NOT 4:5 — these are
- *                                      the one surface on the site that is
- *                                      not portrait.
  *
  * In SHOPIFY, per scent (six products), replacing the ChatGPTImage* files:
  *
@@ -178,9 +174,9 @@ export const PEGASUS_SIZE = { width: 1037, height: 957 } as const;
  * for the whole catalogue, and one bleed shot among five cutouts renders as a
  * mistake. */
 /* The homepage hero and the three How It Works steps came off this list on
- * 2026-08-04 — they are real photography now. What is left is the two
- * collection group shots and the Shopify catalogue. */
-export const SHOOT_LIST = [
-  { path: "public/collections/gods.png", ratio: "4:3", note: "three-bottle group shot" },
-  { path: "public/collections/goddesses.png", ratio: "4:3", note: "three-bottle group shot" },
-] as const;
+ * 2026-08-04, the two collection cards on 2026-08-05 — all real photography
+ * now. Only the Shopify catalogue above is left, and nothing in this repo
+ * names those files, which is why the list is empty rather than deleted: it is
+ * the record of what the ratios are for, and the next surface that needs
+ * shooting belongs here. */
+export const SHOOT_LIST = [] as const;
