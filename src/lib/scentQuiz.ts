@@ -269,7 +269,7 @@ export const QUIZ: QuizQuestion[] = [
       },
       {
         id: "hot",
-        label: "Hot, bright, humid",
+        label: "Hot air, bright sun",
         hint: "Sharp and cooling",
         weights: { apollo: 2, poseidon: 2 },
       },
