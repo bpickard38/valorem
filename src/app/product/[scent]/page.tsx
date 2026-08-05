@@ -26,6 +26,8 @@ import HomeFooter from "@/components/HomeFooter";
 import ProductGallery from "@/components/ProductGallery";
 import SizeSelector from "@/components/SizeSelector";
 import Guarantee from "@/components/Guarantee";
+import PriceBadge from "@/components/PriceBadge";
+import PriceJustification from "@/components/PriceJustification";
 import ValueComparison from "@/components/ValueComparison";
 import ProductReviews from "@/components/ProductReviews";
 import Disclosure from "@/components/Disclosure";
@@ -158,6 +160,16 @@ export default async function ProductPage({
               leave a figure on screen that silently stops describing what is
               about to be added to the cart. */}
           <SizeSelector product={s.id} variants={variants} />
+
+          {/* The price argument, immediately under the buy block rather than
+              buried in the FAQ. Both of these read the 30 ml's pricing and say
+              so in their copy — they do NOT follow the size selector, because
+              a per-day figure derived from the full size while the shopper has
+              the 5 ml selected would be quietly wrong, and the selector is a
+              client component this server page cannot observe.
+              PriceBadge renders nothing until PRICE_BADGE is configured. */}
+          <PriceJustification pricing={defaultPricing} className="mt-4" />
+          <PriceBadge pricing={defaultPricing} className="mt-3" />
 
           <Guarantee className="mt-5" align="left" />
 

@@ -15,6 +15,14 @@ import { RETURN_WINDOW, STICK_SIZE, WEAR_ESTIMATE } from "@/lib/site";
 
 const items = [
   {
+    /* The four-to-six-hour figure is TESTED — owner-confirmed 2026-08-03 that
+     * he has timed it. Recorded here because the number was queried on the
+     * grounds that lasting-power claims must be mechanistic unless measured,
+     * and the answer is that this one is measured. It stays as a figure.
+     *
+     * Note the second sentence is doing the mechanistic work regardless: it
+     * concedes that solids project less than sprays and names the trade rather
+     * than selling around it. Keep that clause if the number ever changes. */
     q: "How long does it last?",
     a: "Four to six hours worn close to the skin. Solids project less than sprays and reapply in two seconds — that's the trade.",
   },
@@ -43,8 +51,21 @@ const items = [
     a: `Returns accepted within ${RETURN_WINDOW} of delivery, including opened and used sticks. Wear it for a couple of weeks before you decide — that's what the window is for.`,
   },
   {
+    /* "Most solids run 5–10%" was cut from this answer on 2026-08-03. It was
+     * the same unsourced category figure as the retired
+     * VALUE_COMPARISON.otherSolids, and research that day contradicted it:
+     * premium solids describe their concentration qualitatively — Fulton &
+     * Roark say "highly-concentrated", Duke Cannon "a high level of fragrance"
+     * — and publish no percentage at all. So the honest version of the point is
+     * about DISCLOSURE, which is checkable, rather than about their number,
+     * which does not exist. Matches the "Fragrance load" framing that the
+     * comparison table uses for the same reason.
+     *
+     * The base is named in full here now that IngredientList publishes the
+     * complete list — "a beeswax and carnauba base" was true but omitted
+     * candelilla, which is the second-largest wax in the formula. */
     q: "Is it really 20% fragrance oil?",
-    a: "Yes. A beeswax and carnauba base, skin-safe. No denatured alcohol — the wax holds the oil against your skin instead of flashing off the way a spray does. Most solids run 5–10%. Ours doesn't whisper.",
+    a: "Yes. A carnauba, candelilla and beeswax base, skin-safe. No denatured alcohol — the wax holds the oil against your skin instead of flashing off the way a spray does. Most solid fragrances never publish a figure at all. Ours doesn't whisper.",
   },
 ];
 /* "How big is it?" used to sit at the bottom of this list with the same two

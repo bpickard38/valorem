@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import SocialLinks from "@/components/SocialLinks";
 import { CONTACT_EMAIL, RETURN_WINDOW, SHIPPING_NOTE } from "@/lib/site";
-import { IMAGES } from "@/lib/images";
+import { IMAGES, PEGASUS_SIZE } from "@/lib/images";
 
 /* Footer shared by the home, collection, product, /faq and /contact pages. */
 
@@ -15,8 +15,7 @@ export default function HomeFooter() {
       <Image
         src={IMAGES.pegasus}
         alt="Valorem"
-        width={572}
-        height={589}
+        {...PEGASUS_SIZE}
         className="h-auto w-14 opacity-80"
       />
       <p className="label-engraved font-serif text-charcoal/80">Valorem</p>

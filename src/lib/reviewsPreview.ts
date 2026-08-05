@@ -27,7 +27,8 @@
  * data path, and do not remove the NODE_ENV gates.
  */
 
-import type { Review, ReviewSummary } from "@/lib/reviews";
+import type { Review, ReviewSummary, Testimonial } from "@/lib/reviews";
+import { shortenName, trimToSentences } from "@/lib/reviews";
 import type { ScentId } from "@/lib/shopify";
 
 const POSEIDON: Review[] = [
@@ -148,4 +149,37 @@ export function previewSummary(scent: ScentId): ReviewSummary | null {
     count: reviews.length,
     reviews,
   };
+}
+
+/*
+ * Sample testimonials for laying out the homepage card row. Empty in
+ * production, under the same NODE_ENV gate as everything else in this file.
+ *
+ * Deliberately NOT all five stars, and one entry deliberately has no title:
+ * both are states the real data will produce, and a preview that only shows
+ * the flattering case is how a layout ships broken. The 4-star entry proves
+ * the card renders a real rating rather than a hardcoded five, and the
+ * title-less entry proves it survives a reviewer who left no headline.
+ *
+ * Runs through the same shortenName/trimToSentences helpers as the live path,
+ * so what is being styled is what will actually render.
+ */
+export function previewTestimonials(limit = 3): Testimonial[] {
+  if (process.env.NODE_ENV === "production") return [];
+
+  const picks: { review: Review; scent: ScentId }[] = [
+    { review: POSEIDON[0], scent: "poseidon" },
+    { review: APHRODITE[1], scent: "aphrodite" },
+    { review: POSEIDON[3], scent: "poseidon" },
+  ];
+
+  return picks.slice(0, limit).map(({ review, scent }, i) => ({
+    id: review.id,
+    rating: review.rating,
+    /* Third card drops its title on purpose — see above. */
+    headline: i === 2 ? null : review.title,
+    body: trimToSentences(review.body),
+    author: shortenName(review.author),
+    scent,
+  }));
 }

@@ -62,7 +62,8 @@ export interface QuizQuestion {
  *    file must not do: it makes a claim about someone else's product, invites
  *    a comparison the formula has never been tested against, and drags the
  *    brand back to the reference-fragrance framing that site.ts replaced with
- *    real formulations. Same rule as VALUE_COMPARISON — no named competitor.
+ *    real formulations. Same rule as COMPARISON in site.ts — no named
+ *    competitor.
  *
  * 2. How someone wants to be described. The second question is about the
  *    person, not the liquid, because that is the decision actually being made

@@ -9,6 +9,10 @@ import type { QuizScent } from "@/components/ScentQuiz";
 import HomeFooter from "@/components/HomeFooter";
 import ScrollLink from "@/components/ScrollLink";
 import ReviewProofLine from "@/components/ReviewProofLine";
+import TestimonialCards from "@/components/TestimonialCards";
+import PriceTiers from "@/components/PriceTiers";
+import ComparisonTable from "@/components/ComparisonTable";
+import IngredientList from "@/components/IngredientList";
 import { ButtonLink, SectionHeader } from "@/components/ui";
 import {
   lowestPricing,
@@ -18,11 +22,12 @@ import {
 } from "@/lib/shopify";
 import type { ScentId } from "@/lib/shopify";
 import { homeSeo, toMetadata } from "@/lib/seo";
-import { IMAGES } from "@/lib/images";
+import { IMAGES, PEGASUS_SIZE, optimizedImage } from "@/lib/images";
 import {
   COLLECTIONS,
   COLLECTION_TITLE,
   CURRENCY,
+  FOUNDER,
   FRAGRANCE_LOAD,
   FREE_SHIPPING_THRESHOLD,
   RETURN_WINDOW,
@@ -90,21 +95,35 @@ const SAMPLE_GIFT = `Every full size ships with two ${SAMPLE_SIZE} samples in sc
  * or the section stops arguing that the brand is unisex. */
 const FEATURED: ScentId[] = ["poseidon", "aphrodite"];
 
-const steps = [
+/* `lead` is also the key into BOTH step image maps — each step is illustrated
+ * by a photograph of the gesture it describes, in a landscape and a portrait
+ * crop. The intersection is what makes that link enforceable: a lead renamed
+ * here, or a key added to only one of the two maps in images.ts, fails to
+ * compile rather than rendering a broken image at one breakpoint only —
+ * which is the failure that would otherwise ship unnoticed on desktop. */
+const steps: {
+  numeral: string;
+  lead: keyof typeof IMAGES.howItWorks & keyof typeof IMAGES.howItWorksTall;
+  body: string;
+  alt: string;
+}[] = [
   {
     numeral: "01",
     lead: "Twist.",
     body: "Turn the base to raise the wax.",
+    alt: "A Valorem stick held in one hand with the wax twisted up above the rim",
   },
   {
     numeral: "02",
     lead: "Swipe.",
     body: "A pass over wrists, neck, collar — anywhere skin runs warm.",
+    alt: "The raised wax being pressed against the inside of a wrist",
   },
   {
     numeral: "03",
     lead: "Go.",
     body: "It lives in your pocket. Reapply whenever you like.",
+    alt: "A Valorem stick being slipped into a trouser pocket",
   },
 ];
 
@@ -207,14 +226,24 @@ export default async function Home() {
             duration={900}
             className="order-first md:order-last"
           >
-            <div className="relative mx-auto aspect-square w-full max-w-md">
+            {/* A BLEED frame, not a cutout frame. IMAGES.hero is an opaque
+                photograph now, so this is object-cover inside a clipped box
+                with no `.product-cutout` — that class drop-shadows whatever
+                shape it is given, which on an opaque file is the rectangle.
+                Restore it only alongside a file with a real alpha channel.
+
+                aspect-[4/5] crops the ~9:16 source; the subject sits mid-frame
+                so a centred cover crop takes shirt off the top and floor off
+                the bottom, keeping both hands and the stick. Re-aim with an
+                `object-top` / `object-bottom` here rather than re-exporting. */}
+            <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-sm">
               <Image
                 src={IMAGES.hero}
-                alt="Valorem solid fragrance stick, twisted up"
+                alt="A hand twisting up a Valorem solid fragrance stick over an open palm"
                 fill
                 priority
                 sizes="(min-width: 768px) 480px, 90vw"
-                className="product-cutout object-contain"
+                className="object-cover"
               />
             </div>
           </FadeIn>
@@ -256,6 +285,16 @@ export default async function Home() {
                   Shop Full Size — {stickPricing.formatted}
                 </ButtonLink>
               </div>
+
+              {/* All three sizes, directly under the two CTAs — the $48 15 ml
+                * appeared nowhere on this page, so the hero offered a $16 trial
+                * or a $70 commitment and nothing in between. Placed here rather
+                * than in its own section because it is context for the buttons
+                * above it, not an offer of its own. */}
+              <PriceTiers
+                variants={variants}
+                className="mt-5 justify-center md:justify-start"
+              />
 
               {/* GUARANTEE — at the price decision, not in the footer. Back to
                 * the shared component now the hero is light: one skin, one
@@ -322,6 +361,18 @@ export default async function Home() {
         </FadeIn>
       </section>
 
+      {/* COMPARISON — directly under the proof strip, reinforcing the four
+       * figures it just stated rather than introducing new ones.
+       *
+       * RENDERS NOTHING TODAY, on purpose. Three of its four rows failed
+       * verification and one row is not a table, so ComparisonTable returns
+       * null (see COMPARISON in site.ts for what each row is waiting on).
+       * Placed anyway, and placed here, for the same reason ReviewProofLine
+       * sits in the closing block: the wiring is the hard part, and the
+       * section should appear the day the claims behind it stand up rather
+       * than the day someone remembers to add it. */}
+      <ComparisonTable className="px-5 py-20 sm:py-24 md:px-6" />
+
       {/* PICKED FOR YOU — the first thing under the hero image.
           This replaced "You can't smell a website", which spent the most
           valuable block on the page arguing that a stranger should not buy
@@ -372,8 +423,7 @@ export default async function Home() {
                       <Image
                         src={IMAGES.pegasus}
                         alt=""
-                        width={572}
-                        height={589}
+                        {...PEGASUS_SIZE}
                         className="h-auto w-16 opacity-40"
                       />
                     </div>
@@ -429,33 +479,120 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* II — HOW IT WORKS */}
-        <section id="how-it-works" className="px-6 pb-24 sm:pb-28">
+        {/* II — HOW IT WORKS
+         *
+         * Three full-width blocks stacked down the page, not a three-column
+         * row. The row made each step a thumbnail; at 1152px a step is a
+         * moment, and the 01/02/03 numbering finally describes a sequence you
+         * actually travel through rather than three things seen at once.
+         *
+         * px-5/md:px-6 and max-w-6xl below are the hero's gutters and measure,
+         * so these blocks line up with the hero image rather than with the
+         * narrower max-w-5xl grids elsewhere in this section. */}
+        <section id="how-it-works" className="px-5 pb-24 sm:pb-28 md:px-6">
           <FadeIn>
             <SectionHeader numeral="II" label="How It Works" />
-            <div className="mx-auto mt-14 grid max-w-4xl grid-cols-1 gap-12 text-center sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-charcoal/10">
-              {steps.map((step) => (
-                <div key={step.lead} className="sm:px-8">
-                  <p
-                    aria-hidden="true"
-                    className="font-serif text-sm tracking-[0.2em] text-gold"
-                  >
-                    {step.numeral}
-                  </p>
-                  <p className="mt-4 font-serif text-xl text-charcoal">
-                    {step.lead}
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed text-charcoal/65">
-                    {step.body}
-                  </p>
-                </div>
-              ))}
-            </div>
+          </FadeIn>
+          {/* space-y, not gap — each block is its own beat, and the gap between
+              them is deliberately larger than the gap between a picture and its
+              own caption so the caption reads as belonging to the image above
+              it rather than floating between two. */}
+          <div className="mx-auto mt-14 max-w-6xl space-y-20 sm:space-y-28">
+            {steps.map((step) => (
+              /* One FadeIn per block rather than one around the section: these
+                 are now tall enough that they cross the viewport separately,
+                 so each should reveal as it arrives. No stagger delay — that
+                 is for items landing together in a row. */
+              <FadeIn key={step.lead}>
+                <figure>
+                  {/* ART DIRECTION, two crops of one shot — see
+                      IMAGES.howItWorksTall. Phones get a 4:5 window because a
+                      16:9 frame at 390px wide is a 219px strip that turns the
+                      gesture into a smear; md and up get the landscape master.
+
+                      <picture> rather than next/image, and rather than two
+                      <Image>s toggled by `md:hidden`. The two-Image version
+                      was measured downloading all six files at every width:
+                      display:none does not cancel a fetch, and lazy loading
+                      does not either. Only <picture> makes the browser resolve
+                      the media condition before choosing what to request.
+                      Srcsets still run through the optimizer via
+                      optimizedImage(), so this keeps WebP/AVIF negotiation and
+                      resizing — it opts out of the component, not the pipeline.
+
+                      The ratio switches on the CONTAINER, in the same
+                      breakpoint as the <source>. Those two have to move
+                      together: a 4:5 box holding the landscape crop letterboxes
+                      it. The box also reserves height before the file lands,
+                      which is why the ratio is pinned rather than left to the
+                      image's own dimensions. */}
+                  <div className="relative aspect-[4/5] w-full overflow-hidden rounded-sm md:aspect-[16/9]">
+                    <picture>
+                      <source
+                        media="(min-width: 768px)"
+                        sizes="(min-width: 1200px) 1152px, 100vw"
+                        srcSet={`${optimizedImage(IMAGES.howItWorks[step.lead], 1200)} 1200w, ${optimizedImage(IMAGES.howItWorks[step.lead], 2048)} 2048w`}
+                      />
+                      {/* A bare <img> is correct here and lint agrees —
+                          @next/next/no-img-element exempts <img> inside a
+                          <picture>, precisely because this is the case
+                          next/image cannot cover. */}
+                      <img
+                        src={optimizedImage(IMAGES.howItWorksTall[step.lead], 828)}
+                        srcSet={`${optimizedImage(IMAGES.howItWorksTall[step.lead], 640)} 640w, ${optimizedImage(IMAGES.howItWorksTall[step.lead], 828)} 828w`}
+                        sizes="100vw"
+                        alt={step.alt}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    </picture>
+                  </div>
+
+                  {/* Same three-part treatment as the old columns — gold
+                      numeral, serif lead, muted body — but left-aligned now.
+                      Centred copy works under a 315px thumbnail; under a
+                      1152px photograph it strands the short lines in the
+                      middle of a very wide block with no edge to hang on. The
+                      body is capped at a readable measure for the same reason:
+                      full-width prose at this size is a 140-character line. */}
+                  <figcaption className="mt-6">
+                    <p
+                      aria-hidden="true"
+                      className="font-serif text-sm tracking-[0.2em] text-gold"
+                    >
+                      {step.numeral}
+                    </p>
+                    <p className="mt-4 font-serif text-xl text-charcoal">
+                      {step.lead}
+                    </p>
+                    <p className="mt-3 max-w-xl text-sm leading-relaxed text-charcoal/65">
+                      {step.body}
+                    </p>
+                  </figcaption>
+                </figure>
+              </FadeIn>
+            ))}
+          </div>
+          <FadeIn>
             <p className="mt-14 text-center text-[0.65rem] uppercase tracking-[0.28em] text-charcoal/55">
               {STICK_SIZE} · about {WEAR_ESTIMATE} of daily wear · {stickPricing.formatted}
             </p>
           </FadeIn>
         </section>
+
+        {/* INGREDIENTS — inside the education block, closing it.
+         *
+         * Placed here because the two sections above it make MECHANICAL
+         * claims — "a wax base holds the oil against warm skin", "there is no
+         * denatured alcohol to flash off" — and this is the evidence for them.
+         * A shopper who has just read why the format works can now read what
+         * it is made of, in that order. Moving it up beside the comparison
+         * table would put two substantiation blocks in front of the first
+         * product photograph. */}
+        <FadeIn>
+          <IngredientList className="border-t border-charcoal/10 px-5 pb-24 pt-24 sm:pb-28 sm:pt-28 md:px-6" />
+        </FadeIn>
       </div>
 
       {/* III — THE SIX SCENTS
@@ -515,8 +652,7 @@ export default async function Home() {
                           <Image
                             src={IMAGES.pegasus}
                             alt=""
-                            width={572}
-                            height={589}
+                            {...PEGASUS_SIZE}
                             className="h-auto w-16 opacity-40"
                           />
                         </div>
@@ -544,30 +680,58 @@ export default async function Home() {
         ))}
       </section>
 
+      {/* TESTIMONIALS — after the six-card grid, before the story.
+       *
+       * After the product on purpose: a quote about a scent means nothing to
+       * someone who has not yet seen the scent, and this is the first point on
+       * the page where a visitor has been shown all six. It also lands
+       * immediately before "Our Story", so the brand talks about itself only
+       * after its customers have.
+       *
+       * Renders nothing until a real review exists — no skeleton and no
+       * placeholder, so today the grid runs straight into the story. */}
+      <TestimonialCards className="border-t border-charcoal/10" />
+
       {/* IV — OUR STORY */}
       <section
         id="story"
         className="texture-travertine scroll-mt-20 px-6 py-24 sm:py-28"
       >
         <div className="mx-auto grid max-w-4xl items-center gap-14 md:grid-cols-2">
+          {/* FOUNDER-LED, as of 2026-08-03. This block used to open on
+            * "Valorem — from the Latin for worth" and then describe the
+            * collection — etymology and a product count, with no person in it.
+            * On a site with no reviews yet, that reads as a template store.
+            *
+            * So it opens on Brayden's own reason now, in quotes and in the
+            * first person, and the Latin survives inside his sentence rather
+            * than as the headline. What came out entirely is the line about six
+            * scents in two houses: section III above is the six scents in two
+            * houses, so it was a caption for a grid the reader had just
+            * scrolled past. */}
           <FadeIn>
             <SectionHeader numeral="IV" label="Our Story" align="left" />
-            <p className="mt-9 text-center font-serif text-2xl leading-snug text-charcoal sm:text-3xl md:text-left">
-              Valorem — from the Latin for{" "}
-              <span className="text-gold-deep">worth.</span>
-            </p>
+            <blockquote className="mt-9 text-center font-serif text-2xl leading-snug text-charcoal sm:text-3xl md:text-left">
+              &ldquo;{FOUNDER.hook}&rdquo;
+            </blockquote>
             <p className="mt-5 text-center text-sm leading-relaxed text-charcoal/70 md:text-left">
-              We make fragrance worth keeping. Our first collection, the Deity
-              Collection, runs to six scents in two houses — the Gods and the
-              Goddesses.
+              {FOUNDER.body}
+            </p>
+            {/* Name and role, not a signature graphic — there is no founder
+              * photograph in the repo and a stock one would defeat the point of
+              * the section. */}
+            <p className="label-engraved mt-6 text-center text-gold-deep md:text-left">
+              {FOUNDER.name}, {FOUNDER.role}
+            </p>
+            <p className="mt-2 text-center text-xs tracking-wide text-charcoal/55 md:text-left">
+              {FOUNDER.craft}
             </p>
           </FadeIn>
           <FadeIn delay={150}>
             <Image
               src={IMAGES.pegasus}
               alt="Valorem pegasus mark"
-              width={572}
-              height={589}
+              {...PEGASUS_SIZE}
               className="mx-auto h-auto w-40 opacity-90 sm:w-52"
             />
           </FadeIn>

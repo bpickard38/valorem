@@ -84,15 +84,25 @@ fbq('init', '1506577174000493');
 fbq('track', 'PageView');
         `}
       </Script>
-      <Script id="microsoft-clarity" strategy="afterInteractive">
-        {`
-(function(c,l,a,r,i,t,y){
-    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-})(window, document, "clarity", "script", "xoms7dfcdq");
-        `}
-      </Script>
+      {/* Microsoft Clarity (tag xoms7dfcdq) was REMOVED on 2026-08-03. It is
+        * not paused or gated — the script is gone.
+        *
+        * Why: it was the worst value-to-risk trade on the site. Session replay
+        * earns its keep by revealing patterns across many sessions, and at this
+        * traffic there were not enough to find one. Against that it was the only
+        * tracker recording what visitors physically did — mouse movement,
+        * clicks, scrolling — and if its masking is not configured tightly, form
+        * fields go with it, which on a store means email and address data.
+        *
+        * If it comes back, it comes back BEHIND A CONSENT GATE, and the privacy
+        * policy has to be updated in the same commit — see the note at the top
+        * of app/privacy/page.tsx. A tracker listed there but not loaded here,
+        * or loaded here but not listed there, makes that page a false
+        * statement.
+        *
+        * The Meta Pixel above stays: it is load-bearing for advertising, and it
+        * is paired with the server-side Conversions API in /api/events. Vercel
+        * Analytics and Speed Insights stay too and are cookieless. */}
     </html>
   );
 }

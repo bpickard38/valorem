@@ -24,8 +24,23 @@
 
 import type { Metadata } from "next";
 import type { ScentId } from "@/lib/shopify";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { CONTACT_EMAIL, WEAR_ESTIMATE_SHORT } from "@/lib/site";
 import type { CollectionId } from "@/lib/site";
+
+/* The wear figure, interpolated rather than typed into nine strings.
+ *
+ * It WAS typed into nine strings — "about three months of daily wear" in all
+ * six product descriptions, the collections index and the home page — and when
+ * WEAR_ESTIMATE moved to six-to-eight months on 2026-08-03 every one of them
+ * kept the old number. A meta description is the version of a claim that ends
+ * up in a Google snippet and on a shared link, so the result was the site
+ * saying six-to-eight months on the page and three months everywhere it gets
+ * quoted. Interpolated now, so the next change cannot half-land.
+ *
+ * Uses the SHORT form: a description has a 160-character budget (asserted at
+ * the bottom of this file) and "6–8 months" spends ten of them where "six to
+ * eight months" spends nineteen. It also scans better in a SERP. */
+const WEAR = `about ${WEAR_ESTIMATE_SHORT}`;
 
 /* Absolute base for canonicals and OG urls. Next needs this to resolve the
  * relative paths below; without it `alternates.canonical` silently emits
@@ -57,27 +72,27 @@ const PRODUCT_SEO: Record<
 > = {
   poseidon: {
     title: "Poseidon Solid Cologne — Bergamot & Lavender | Valorem",
-    body: "Solid cologne in a twist-up stick. Bergamot, Sichuan pepper and lavender over warm ambroxan. 30 ml, about three months of daily wear.",
+    body: `Solid cologne in a twist-up stick. Bergamot, Sichuan pepper and lavender over warm ambroxan. 30 ml, ${WEAR} of daily wear.`,
   },
   hades: {
     title: "Hades Solid Cologne — Bergamot & Black Currant | Valorem",
-    body: "Solid cologne in a twist-up stick. Bergamot, black currant and apple over smoky birch, oakmoss and cedar. 30 ml, about three months of wear.",
+    body: `Solid cologne in a twist-up stick. Bergamot, black currant and apple over smoky birch, oakmoss and cedar. 30 ml, ${WEAR} of wear.`,
   },
   apollo: {
     title: "Apollo Solid Cologne — Grapefruit, Lemon, Mint | Valorem",
-    body: "Solid cologne in a twist-up stick. Grapefruit, lemon and mint over blue cedar and musk. 30 ml, about three months of daily wear.",
+    body: `Solid cologne in a twist-up stick. Grapefruit, lemon and mint over blue cedar and musk. 30 ml, ${WEAR} of daily wear.`,
   },
   artemis: {
     title: "Artemis Solid Perfume — Vanilla and Amber | Valorem",
-    body: "Solid perfume in a twist-up stick. Warm vanilla wrapped in soft amber. 30 ml, about three months of daily wear.",
+    body: `Solid perfume in a twist-up stick. Warm vanilla wrapped in soft amber. 30 ml, ${WEAR} of daily wear.`,
   },
   hera: {
     title: "Hera Solid Perfume — Lavender & Mandarin | Valorem",
-    body: "Solid perfume in a twist-up stick. Lavender and mandarin over orange blossom, jasmine and warm cedar. 30 ml, about three months of wear.",
+    body: `Solid perfume in a twist-up stick. Lavender and mandarin over orange blossom, jasmine and warm cedar. 30 ml, ${WEAR} of wear.`,
   },
   aphrodite: {
     title: "Aphrodite Solid Perfume — Vanilla & Jasmine | Valorem",
-    body: "Solid perfume in a twist-up stick. Vanilla orchid, jasmine absolute and amberwood over rich oakmoss. 30 ml, about three months of wear.",
+    body: `Solid perfume in a twist-up stick. Vanilla orchid, jasmine absolute and amberwood over rich oakmoss. 30 ml, ${WEAR} of wear.`,
   },
 };
 
@@ -121,7 +136,7 @@ export function collectionsIndexSeo(from: string) {
   return {
     title: "Solid Cologne & Perfume — The Deity Collection | Valorem",
     description: withPrice(
-      "Six solid fragrances in twist-up sticks. Three fresh, three warm. 30 ml, about three months of daily wear. No glass, no spills.",
+      `Six solid fragrances in twist-up sticks. Three fresh, three warm. 30 ml, ${WEAR} of daily wear. No glass, no spills.`,
       from,
     ),
     canonical: "/collections",
@@ -140,7 +155,7 @@ export function homeSeo(from: string) {
   return {
     title: "VALOREM — Solid Cologne & Perfume in a Twist-Up Stick",
     description: withPrice(
-      "Solid fragrance that sits on your skin, not in the room. Six twist-up sticks in the Deity Collection — 30 ml, about three months of daily wear.",
+      `Solid fragrance that sits on your skin, not in the room. Six twist-up sticks in the Deity Collection — 30 ml, ${WEAR} of daily wear.`,
       from,
     ),
     canonical: "/",

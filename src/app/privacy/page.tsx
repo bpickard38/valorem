@@ -7,16 +7,27 @@ import { CONTACT_EMAIL, LEGAL_ENTITY, RETURN_WINDOW } from "@/lib/site";
 import { PRIVACY_SEO, toMetadata } from "@/lib/seo";
 
 /*
- * Privacy policy. Required independently of any cookie banner: Meta's
- * Business Tools Terms and Microsoft Clarity's terms both oblige us to
- * disclose their use, and Meta ad reviews check for this page.
+ * Privacy policy. Required independently of any cookie banner: Meta's Business
+ * Tools Terms oblige us to disclose the Pixel's use, and Meta ad reviews check
+ * for this page.
  *
  * Everything here describes what the site actually does — the trackers listed
  * are exactly those loaded in layout.tsx. If a tracker is added or removed
  * there, update this page in the same commit or it becomes a false statement.
+ *
+ * Microsoft Clarity came out on 2026-08-03, and this page came out with it in
+ * the same change: the tracker list, the Microsoft entry under who we share
+ * with, the "clicks, scrolling and mouse movement" sentence, and the Clarity
+ * opt-out under Your choices. What remains is the Pixel, the Conversions API,
+ * and cookieless Vercel analytics.
+ *
+ * LAST_UPDATED is part of the disclosure, not decoration — a policy whose
+ * substance changes while its date sits still is telling visitors the terms
+ * they read last month are the terms today. Move it whenever this file's
+ * MEANING changes; leave it alone for typos and styling.
  */
 
-const LAST_UPDATED = "21 July 2026";
+const LAST_UPDATED = "3 August 2026";
 
 export const metadata: Metadata = toMetadata(PRIVACY_SEO);
 
@@ -92,9 +103,9 @@ export default function PrivacyPage() {
               When you browse.
             </strong>{" "}
             Pages viewed, referring site, approximate location from your IP
-            address, and device and browser type. On this site we also record
-            how you interact with pages — clicks, scrolling and mouse movement
-            — through Microsoft Clarity, described below.
+            address, and device and browser type. We do not record your
+            individual clicks, scrolling or mouse movement, and we do not make
+            session replays of your visit.
           </p>
         </Section>
 
@@ -139,8 +150,14 @@ export default function PrivacyPage() {
         </Section>
 
         <Section heading="Cookies and tracking">
+          {/* COUNT THIS AGAINST layout.tsx WHENEVER A TRACKER CHANGES. It read
+            * "four tools. Two of them set cookies... two do not" and went stale
+            * the instant Clarity was removed — the sentence was still
+            * grammatical and no longer true, which is the failure mode this
+            * page is most exposed to. Three tools now: the Meta Pixel sets
+            * cookies, Vercel Analytics and Speed Insights do not. */}
           <p>
-            We use four tools. Two of them set cookies and follow behaviour;
+            We use three tools. One of them sets cookies and follows behaviour;
             two do not.
           </p>
           <ul className="flex flex-col gap-4">
@@ -151,14 +168,6 @@ export default function PrivacyPage() {
               activity with Meta, including purchase events sent from our
               server through Meta&rsquo;s Conversions API. Purchase and checkout
               events are sent by Shopify.
-            </li>
-            <li>
-              <strong className="font-medium text-charcoal">
-                Microsoft Clarity
-              </strong>{" "}
-              — records how visitors use the site, as heatmaps and session
-              replays, so we can find what is confusing or broken. It sets
-              cookies.
             </li>
             <li>
               <strong className="font-medium text-charcoal">
@@ -183,10 +192,6 @@ export default function PrivacyPage() {
             <li>
               <strong className="font-medium text-charcoal">Meta</strong> —
               advertising and conversion measurement
-            </li>
-            <li>
-              <strong className="font-medium text-charcoal">Microsoft</strong> —
-              Clarity behaviour analytics
             </li>
             <li>
               <strong className="font-medium text-charcoal">Vercel</strong> —
@@ -267,21 +272,6 @@ export default function PrivacyPage() {
                 Meta ad preferences
               </a>
               .
-            </li>
-            <li>
-              <strong className="font-medium text-charcoal">
-                Opt out of Clarity.
-              </strong>{" "}
-              Microsoft honours the{" "}
-              <a
-                href="https://privacy.microsoft.com/privacystatement"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={linkStyle}
-              >
-                choices in their privacy statement
-              </a>
-              , and browser Do Not Track settings.
             </li>
             <li>
               <strong className="font-medium text-charcoal">

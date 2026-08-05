@@ -8,7 +8,7 @@ import HomeFooter from "@/components/HomeFooter";
 import Guarantee from "@/components/Guarantee";
 import { lowestPricing, productImage, productVariants } from "@/lib/shopify";
 import { collectionSeo, toMetadata } from "@/lib/seo";
-import { IMAGES } from "@/lib/images";
+import { IMAGES, PEGASUS_SIZE } from "@/lib/images";
 import {
   COLLECTIONS,
   COLLECTION_TITLE,
@@ -125,8 +125,7 @@ export default async function CollectionPage({
                       <Image
                         src={IMAGES.pegasus}
                         alt=""
-                        width={572}
-                        height={589}
+                        {...PEGASUS_SIZE}
                         className="h-auto w-16 opacity-40"
                       />
                     </div>

@@ -8,7 +8,7 @@ import Guarantee from "@/components/Guarantee";
 import { collectionImage } from "@/lib/collectionImage";
 import { lowestPricing, productVariants } from "@/lib/shopify";
 import { collectionsIndexSeo, toMetadata } from "@/lib/seo";
-import { IMAGES } from "@/lib/images";
+import { IMAGES, PEGASUS_SIZE } from "@/lib/images";
 import {
   COLLECTIONS,
   COLLECTION_TITLE,
@@ -103,8 +103,7 @@ export default async function CollectionsPage() {
                         <Image
                           src={IMAGES.pegasus}
                           alt=""
-                          width={572}
-                          height={589}
+                          {...PEGASUS_SIZE}
                           className="h-auto w-20 opacity-40"
                         />
                         <p className="label-engraved text-charcoal/45">
