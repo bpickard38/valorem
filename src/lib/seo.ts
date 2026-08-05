@@ -162,6 +162,22 @@ export function homeSeo(from: string) {
   };
 }
 
+/* The scent finder became a route of its own on 2026-08-05, having lived as a
+ * section of the home page behind /#quiz. A section cannot rank, cannot be
+ * linked to from an ad, and cannot be shared — this can.
+ *
+ * The title leads with "Quiz" because that is the word people type, and keeps
+ * "Solid Cologne & Perfume" because those are still the phrases with volume
+ * (same reasoning as homeSeo above). No price interpolation: nothing on this
+ * page quotes one until the result card, and a description promising a figure
+ * the page does not show is a bounce. */
+export const QUIZ_SEO = {
+  title: "Scent Quiz — Find Your Solid Cologne or Perfume | Valorem",
+  description:
+    "Three questions and we'll point you at one of six. Answer what you like to smell, not what you know about fragrance.",
+  canonical: "/quiz",
+};
+
 export const FAQ_SEO = {
   title: "FAQ — VALOREM Solid Fragrance",
   description:

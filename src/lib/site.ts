@@ -162,6 +162,18 @@ export function sizeById(id: SizeId) {
  * only the size label lives here. */
 export const SAMPLE_SIZE = sizeById("5ml").label;
 
+/* The two free samples packed with a full size. The strongest thing in the
+ * offer, and it appeared nowhere on the site — it lives in SIZES[].gift, which
+ * only the product page's size selector was reading.
+ *
+ * Note what it is NOT: nothing in Shopify adds these to the cart, so this says
+ * "ships with", never "add to bag". See the SIZES comment above.
+ *
+ * Lived as a private const in app/page.tsx until 2026-08-05. The quiz moved to
+ * its own route and needed the same sentence, and two copies of an offer
+ * promise is how the two drift into saying different things. */
+export const SAMPLE_GIFT = `Every full size ships with two ${SAMPLE_SIZE} samples in scents you didn't pick. Find your second one on us.`;
+
 /* ---- Product photography ----------------------------------------------
  * ONE SWITCH, FLIP IT WHEN THE CUTOUTS ARE UPLOADED.
  *
@@ -648,9 +660,10 @@ export interface Scent {
   description: string;
   /* The long-form story, shown under the price on the product page. */
   inspiration: string;
-  /* The scent's character in three words — what it smells like, not who is
-   * allowed to wear it. The brand is unisex, so nothing here describes a
-   * gender; `Collection.audience` below carries the same rule for a house.
+  /* The scent's character in three words — what it smells like. Stays that
+   * way: the audience split introduced on 2026-08-05 lives at the HOUSE level,
+   * on `Collection.audience`, and does not propagate down here. A single scent
+   * describes itself; the house says who it is for. See AGENTS.md.
    *
    * Currently held but not rendered anywhere. Kept because it is the natural
    * home for a character line if a card ever wants one. */
@@ -791,14 +804,20 @@ export function noteRows(
 export interface Collection {
   id: CollectionId;
   name: string;
-  /* The house's character in three words, in the same voice as
-   * Scent.character. Rendered as the eyebrow on the /collections cards.
+  /* Who the house is FOR, and what the format is called for them. Rendered as
+   * the eyebrow on the /collections cards and the home grid.
    *
-   * These described the WEARER until 2026-07-25 ("Worn by men" / "Worn by
-   * women"), which argued against a unisex brand and halved each house's
-   * audience on the one screen where a shopper picks a side. The two-house
-   * structure and the deity names are unchanged — only the label is. Keep it
-   * about the scent. */
+   * History, because this has moved twice: it described the wearer until
+   * 2026-07-25, was replaced with scent-character words ("Fresh · Sharp ·
+   * Smoky") on the argument that a wearer label halves each house's reach on
+   * the one screen where a shopper picks a side, and went back to describing
+   * the wearer on 2026-08-05 as a deliberate positioning call. See AGENTS.md.
+   * That cost is real and still applies; it is being accepted, not overlooked.
+   *
+   * "Cologne" and "perfume" here are not decoration — they match the titles in
+   * seo.ts, which have split the two houses that way all along (Gods are
+   * "Solid Cologne", Goddesses "Solid Perfume"). Change one and change both,
+   * or the page and its own <title> disagree. */
   audience: string;
   lead: string;
   description: string;
@@ -826,7 +845,7 @@ export const COLLECTIONS: Record<CollectionId, Collection> = {
   gods: {
     id: "gods",
     name: "The Gods",
-    audience: "Fresh · Sharp · Smoky",
+    audience: "Solid Cologne · For Men",
     lead: "Three ways to be remembered.",
     description:
       "Hades, Poseidon and Apollo — smoke, salt water and clean light. Three full-size sticks, each a different way of being the one people remember.",
@@ -836,7 +855,7 @@ export const COLLECTIONS: Record<CollectionId, Collection> = {
   goddesses: {
     id: "goddesses",
     name: "The Goddesses",
-    audience: "Warm · Vanilla · Floral",
+    audience: "Solid Perfume · For Women",
     lead: "Three ways to be remembered.",
     description:
       "Artemis, Hera and Aphrodite — midnight vanilla, sharpened florals and luminous amber. Three full-size sticks, each a different way of being the one people remember.",

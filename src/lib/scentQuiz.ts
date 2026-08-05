@@ -39,10 +39,43 @@ export interface QuizOption {
   weights: Weights;
 }
 
-export interface QuizQuestion {
+interface QuizQuestionBase {
   id: string;
   prompt: string;
+}
+
+/* Most questions show the same options to everyone. */
+export interface FixedQuestion extends QuizQuestionBase {
   options: QuizOption[];
+}
+
+/* A question whose options depend on an earlier answer. `branchOn` names that
+ * question's id and `branches` maps each of its option ids to a list.
+ *
+ * This exists for one reason: the two houses do not contain the same scents,
+ * so they cannot sensibly share a scent-family question. Asking a shared list
+ * left dead ends — "floral" meant nothing to the Gods and "spicy" nothing to
+ * the Goddesses, so on those paths question 2 contributed zero and the weather
+ * silently decided everything. Branching gives each house exactly the three
+ * families it actually has. */
+export interface BranchedQuestion extends QuizQuestionBase {
+  branchOn: string;
+  branches: Record<string, QuizOption[]>;
+}
+
+export type QuizQuestion = FixedQuestion | BranchedQuestion;
+
+/* The options to render/score for a question, given what has been answered so
+ * far. Returns empty for a branched question whose parent is unanswered, which
+ * only happens if the questions are reordered so a branch precedes its parent
+ * — the dev check at the bottom of this file catches that. */
+export function optionsFor(
+  question: QuizQuestion,
+  answers: QuizAnswers,
+): QuizOption[] {
+  if ("options" in question) return question.options;
+  const key = answers[question.branchOn];
+  return key ? (question.branches[key] ?? []) : [];
 }
 
 /* Three questions, not five. Each additional step sheds people, and three is
@@ -51,11 +84,18 @@ export interface QuizQuestion {
  *
  * HOW THE QUESTIONS ARE WRITTEN, AND WHY
  *
- * 1. Smells a person already owns. The first question anchors on things
- *    everyone has smelled — cut grapefruit, woodsmoke, clean linen — not on
- *    perfumery vocabulary. Someone who does not know what "ambroxan" or a
- *    "chypre" is can still answer it honestly and instantly, and the answer
- *    still maps cleanly onto the real pyramids in site.ts.
+ * 1. Masculine or feminine. Added 2026-08-05, when the two houses became an
+ *    audience split (see AGENTS.md and Collection.audience in site.ts). This
+ *    question exists to PICK THE HOUSE, and its weights are deliberately
+ *    blunt: a flat +8 to all three scents in one house, which no combination
+ *    of questions 2 and 3 can overcome (their ceiling together is 6). So the
+ *    answer here is a hard gate, not a nudge — a masculine answer can only
+ *    ever return a cologne, and that is the point of asking it.
+ *
+ *    Note the wording asks what the READER WANTS, not who they are. "Are you
+ *    after something masculine or feminine?" describes the scent and routes
+ *    just as reliably as demanding a shopper classify themselves, and it
+ *    leaves the door open to anyone who wants the other house's three.
  *
  *    Deliberately NOT anchored on designer fragrances. "Like Bleu de Chanel"
  *    would be the most recognisable option of all, and it is exactly what this
@@ -65,99 +105,185 @@ export interface QuizQuestion {
  *    real formulations. Same rule as COMPARISON in site.ts — no named
  *    competitor.
  *
- * 2. How someone wants to be described. The second question is about the
- *    person, not the liquid, because that is the decision actually being made
- *    at $70. It reads on identity while every ANSWER still maps to scent
- *    character, so it routes without flattering.
+ * 2. Scent family, BRANCHED ON QUESTION 1, and the question that actually
+ *    decides the answer. The reader sees the three families their house
+ *    contains and nothing else: clean / spicy / smoky for the Gods, sweet /
+ *    fresh / rich for the Goddesses. Three options, three scents, one leader
+ *    each — so answering this names the recommendation outright.
  *
- * 3. When they will wear it. The tiebreaker, and the most practical of the
- *    three — daylight and after-dark genuinely pull toward different halves of
- *    the catalogue.
+ *    It was a single shared list until 2026-08-05, which had two faults. The
+ *    Gods have nothing floral and the Goddesses nothing smoky, so those
+ *    options were dead ends where the weather silently decided everything;
+ *    and the leader gaps were small enough that question 3 outranked this one
+ *    on half the paths. Branching fixes the first, the 7-vs-2 weighting the
+ *    second.
  *
- * None of the three questions is about gender, and none can be. The houses are
- * a browsing aid; see Collection.audience in site.ts. */
+ * 3. Weather. A TIEBREAK, and scoped to be exactly that. It is capped at 2,
+ *    and question 2's leaders sit 5 clear of their runners-up in four of the
+ *    six families — so in those four the weather cannot touch the result.
+ *
+ *    In the remaining two it decides, on purpose. One family per house is
+ *    weighted 7-to-6 rather than 7-to-2 ("spicy" for the Gods, "rich" for the
+ *    Goddesses), because in those two the near-tie is real and the weather is
+ *    the honest way to break it. That is the whole job: 8 of 24 paths, in the
+ *    two places where a tie exists, and nowhere else.
+ *
+ *    Air temperature is the right axis for it because it is the one thing that
+ *    changes how these materials behave — citrus lifts and burns off in heat,
+ *    resins and smoke bloom in the cold.
+ *
+ *    If a future edit widens those two gaps back to 5, this question stops
+ *    changing any answer at all and becomes decoration. Check the influence
+ *    numbers before touching them.
+ *
+ * WHAT WAS TRIED AND REJECTED. A binary "sweet or fresh?" in slot 2 was
+ * measured across all paths and dropped Hades to 2 wins in 32: it is smoky
+ * birch and oakmoss, so neither pole describes it, and the only fix was to
+ * file it under "sweet", which mislabels the product to the customer. Any
+ * replacement option here has to leave every scent a lane. */
 export const QUIZ: QuizQuestion[] = [
+  {
+    id: "house",
+    prompt: "Are you after something masculine or feminine?",
+    options: [
+      {
+        id: "masculine",
+        label: "Masculine",
+        hint: "The Gods — solid cologne",
+        weights: { hades: 20, poseidon: 20, apollo: 20 },
+      },
+      {
+        id: "feminine",
+        label: "Feminine",
+        hint: "The Goddesses — solid perfume",
+        weights: { artemis: 20, hera: 20, aphrodite: 20 },
+      },
+    ],
+  },
   {
     id: "family",
     prompt: "Which of these smells best to you?",
-    options: [
-      {
-        id: "citrus",
-        label: "Cut grapefruit and cold mint",
-        hint: "Sharp, clean, wide awake",
-        weights: { apollo: 3, poseidon: 1 },
-      },
-      {
-        id: "vanilla",
-        label: "Vanilla, amber, warm skin",
-        hint: "Soft and close",
-        weights: { artemis: 3, aphrodite: 2 },
-      },
-      {
-        id: "smoke",
-        label: "Woodsmoke, dark fruit, damp moss",
-        hint: "Deep and layered",
-        weights: { hades: 3 },
-      },
-      {
-        id: "floral",
-        label: "Orange blossom and clean linen",
-        hint: "Bright, with an edge",
-        weights: { hera: 3, aphrodite: 1 },
-      },
-    ],
+    branchOn: "house",
+    /* THE DECIDING QUESTION. Each branch lists three families for three
+     * scents, one leader each at 7 against a 2 for its nearest neighbour. That
+     * gap is deliberately larger than anything question 3 can add (max 2), so
+     * a family answer cannot be overridden by the weather — which is the whole
+     * point: this question is what picks the scent, and the previous shared
+     * list let weather outrank it on half the paths.
+     *
+     * The runner-up weights are not decoration. They are what the answer would
+     * mean if the leader did not exist, and they keep the table honest about
+     * how close two scents actually are — Poseidon really is the second
+     * smokiest of the Gods.
+     *
+     * Both branches must stay exhaustive: three options, three scents, every
+     * scent the leader of exactly one. Add a scent to a house and it needs its
+     * own family here or it can never be recommended. */
+    branches: {
+      masculine: [
+        {
+          id: "clean",
+          label: "Fresh and clean",
+          hint: "Grapefruit, lemon, cold mint",
+          weights: { apollo: 7, poseidon: 2 },
+        },
+        {
+          id: "spicy",
+          label: "Spicy and warm",
+          hint: "Sichuan pepper, star anise, amber",
+          /* THE GODS' DELIBERATE NEAR-TIE — 7 to 6, not 7 to 2. This is the
+           * one family in this house where question 3 is allowed to decide,
+           * and it is this one because the near-tie is true: both scents open
+           * on pepper, Poseidon on Sichuan and Hades on pink. Cold air adds 2
+           * to Hades and tips it, which is the real behaviour of the pair — a
+           * spicy scent in the cold leans on its smoky base.
+           *
+           * Keep the gap at exactly 1. At 2 the weather can only draw and the
+           * tiebreak decides on declaration order; at 0 the families stop
+           * meaning anything and Hades takes the lane outright. */
+          weights: { poseidon: 7, hades: 6 },
+        },
+        {
+          /* Hades needs a lane of its own or it is unreachable, and "smoky" is
+           * the only honest word for birch, oakmoss and cedar. This is the
+           * option that was dropped from the shared list as "dark"; branching
+           * brings it back where it belongs — in front of the readers who
+           * chose the house that contains it, and nowhere near the Goddesses,
+           * none of whom smell remotely like this. */
+          id: "smoky",
+          label: "Smoky and deep",
+          hint: "Birch, oakmoss, black currant",
+          weights: { hades: 7, poseidon: 1 },
+        },
+      ],
+      feminine: [
+        {
+          id: "sweet",
+          label: "Sweet and warm",
+          hint: "Vanilla and soft amber",
+          /* Artemis leads outright rather than tying Aphrodite. It IS this
+           * answer — warm vanilla in soft amber, the only scent in the
+           * catalogue with no second idea in it — while Aphrodite reaches
+           * sweetness through vanilla orchid on the way to jasmine. */
+          weights: { artemis: 7, aphrodite: 2 },
+        },
+        {
+          id: "fresh",
+          label: "Fresh and floral",
+          hint: "Lavender, mandarin, orange blossom",
+          weights: { hera: 7, aphrodite: 1 },
+        },
+        {
+          id: "rich",
+          label: "Rich and floral",
+          hint: "Jasmine, vanilla orchid, amberwood",
+          /* THE GODDESSES' DELIBERATE NEAR-TIE, the mirror of "spicy" above.
+           * Both scents are built on jasmine, so the split is not about the
+           * flower but about how often you would wear it: Aphrodite is the
+           * occasion one, Hera the lighter everyday floral on lavender and
+           * mandarin. "All year, without thinking" is therefore the answer
+           * that tips it to Hera, and it is the only weather that does.
+           *
+           * Not "sweet" and not "fresh": sweet is Artemis outright by
+           * instruction, and softening fresh would change nothing, because the
+           * weather table already favours Hera on both mild and all-year — the
+           * two answers that would have to move it. */
+          weights: { aphrodite: 7, hera: 6 },
+        },
+      ],
+    },
   },
   {
-    id: "impression",
-    prompt: "How do you want to be described?",
+    id: "weather",
+    prompt: "When do you reach for fragrance most?",
     options: [
+      /* Capped at 2, against question 2's leader gap of 5. That makes this a
+       * TIEBREAK, not a vote: it can separate two scents question 2 left
+       * level, and it cannot overturn a family answer. Raise anything here to
+       * 5 and the weather starts deciding the scent again. */
       {
-        id: "sharp",
-        label: "Put together.",
-        hint: "Precise, never trying too hard",
-        weights: { apollo: 2, hera: 2 },
+        id: "cold",
+        label: "Cold air, coat weather",
+        hint: "Close and warming",
+        weights: { artemis: 2, hades: 2 },
       },
       {
-        id: "warm",
-        label: "Warm. Easy to be around.",
-        hint: "Comfortable in a room",
-        weights: { artemis: 2, poseidon: 1 },
+        id: "hot",
+        label: "Hot, bright, humid",
+        hint: "Sharp and cooling",
+        weights: { apollo: 2, poseidon: 2 },
       },
       {
-        id: "unreadable",
-        label: "Hard to read.",
-        hint: "More going on than you let on",
-        weights: { hades: 2, aphrodite: 1 },
+        id: "mild",
+        label: "Spring and autumn",
+        hint: "Floral, in between",
+        weights: { hera: 2, aphrodite: 1 },
       },
       {
-        id: "magnetic",
-        label: "Magnetic.",
-        hint: "The one people remember meeting",
-        weights: { aphrodite: 3, hades: 1 },
-      },
-    ],
-  },
-  {
-    id: "occasion",
-    prompt: "When are you actually wearing it?",
-    options: [
-      {
-        id: "day",
-        label: "Work, daylight, every day",
-        hint: "Desks, meetings, errands",
-        weights: { apollo: 2, poseidon: 2, hera: 1 },
-      },
-      {
-        id: "night",
-        label: "Dinner, drinks, after dark",
-        hint: "Close quarters, evening light",
-        weights: { aphrodite: 2, hades: 2, artemis: 1 },
-      },
-      {
-        id: "both",
-        label: "Both — one stick for everything",
-        hint: "It goes where you go",
-        weights: { poseidon: 2, hera: 1, artemis: 1 },
+        id: "all",
+        label: "All year, without thinking",
+        hint: "One stick, no season",
+        weights: { poseidon: 2, hera: 2 },
       },
     ],
   },
@@ -183,7 +309,15 @@ export function recommendScent(answers: QuizAnswers): ScentId {
   const totals = new Map<ScentId, number>();
 
   for (const question of QUIZ) {
-    const chosen = question.options.find((o) => o.id === answers[question.id]);
+    /* optionsFor, not question.options — a branched question's answer is only
+     * meaningful against the branch its parent answer selected. Looking it up
+     * in the wrong branch would score a Gods family answer against the
+     * Goddesses, which is exactly what going Back and switching houses would
+     * otherwise produce. Missing means "not answered on this path" and
+     * contributes nothing. */
+    const chosen = optionsFor(question, answers).find(
+      (o) => o.id === answers[question.id],
+    );
     if (!chosen) continue;
     for (const [scent, points] of Object.entries(chosen.weights)) {
       const id = scent as ScentId;
@@ -205,12 +339,22 @@ export function recommendScent(answers: QuizAnswers): ScentId {
  * editing it, not take the site down for a customer. */
 if (process.env.NODE_ENV !== "production") {
   const winners = new Set<ScentId>();
+  /* Walks branches correctly because it passes the answers accumulated so far
+   * to optionsFor — the same call recommendScent makes — so a branched
+   * question is only ever explored through the parent answers that reach it. */
   const walk = (index: number, answers: QuizAnswers) => {
     if (index === QUIZ.length) {
       winners.add(recommendScent(answers));
       return;
     }
-    for (const option of QUIZ[index].options) {
+    const options = optionsFor(QUIZ[index], answers);
+    if (options.length === 0) {
+      console.warn(
+        `[scentQuiz] question "${QUIZ[index].id}" has no options on this path — a branched question is probably ordered before the question it branches on`,
+      );
+      return;
+    }
+    for (const option of options) {
       walk(index + 1, { ...answers, [QUIZ[index].id]: option.id });
     }
   };

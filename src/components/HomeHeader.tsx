@@ -14,15 +14,16 @@ import type { NavItem } from "@/components/MobileNav";
  * in; that route was retired on 2026-07-25 and the cheap way in is now the
  * 5 ml size on each product page, which is behind this same link.
  *
- * "Find Your Scent" points at the quiz, which lives in a section of the home
- * page rather than on a route of its own — hence the /#quiz href, which works
- * from every other page too. It sits second because it is the lower-commitment
- * of the two shopping entrances: someone who already knows what they want taps
+ * "Find Your Scent" points at /quiz. It was /#quiz until 2026-08-05, when the
+ * quiz became a route instead of a section of the home page — a plain link
+ * now, which means it no longer has to load the whole home page and scroll to
+ * reach the tool. It sits second because it is the lower-commitment of the two
+ * shopping entrances: someone who already knows what they want taps
  * Collections, and someone who does not has somewhere to go that is not a
  * six-product grid. */
 const NAV_ITEMS: NavItem[] = [
   { href: "/collections", label: "Collections" },
-  { href: "/#quiz", label: "Find Your Scent" },
+  { href: "/quiz", label: "Find Your Scent" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];

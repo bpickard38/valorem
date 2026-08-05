@@ -5,7 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import EmailForm from "@/components/EmailForm";
 import { ButtonLink } from "@/components/ui";
-import { QUIZ, recommendScent, type QuizAnswers } from "@/lib/scentQuiz";
+import {
+  QUIZ,
+  optionsFor,
+  recommendScent,
+  type QuizAnswers,
+} from "@/lib/scentQuiz";
 import type { ScentId } from "@/lib/shopify";
 
 /*
@@ -59,7 +64,18 @@ export default function ScentQuiz({
     : undefined;
 
   function choose(optionId: string) {
-    setAnswers((prev) => ({ ...prev, [question.id]: optionId }));
+    setAnswers((prev) => {
+      /* Drop every answer AFTER this one. Question 2 branches on question 1,
+       * so going Back and switching houses would otherwise leave a Gods family
+       * answer sitting in state while the Goddesses options are on screen —
+       * scored against a branch it does not belong to. Clearing forward is
+       * correct for any branching quiz and costs nothing when nothing changed. */
+      const kept: QuizAnswers = {};
+      for (const q of QUIZ.slice(0, step)) {
+        if (prev[q.id]) kept[q.id] = prev[q.id];
+      }
+      return { ...kept, [question.id]: optionId };
+    });
     setStep((s) => s + 1);
   }
 
@@ -133,6 +149,32 @@ export default function ScentQuiz({
           </div>
         </div>
 
+        {/* Both secondary actions sit ABOVE the email capture, directly under
+            the recommendation they refer to. They were below it until
+            2026-08-05, which put a form between the answer and the two ways of
+            questioning it — someone unconvinced by their result had to scroll
+            past a signup to retake the quiz or go look at the other five.
+
+            Kept as quiet text rather than filled buttons on purpose: the one
+            loud control on this screen is "See {scent}", and giving "Take it
+            again" the same weight would invite a reader to re-roll instead of
+            act on an answer they were just given. */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          <button
+            type="button"
+            onClick={restart}
+            className="cursor-pointer text-xs uppercase tracking-[0.25em] text-charcoal/50 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
+          >
+            Take it again
+          </button>
+          <Link
+            href="/collections"
+            className="text-xs uppercase tracking-[0.25em] text-charcoal/50 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
+          >
+            See all six
+          </Link>
+        </div>
+
         <div className="mt-12 border-t border-charcoal/10 pt-10 text-center">
           <p className="font-serif text-lg text-charcoal">
             Want the other five in writing?
@@ -143,21 +185,6 @@ export default function ScentQuiz({
           </p>
           <div className="mt-8">
             <EmailForm />
-          </div>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <button
-              type="button"
-              onClick={restart}
-              className="cursor-pointer text-xs uppercase tracking-[0.25em] text-charcoal/50 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
-            >
-              Take it again
-            </button>
-            <Link
-              href="/collections"
-              className="text-xs uppercase tracking-[0.25em] text-charcoal/50 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
-            >
-              See all six
-            </Link>
           </div>
         </div>
       </div>
@@ -176,7 +203,7 @@ export default function ScentQuiz({
       </h3>
 
       <div className="mt-10 flex flex-col gap-3">
-        {question.options.map((option) => (
+        {optionsFor(question, answers).map((option) => (
           <button
             key={option.id}
             type="button"

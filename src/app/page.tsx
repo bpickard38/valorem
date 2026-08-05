@@ -4,8 +4,6 @@ import Link from "next/link";
 import FadeIn from "@/components/FadeIn";
 import HomeHeader from "@/components/HomeHeader";
 import Guarantee from "@/components/Guarantee";
-import ScentQuiz from "@/components/ScentQuiz";
-import type { QuizScent } from "@/components/ScentQuiz";
 import HomeFooter from "@/components/HomeFooter";
 import ScrollLink from "@/components/ScrollLink";
 import ReviewProofLine from "@/components/ReviewProofLine";
@@ -31,7 +29,7 @@ import {
   FRAGRANCE_LOAD,
   FREE_SHIPPING_THRESHOLD,
   RETURN_WINDOW,
-  SAMPLE_SIZE,
+  SAMPLE_GIFT,
   SCENTS,
   STICK_SIZE,
   WEAR_ESTIMATE,
@@ -78,21 +76,14 @@ const hooks = [
   },
 ];
 
-/* The two free samples packed with a full size. This is the strongest thing in
- * the offer and it appeared nowhere on the site — it lives in SIZES[].gift,
- * which only the product page's size selector was reading.
- *
- * Note what it is NOT: nothing in Shopify adds these to the cart, so this says
- * "ships with", never "add to bag". See the SIZES comment in site.ts. */
-const SAMPLE_GIFT = `Every full size ships with two ${SAMPLE_SIZE} samples in scents you didn't pick. Find your second one on us.`;
-
 /* The two scents the shortlist under the hero shows — one from each house, so
  * the block spans the range rather than pushing a single taste.
  *
  * This is an EDITORIAL pick, not a sales ranking. Nothing in this codebase
  * knows what has actually sold, so anything ordered by popularity here would
  * be invented. Reorder freely; just keep it two, and keep one from each house
- * or the section stops arguing that the brand is unisex. */
+ * — the houses are an audience split now (see Collection.audience), so a
+ * shortlist drawn from one of them silently addresses half the visitors. */
 const FEATURED: ScentId[] = ["poseidon", "aphrodite"];
 
 /* `lead` is also the key into BOTH step image maps — each step is illustrated
@@ -130,13 +121,17 @@ const steps: {
 export default async function Home() {
   /* Every scent is priced together, so one lookup speaks for all six
    * everywhere this page names a price. `stickPricing` is the full size the
-   * hero and closing CTA quote; `samplePricing` is the entry price the
-   * "you can't smell a website" block answers with. */
+   * How It Works line and the closing CTA quote; `variants` feeds <PriceTiers>,
+   * which does its own lowest-price maths.
+   *
+   * There was a `samplePricing` here until 2026-08-05, holding the entry price
+   * for the hero's "Start with a $16 Sample" button. The hero leads with the
+   * quiz now and names no price, so the lookup went with it — PriceTiers still
+   * shows all three sizes a few lines further down. */
   const [stickPricing, variants] = await Promise.all([
     productPricing("poseidon"),
     productVariants("poseidon"),
   ]);
-  const samplePricing = lowestPricing(variants);
 
   /* The six scents, for the grid below. Read out of COLLECTIONS rather than
    * listed here, so the two houses and their order stay defined in exactly one
@@ -178,24 +173,8 @@ export default async function Home() {
     return card ? [card] : [];
   });
 
-  /* Flattened for the quiz, which needs all six regardless of house but wants
-   * the house NAME on the result card. Built from the same fetched cards as
-   * the grid — the quiz is a client component and cannot reach Shopify, so
-   * everything it renders has to cross the boundary as plain data here. */
-  const quizScents: QuizScent[] = houses.flatMap((house) =>
-    house.cards.map((card) => ({
-      id: card.id,
-      title: productTitle(card),
-      house: house.name,
-      lead: card.lead,
-      description: card.description,
-      teaser: noteTeaser(card).join(", "),
-      price: card.pricing.formatted,
-      image: card.image
-        ? { url: card.image.url, altText: card.image.altText ?? null }
-        : null,
-    })),
-  );
+  /* The quiz used to be reshaped out of `houses` here — it lives at /quiz now
+   * and does its own fetch through loadQuizScents(). See lib/quizScents.ts. */
 
   return (
     <main id="top" className="flex-1 scroll-mt-24">
@@ -271,18 +250,27 @@ export default async function Home() {
               </p>
             </FadeIn>
             <FadeIn delay={200} duration={900}>
-              {/* The cheap way in is the SOLID button and it comes first. The
-                * old hero made $70 the primary action, which asks a stranger
-                * who has never smelled this to make the largest decision on
-                * the page first. Sample leads; the full size is the outline
-                * beside it. Order is source order — the flex row does not
-                * reverse — so this is also the tap order on a phone. */}
+              {/* Neither button asks for money any more. Both used to: "Start
+                * with a $16 Sample" and "Shop Full Size — $70", replaced
+                * 2026-08-05.
+                *
+                * The quiz leads because it is the only thing here that answers
+                * the question a stranger actually arrives with. Nobody lands on
+                * a fragrance site having decided between six deity names they
+                * have never heard of, and a price is not an answer to that —
+                * it is a decision asked before the reader knows what they are
+                * choosing between. Three questions later they have a scent, a
+                * reason and a product link, and the price appears there, on
+                * the recommendation, where it means something.
+                *
+                * Order is source order — the flex row does not reverse — so
+                * this is also the tap order on a phone. */}
               <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center md:justify-start">
-                <ScrollLink href="#scents">
-                  Start with a {samplePricing.formatted} Sample
-                </ScrollLink>
+                {/* A real navigation now, not a scroll — the quiz is its own
+                    route. Same destination as the header's "Find Your Scent". */}
+                <ButtonLink href="/quiz">Take the Scent Quiz</ButtonLink>
                 <ButtonLink href="/collections" variant="outline">
-                  Shop Full Size — {stickPricing.formatted}
+                  Explore the Collections
                 </ButtonLink>
               </div>
 
@@ -611,13 +599,15 @@ export default async function Home() {
        * productTitle(). Nothing about a scent is typed into this page. */}
       <section id="scents" className="scroll-mt-20 px-5 py-24 sm:py-28 md:px-6">
         {/* The collection name carries the section on its own. It previously
-            ran a "Six scents. Two houses." title over a paragraph explaining
-            that the houses are not a rule about who may wear what — three
-            lines of throat-clearing before the first photograph, restating a
-            count the grid below makes obvious. The unisex point is still made
-            where it does work: Collection.audience describes the scent rather
-            than the wearer, so the two house eyebrows read "Fresh · Sharp ·
-            Smoky", not "Worn by men". */}
+            ran a "Six scents. Two houses." title over a paragraph of
+            throat-clearing before the first photograph, restating a count the
+            grid below makes obvious.
+
+            Who each house is for is said by the eyebrow under its name —
+            Collection.audience, which reads "Solid Cologne · For Men" and
+            "Solid Perfume · For Women" as of 2026-08-05. That is the only
+            place the split is stated on this page, so it does the work a
+            paragraph used to. */}
         <FadeIn>
           <SectionHeader numeral="III" title={COLLECTION_TITLE} />
         </FadeIn>
@@ -756,25 +746,21 @@ export default async function Home() {
             SAMPLE_GIFT still runs in the hero, so the two free samples are
             stated where the price decision actually happens. */}
 
-        {/* THE SCENT FINDER — what "Not sure which one is yours?" now does.
+        {/* THE SCENT FINDER — the ask, not the tool.
           *
-          * The heading is unchanged; the answer under it is. It used to be an
-          * email capture: type an address, wait for an inbox to solve a
-          * problem you have right now. Three questions solve it here and hand
-          * over a product page, and the email form survives inside the result
-          * as the second, optional ask — so the Lead event still fires without
-          * standing between anyone and the buy.
+          * The quiz itself ran here until 2026-08-05 and now lives at /quiz.
+          * What stays is the question it answers, plus a button through to it:
+          * this is still the right place on the page to ask "not sure which
+          * one is yours?", and it is still the last thing before the footer.
           *
-          * The payoff is the two free 5 ml samples that already ship with
-          * every full size. No third sample was invented for this: that would
-          * be another hand-packed item with no cart line behind it.
-          *
-          * mt-24 came off with the block above it — this is the section's
-          * first content now, and the section's own pt-24 is the spacing. */}
+          * The id="quiz" on the section above is deliberately unchanged, so
+          * anything still pointing at /#quiz — an old link, a shared URL —
+          * lands on this block rather than 404ing at an anchor that no longer
+          * exists. Internal links all point at /quiz directly. */}
         <FadeIn className="text-center">
           {/* Renders nothing until real reviews exist — see ReviewProofLine.
-            * Kept, and kept on this page, because it is the only place the
-            * homepage is wired to show a rating the day the first one lands.
+            * Kept because it is the only place the homepage is wired to show a
+            * rating the day the first one lands; /quiz carries its own copy.
             * Inlined rather than given its own FadeIn so that returning null
             * costs no wrapper and no vertical space. */}
           <ReviewProofLine className="mb-10" />
@@ -782,17 +768,12 @@ export default async function Home() {
             Not sure which one is yours?
           </h2>
           <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed text-charcoal/70">
-            Three questions. No wrong answers — every scent is built to wear on
-            anyone.
+            Three questions. No wrong answers — just the one we&rsquo;d start
+            you on.
           </p>
-        </FadeIn>
-        <FadeIn className="mt-14">
-          <ScentQuiz
-            scents={quizScents}
-            sampleGift={SAMPLE_GIFT}
-            frameClass={productImageFrame}
-            imageClass={productImageFit}
-          />
+          <div className="mt-8 flex justify-center">
+            <ButtonLink href="/quiz">Take the Scent Quiz</ButtonLink>
+          </div>
         </FadeIn>
         <HomeFooter />
       </section>
