@@ -8,6 +8,7 @@ import {
   productVariants,
 } from "@/lib/shopify";
 import {
+  HERO_IMAGE_INDEX,
   RETURN_WINDOW,
   SCENTS,
   collectionOf,
@@ -63,11 +64,12 @@ export async function generateMetadata({
      * and the short tagline is already written for exactly this slot. */
     title: `${productTitle(s)} — ${SITE_NAME}`,
     description: s.description,
-    images: images.slice(0, 1).map((i) => ({
-      url: i.url,
-      width: i.width,
-      height: i.height,
-    })),
+    /* The flagship's photo, not image 1 — image 1 is the 5 ml since the admin
+       re-order, and a share card showing the sample undersells the link. Falls
+       back to whatever exists if the hero index isn't uploaded yet. */
+    images: [images[HERO_IMAGE_INDEX] ?? images[0]]
+      .filter((i) => i !== undefined)
+      .map((i) => ({ url: i.url, width: i.width, height: i.height })),
   });
 }
 
@@ -109,7 +111,16 @@ export default async function ProductPage({
             productJsonLd({
               name: productTitle(s),
               description: s.description,
-              image: images.slice(0, 4).map((i) => i.url),
+              /* Hero first — schema.org treats the leading image as the
+                 primary one, and that is the flagship rather than whatever
+                 the admin happens to have in position 1. */
+              image: [
+                ...new Set(
+                  [images[HERO_IMAGE_INDEX], ...images.slice(0, 4)]
+                    .filter((i) => i !== undefined)
+                    .map((i) => i.url),
+                ),
+              ].slice(0, 4),
               url: `/product/${s.id}`,
               offers: variants.map((v) => ({
                 price: v.pricing.amount,

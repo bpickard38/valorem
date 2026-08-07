@@ -19,33 +19,9 @@ const THUMB_WIDTH = "w-[calc((100%-3rem)/5)]";
  * enough that nobody sees the clone. */
 const SETTLE_MS = 120;
 
-/* Desktop ring geometry. Every photo is 62% of the frame wide (written as the
- * literal `w-[62%]` below, since Tailwind only sees static class strings). The
- * neighbours sit SIDE_SHIFT to either side — a percentage of their OWN width,
- * which is how translateX percentages resolve — then shrink and dim so the eye
- * goes to the middle.
- *
- * The frame's aspect ratio falls out of that width: a 4:5 photo at 62% width
- * is 0.775 of the frame's width tall, hence aspect-[40/31]. Change the width
- * and this has to be recomputed or the sides get clipped. */
-const SIDE_SHIFT = 68;
-const SIDE_SCALE = 0.86;
-const SIDE_OPACITY = 0.4;
-
-/* Signed distance from the active photo to photo `i`, taking the short way
- * round the ring. With six photos, photo 0 is one step forward from photo 5,
- * not five steps back — which is what makes the desktop gallery loop without
- * any cloned slides. */
-function ringDelta(i: number, active: number, count: number): number {
-  let d = i - active;
-  if (d > count / 2) d -= count;
-  if (d < -count / 2) d += count;
-  return d;
-}
-
 /*
- * Product gallery. Photos and their order come from Shopify — image 1 is the
- * opening shot, and re-arranging them in the admin re-arranges this.
+ * Product gallery. Photos and their order come from Shopify, and the size
+ * selector drives which one is showing — see SIZE_IMAGE_INDEX.
  *
  * Two presentations of one state, because phones and desktops want different
  * things and one mechanism cannot do both well:
@@ -53,17 +29,25 @@ function ringDelta(i: number, active: number, count: number): number {
  *   Phone   — a native scroll-snap track, so swiping has real momentum and
  *             rubber-band. Loops by cloning the first and last photos and
  *             teleporting off the clone once scrolling settles.
- *   Desktop — a three-up ring. There is nothing to swipe with a mouse, so the
- *             loop has to be visible: the neighbours sit either side, dimmed,
- *             and clicking one rotates it into the middle. Positions come from
- *             modular arithmetic, so it is circular by construction — no
- *             clones, and no end to hit.
+ *   Desktop — one photo at full width with the thumbnail strip underneath as
+ *             the picker.
  *
- * Both read and write the same `active` index, so the dots, the thumbnails and
- * whatever is on screen can never disagree.
+ * THE DESKTOP VIEW WAS A THREE-UP RING until 2026-08-07: the active photo
+ * centred at 62% width with its two neighbours peeking out either side, dimmed
+ * and scaled down, clicking one to rotate it in. It was replaced because the
+ * ring spends nearly 40% of the column showing two photos you are not looking
+ * at, and the one you ARE looking at is the one being sold — the cost fell
+ * entirely on the product shot. It also had no way to jump: reaching photo 5
+ * from photo 1 meant three separate rotations, where a strip of thumbnails is
+ * one click to anything. And now that the first three photos are the same tin
+ * in three sizes, two dimmed near-identical neighbours read as a rendering
+ * fault rather than as a carousel.
  *
- * No layout shift: both frames are fixed aspect boxes whether or not their
- * images have loaded.
+ * Both presentations read and write the same `active` index, so the dots, the
+ * thumbnails and whatever is on screen can never disagree.
+ *
+ * No layout shift: every frame is a fixed aspect box whether or not its image
+ * has loaded.
  */
 export default function ProductGallery({
   images,
@@ -279,53 +263,34 @@ export default function ProductGallery({
         })}
       </div>
 
-      {/* ---------- DESKTOP: three-up ring ---------- */}
-      <div className="relative hidden aspect-[40/31] w-full overflow-hidden md:block">
+      {/* ---------- DESKTOP: one photo, picked from the strip below ----------
+          Every photo is rendered and cross-faded on opacity rather than
+          swapping one <img> src. Two reasons: the switch is instant because
+          the next photo is already decoded, and a src swap would flash the
+          empty stone frame between the old image unloading and the new one
+          painting — which, on a control the size selector drives, reads as the
+          page breaking rather than as a photo changing. */}
+      <div className="relative hidden aspect-[4/5] w-full bg-stone md:block">
         {images.map((image, i) => {
-          const d = loop ? ringDelta(i, active, count) : 0;
-          const isCentre = d === 0;
-          // Neighbours are interactive; anything further out is parked
-          // invisible so it fades in rather than popping when it rotates up.
-          const onStage = Math.abs(d) <= 1;
-          const inWings = Math.abs(d) === 2;
-
+          const isActive = i === active;
           return (
-            <button
+            <div
               key={image.url}
-              type="button"
-              onClick={() => goTo(i)}
-              tabIndex={onStage && !isCentre ? 0 : -1}
-              aria-hidden={!onStage}
-              /* Deliberately not "View photo N" — the thumbnail strip below
-               * already owns that label, and two controls sharing one name is
-               * ambiguous to a screen reader reading the page in order. */
-              aria-label={isCentre ? undefined : `Bring photo ${i + 1} to the front`}
-              aria-current={isCentre}
-              disabled={isCentre}
-              style={{
-                transform: `translateX(-50%) translateX(${d * SIDE_SHIFT}%) scale(${
-                  isCentre ? 1 : SIDE_SCALE
-                })`,
-                opacity: isCentre ? 1 : onStage ? SIDE_OPACITY : 0,
-                zIndex: isCentre ? 20 : onStage ? 10 : 0,
-                pointerEvents: onStage && !isCentre ? "auto" : "none",
-                visibility: onStage || inWings ? "visible" : "hidden",
-              }}
-              className={`absolute inset-y-0 left-1/2 w-[62%] bg-stone transition-all duration-500 ease-out ${
+              aria-hidden={!isActive}
+              className={`absolute inset-0 transition-opacity duration-300 ease-out ${
                 galleryImageMode(i).frame
-              } ${
-                isCentre ? "cursor-default" : "cursor-pointer hover:opacity-70"
-              }`}
+              } ${isActive ? "opacity-100" : "opacity-0"}`}
             >
               <Image
                 src={image.url}
-                alt={isCentre ? altFor(image, i) : ""}
+                alt={isActive ? altFor(image, i) : ""}
                 fill
-                sizes="300px"
+                /* Half the 1024px content column, less the gap. */
+                sizes="(min-width: 768px) 480px, 100vw"
                 priority={i === openedOn}
                 className={galleryImageMode(i).image}
               />
-            </button>
+            </div>
           );
         })}
       </div>
@@ -357,13 +322,13 @@ export default function ProductGallery({
           {/* Thumbnails — exactly five across, snapping so a scroll always
            * lands on whole ones.
            *
-           * Phone only. On desktop the three-up ring already shows the
-           * neighbouring photos and is the way you move between them, so a
-           * thumbnail strip underneath would be a second control doing the
-           * same job. */}
+           * Shown at EVERY width since 2026-08-07. On a phone it supplements
+           * the swipe track; on desktop it is the only way to change photo, so
+           * it is the picker the ring used to be. One click reaches any photo,
+           * which the ring's rotate-a-step-at-a-time never could. */}
           <div
             ref={stripRef}
-            className="no-scrollbar mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:hidden"
+            className="no-scrollbar mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1"
           >
             {images.map((image, i) => (
               <button

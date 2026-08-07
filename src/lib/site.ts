@@ -215,25 +215,35 @@ export function preferredSize(
  * Which image in the Shopify gallery shows which size, so picking a size on the
  * product page brings that tin to the front.
  *
- * KEYED BY SIZE ID, NOT BY POSITION IN `SIZES`. The two happen to agree today
- * (SIZES runs 30/15/5 and so does the admin), and that coincidence is exactly
- * the trap: reorder SIZES to lead with the sample and an index-follows-index
- * mapping would silently start showing the 30 ml tin for a 5 ml selection.
- * Nothing about the display order of the selector should be able to reach the
- * photographs, so the mapping is written out.
+ * KEYED BY SIZE ID, NOT BY POSITION IN `SIZES`, and this has now earned its
+ * keep twice. The admin order was 30/15/5 when this was written and was flipped
+ * to 5/15/30 on 2026-08-07; because the mapping is written out rather than
+ * inferred from array position, that flip was this one table and nothing else.
+ * Nothing about the display order of the selector reaches the photographs, and
+ * nothing about the photographs reaches the selector.
  *
  * Zero-based, against the order the images are arranged in the Shopify admin —
- * admin position 1 is index 0. Re-arrange the photos there and this must be
- * re-arranged to match; it is the one place the site assumes anything about
- * which photo is which.
+ * admin position 1 is index 0. THIS IS THE ONE PLACE the site assumes anything
+ * about which photo is which, so re-arrange the photos there and re-arrange
+ * these to match.
  *
  * A size whose index is past the end of the uploaded photos is skipped rather
  * than clamped, so a product with only one photo simply doesn't sync. */
 export const SIZE_IMAGE_INDEX: Record<SizeId, number> = {
-  "30ml": 0,
+  "5ml": 0,
   "15ml": 1,
-  "5ml": 2,
+  "30ml": 2,
 };
+
+/* The one photo that represents the product ANYWHERE ELSE — the home grid, the
+ * collection pages, the quiz, the social share card.
+ *
+ * It is the flagship's photo, not image 1. Those were the same thing until the
+ * admin order flipped on 2026-08-07; now image 1 is the 5 ml, and a card that
+ * quietly followed "the first image" would be selling the $16 sample on every
+ * surface that isn't the product page. Derived from DEFAULT_SIZE so the two can
+ * never disagree: change which size is the flagship and every card follows. */
+export const HERO_IMAGE_INDEX = SIZE_IMAGE_INDEX[DEFAULT_SIZE];
 
 /* The entry size — what answers "you can't smell a website" now that the
  * Discovery Set is gone. The PRICE comes from Shopify via lowestPricing();
@@ -474,20 +484,32 @@ export const productThumbFit = CUTOUT_PHOTOGRAPHY
   ? "object-contain p-[6%]"
   : "object-cover";
 
+/* How many photos at the FRONT of a product's gallery are background-free
+ * product shots rather than lifestyle scenes: one per size, since every size
+ * now has its own cutout and SIZE_IMAGE_INDEX maps the selector onto them.
+ *
+ * Derived from SIZES rather than typed as 3, so adding a fourth size and its
+ * photo does not silently leave that photo being treated as a lifestyle scene.
+ * The admin has to keep the size shots contiguous and first — which it already
+ * must, because SIZE_IMAGE_INDEX addresses them by position. */
+export const PRODUCT_SHOT_COUNT = SIZES.length;
+
 /* Per-image treatment inside a product GALLERY, where the two kinds of photo
- * live side by side: image 1 is the background-free product cutout, and the
- * rest are lifestyle scenes that still have their own backgrounds.
+ * live side by side: the leading PRODUCT_SHOT_COUNT images are background-free
+ * cutouts of each size, and everything after them is a lifestyle scene that
+ * still carries its own background.
  *
  * They must not be treated alike. A cutout wants contain + shadow. A lifestyle
  * photo is opaque, so `drop-shadow` would trace its RECTANGLE and render a
  * grey box with a shadow under it — and contain would letterbox a scene that
  * is meant to bleed. Scenes therefore keep cover in both modes.
  *
- * "Image 1 is the product shot" is the same convention productImage() already
- * relies on (see shopify.ts) and matches how the photos are ordered in the
- * Shopify admin. Reorder them there and this follows. */
+ * This tested `index === 0` until 2026-08-07, when the admin gained a cutout
+ * per size. Left alone it would have rendered the 15 ml and 5 ml — genuine
+ * transparent cutouts — with object-cover and no shadow, i.e. two tins cropped
+ * to fill a frame they were never shot to fill. */
 export function galleryImageMode(index: number) {
-  const cutout = CUTOUT_PHOTOGRAPHY && index === 0;
+  const cutout = CUTOUT_PHOTOGRAPHY && index < PRODUCT_SHOT_COUNT;
   return {
     frame: cutout ? "p-[3%]" : "overflow-hidden",
     image: cutout ? "object-contain product-cutout" : "object-cover",

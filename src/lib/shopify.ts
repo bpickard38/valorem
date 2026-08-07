@@ -6,7 +6,13 @@
  * Ported verbatim from ../valorem/src/lib/shopify.ts — keep in sync.
  */
 
-import { DEFAULT_SIZE, SIZES, SIZE_OPTION, formatMoney } from "@/lib/site";
+import {
+  DEFAULT_SIZE,
+  HERO_IMAGE_INDEX,
+  SIZES,
+  SIZE_OPTION,
+  formatMoney,
+} from "@/lib/site";
 import type { SizeId } from "@/lib/site";
 
 const API_VERSION = "2025-07";
@@ -468,10 +474,20 @@ export interface ProductImage {
   altText: string | null;
 }
 
-/* The product's lead image from Shopify — the first variant's own image if one
- * is assigned, else the product's featured image. Returns null (caller falls
- * back to a placeholder) rather than throwing: a missing image must never
- * take the product page down. */
+/* The one photo that represents this product away from its own page — the home
+ * grid, the collection pages, the quiz, the share card.
+ *
+ * IT IS THE FLAGSHIP'S PHOTO, NOT IMAGE 1. This used to read the first variant's
+ * image and fall back to featuredImage, which amounted to "whatever is first in
+ * the admin". That was the 30 ml until the images were re-ordered to 5/15/30 on
+ * 2026-08-07 — after which every card on the site would have been selling the
+ * $16 sample. It now addresses HERO_IMAGE_INDEX, which is derived from
+ * DEFAULT_SIZE, so the cards follow the flagship rather than the upload order.
+ *
+ * Falls back down the list rather than failing: the hero index, then the
+ * product's own featured image, then whatever exists. Returns null (caller
+ * renders a placeholder) rather than throwing — a missing image must never take
+ * a page down. */
 export async function productImage(
   product: ScentId,
 ): Promise<ProductImage | null> {
@@ -479,20 +495,22 @@ export async function productImage(
     const data = await storefrontQuery<{
       product: {
         featuredImage: ProductImage | null;
-        variants: { nodes: { image: ProductImage | null }[] };
+        images: { nodes: ProductImage[] };
       } | null;
     }>(
       `query productLeadImage($handle: String!) {
         product(handle: $handle) {
           featuredImage { url width height altText }
-          variants(first: 1) { nodes { image { url width height altText } } }
+          images(first: 20) { nodes { url width height altText } }
         }
       }`,
       { handle: SCENT_HANDLE[product] },
     );
+    const images = data.product?.images.nodes ?? [];
     return (
-      data.product?.variants.nodes[0]?.image ??
+      images[HERO_IMAGE_INDEX] ??
       data.product?.featuredImage ??
+      images[0] ??
       null
     );
   } catch {
