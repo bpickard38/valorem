@@ -324,6 +324,22 @@ export const GIFT_IMAGES: Record<GiftArtKey, GiftImage | null> = {
  * promise is how the two drift into saying different things. */
 export const SAMPLE_GIFT = `Every full size ships with two ${SAMPLE_SIZE} samples in scents you didn't pick. Find your second one on us.`;
 
+/* The two sample tiers the ladder shows, read out of SIZES rather than typed as
+ * 1 and 2. This is what stops the rung labels, the struck-through values and
+ * what actually gets packed from drifting apart: change `giftSamples` on a size
+ * and the card that describes that tier re-labels and re-prices itself.
+ *
+ * Distinct non-zero counts, ascending. The top tier is the LAST entry rather
+ * than index 1, so introducing a middle tier later degrades to "smallest and
+ * largest" instead of silently mislabelling the biggest offer. */
+const SAMPLE_TIERS = [
+  ...new Set(SIZES.map((s) => s.giftSamples).filter((n) => n > 0)),
+].sort((a, b) => a - b);
+
+export const SAMPLE_TIER_ONE: number = SAMPLE_TIERS[0] ?? 1;
+export const SAMPLE_TIER_TWO: number =
+  SAMPLE_TIERS[SAMPLE_TIERS.length - 1] ?? 2;
+
 /* ---- The gift ladder ---------------------------------------------------
  * What the selected size unlocks, as three rungs, for the progressive-unlock
  * block under the size selector.
@@ -347,21 +363,36 @@ export const SAMPLE_GIFT = `Every full size ships with two ${SAMPLE_SIZE} sample
  * what a block this far above the fold is for. The threshold still appears in
  * the site footer, where a policy belongs.
  *
- * EACH RUNG IS A DISTINCT GIFT, AND THE THIRD ONE SAYS "1 MORE". This is the
- * fix for a counting bug the first version shipped with. The rungs read "1 free
- * sample" and "2 free samples", and because a ladder never un-checks a lower
- * rung, the 30 ml lit BOTH — which reads as three samples. It gives two. The
- * error was invisible while the cards were bare text and became a live
- * misstatement the moment they started showing what each gift is worth, since
- * the values sum. Rung three is therefore the SECOND sample, not a restatement
- * of the pair, and `value` is per-card so the column adds up to what is
- * actually packed.
+ * THE TWO SAMPLE RUNGS ARE TIERS, NOT SEPARATE GIFTS — owner's call,
+ * 2026-08-07, and worth writing down because the code read the other way for
+ * half a day and the difference is not cosmetic.
+ *
+ *   Tiers (what ships)  rung 2 IS the one-sample offer, rung 3 IS the
+ *     two-sample offer. Rung 3 supersedes rung 2 rather than adding to it, so
+ *     its value is the PAIR's value — 2 x the sample price — and the 30 ml
+ *     gives exactly the two samples SIZES promises.
+ *   Additive (Carpe's)  every card is a different gift and the column sums.
+ *     That is what Carpe's row does, because its gifts are wipes, a bag and a
+ *     wash — three unrelated things.
+ *
+ * The cost of tiers, accepted knowingly: at the 30 ml both sample rungs are
+ * lit, so a shopper who reads the row as additive totals $16 + $32 and expects
+ * three samples' worth. The mitigation is that rung 3 restates the whole offer
+ * ("2 free samples") rather than describing an increment, so the natural
+ * reading is that it replaces the rung above it. Do NOT "fix" this back to an
+ * additive "1 more sample" phrasing without asking — it was tried, and this is
+ * the deliberate reversal.
+ *
+ * What must stay true either way: the number of samples a shopper can arrive at
+ * by reading this block has to equal `giftSamples` on the selected size. Under
+ * tiers that means the HIGHEST lit sample rung is the answer, never the sum.
  *
  * `value` is what the gift would cost if bought: the sample's own live Shopify
- * price, and the flat shipping rate. Both are real prices charged on this site
- * today — the sample is on sale three inches up this very page — which is what
- * separates a struck-through figure here from the invented "was" price
- * PRICE_BADGE refuses to build machinery for. Null renders no value at all. */
+ * price (x2 on the pair rung), and the flat shipping rate. Both are real prices
+ * charged on this site today — the sample is on sale three inches up this very
+ * page — which is what separates a struck-through figure here from the invented
+ * "was" price PRICE_BADGE refuses to build machinery for. Null renders no value
+ * at all. */
 export interface GiftRung {
   key: string;
   label: string;
@@ -387,21 +418,25 @@ export function giftLadder(
       value: FLAT_SHIPPING_RATE,
       unlocked: amount >= FREE_SHIPPING_THRESHOLD,
     },
+    /* The two sample TIERS. Each rung's value is the value of the whole offer
+     * at that tier — one sample, then the pair — so the figure on a card always
+     * matches the card's own words. See the note above on why these supersede
+     * rather than add. */
     {
       key: "sample-1",
-      label: `1 free ${SAMPLE_SIZE} sample`,
+      label: `${SAMPLE_SIZE} sample`,
       art: "sample",
       image: GIFT_IMAGES.sample,
-      value: samplePrice,
-      unlocked: samples >= 1,
+      value: samplePrice === null ? null : samplePrice * SAMPLE_TIER_ONE,
+      unlocked: samples >= SAMPLE_TIER_ONE,
     },
     {
       key: "sample-2",
-      label: `1 more ${SAMPLE_SIZE} sample`,
+      label: `${SAMPLE_TIER_TWO} free samples`,
       art: "sample-extra",
       image: GIFT_IMAGES["sample-extra"],
-      value: samplePrice,
-      unlocked: samples >= 2,
+      value: samplePrice === null ? null : samplePrice * SAMPLE_TIER_TWO,
+      unlocked: samples >= SAMPLE_TIER_TWO,
     },
   ];
 }
