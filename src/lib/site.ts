@@ -340,6 +340,20 @@ export const SAMPLE_TIER_ONE: number = SAMPLE_TIERS[0] ?? 1;
 export const SAMPLE_TIER_TWO: number =
   SAMPLE_TIERS[SAMPLE_TIERS.length - 1] ?? 2;
 
+/* A small count, spelled out and capitalised, for the start of a caption —
+ * "Two 5 ml samples" rather than "2 5 ml samples", which collides two numerals
+ * and reads as a typo. Falls back to the numeral above the range it knows, so a
+ * larger tier degrades to "7 5 ml samples" rather than to `undefined`.
+ *
+ * Exists so the tier COUNT can still come from SIZES: hardcoding the word "Two"
+ * in the label would quietly decouple the caption from `giftSamples`, which is
+ * the drift SAMPLE_TIERS was introduced to prevent. */
+const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six"];
+
+export function spellCount(n: number): string {
+  return COUNT_WORDS[n] ?? String(n);
+}
+
 /* ---- The gift ladder ---------------------------------------------------
  * What the selected size unlocks, as three rungs, for the progressive-unlock
  * block under the size selector.
@@ -432,7 +446,9 @@ export function giftLadder(
     },
     {
       key: "sample-2",
-      label: `${SAMPLE_TIER_TWO} free samples`,
+      label: `${spellCount(SAMPLE_TIER_TWO)} ${SAMPLE_SIZE} sample${
+        SAMPLE_TIER_TWO === 1 ? "" : "s"
+      }`,
       art: "sample-extra",
       image: GIFT_IMAGES["sample-extra"],
       value: samplePrice === null ? null : samplePrice * SAMPLE_TIER_TWO,
