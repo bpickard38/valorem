@@ -54,11 +54,12 @@ export default function ValueComparison({ price = PRICE }: { price?: string }) {
         ))}
       </dl>
 
-      {/* NO free-samples line here, though it was written and cut. The product
-          page already states it twice above this block — SizeSelector renders
-          SIZES[].gift verbatim, and PriceJustification paraphrases it beside
-          the price. A third mention in the same scroll is not emphasis, it is
-          the page repeating itself. */}
+      {/* NO free-samples line here, though it was written and cut. The gift
+          ladder under the size selector already states it above this block, per
+          size and with the "different from your purchase" qualifier attached. A
+          second mention in the same scroll is not emphasis, it is the page
+          repeating itself — and this one would have to restate the qualifier or
+          quietly drop it. */}
     </section>
   );
 }

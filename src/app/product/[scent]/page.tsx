@@ -10,9 +10,9 @@ import {
 import {
   RETURN_WINDOW,
   SCENTS,
-  SHIPPING_NOTE,
   collectionOf,
   noteRows,
+  preferredSize,
   productTitle,
 } from "@/lib/site";
 import {
@@ -25,9 +25,10 @@ import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 import ProductGallery from "@/components/ProductGallery";
 import SizeSelector from "@/components/SizeSelector";
+import { SelectedSizeProvider } from "@/components/SelectedSizeProvider";
+import SpecGrid from "@/components/SpecGrid";
 import Guarantee from "@/components/Guarantee";
 import PriceBadge from "@/components/PriceBadge";
-import PriceJustification from "@/components/PriceJustification";
 import ValueComparison from "@/components/ValueComparison";
 import ProductReviews from "@/components/ProductReviews";
 import Disclosure from "@/components/Disclosure";
@@ -127,102 +128,119 @@ export default async function ProductPage({
       />
 
       {/* BUY BLOCK — gallery and details. On a phone this is a single column
-          with the gallery first; the two columns only appear from md up. */}
-      <div className="mx-auto grid w-full max-w-5xl gap-10 px-5 pb-16 pt-8 md:grid-cols-2 md:gap-14 md:px-6 md:pt-12">
-        {/* min-w-0: a grid item defaults to min-width:auto, which lets the
-            gallery's swipe track size itself from its slides and push the
-            whole page wider than the viewport. */}
-        <div className="min-w-0 md:sticky md:top-24 md:self-start">
-          <ProductGallery images={images} productName={s.name} />
-        </div>
+          with the gallery first; the two columns only appear from md up.
 
-        <div>
-          {/* Eyebrow doubles as the way back up to the collection the shopper
-              came down from. */}
-          <Link
-            href={`/collections/${collection.id}`}
-            className="label-engraved text-charcoal/50 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
-          >
-            {collection.name}
-          </Link>
-          <h1 className="type-heading mt-3 text-charcoal">{productTitle(s)}</h1>
-          {/* Only Artemis carries a sub-name today ("Midnight Vanilla"). */}
-          {s.subtitle ? (
-            <p className="label-engraved mt-3 text-charcoal/55">
-              {s.subtitle}
-            </p>
-          ) : null}
-          <p className="mt-2 font-serif text-lg italic text-gold-deep">
-            {s.lead}
-          </p>
-          {/* BUY BLOCK — price, size, what that size buys, and the button, in
-              one contiguous run. Splitting the price from the selector would
-              leave a figure on screen that silently stops describing what is
-              about to be added to the cart. */}
-          <SizeSelector product={s.id} variants={variants} />
-
-          {/* The price argument, immediately under the buy block rather than
-              buried in the FAQ. Both of these read the 30 ml's pricing and say
-              so in their copy — they do NOT follow the size selector, because
-              a per-day figure derived from the full size while the shopper has
-              the 5 ml selected would be quietly wrong, and the selector is a
-              client component this server page cannot observe.
-              PriceBadge renders nothing until PRICE_BADGE is configured. */}
-          <PriceJustification pricing={defaultPricing} className="mt-4" />
-          <PriceBadge pricing={defaultPricing} className="mt-3" />
-
-          <Guarantee className="mt-5" align="left" />
-
-          <p className="mt-4 text-xs leading-relaxed tracking-wide text-charcoal/50">
-            {SHIPPING_NOTE} Returns accepted within {RETURN_WINDOW} of
-            delivery.
-          </p>
-
-          {/* The story, in full and in the open — not behind a disclosure. It
-              is the one piece of copy that sells the scent, so it stays high:
-              directly under the buy block, which is where a shopper's eye
-              already is. It sat between the price and the button until sizes
-              arrived; a paragraph wedged between choosing a size and paying
-              for it is an interruption, so it moved below the CTA rather than
-              splitting the buy block in half. Set as body copy rather than the
-              display serif; a paragraph this long in italic 18px is a wall. */}
-          <p className="mt-8 text-sm leading-relaxed text-charcoal/75">
-            {s.inspiration}
-          </p>
-
-          {/* THE DETAIL — the pyramid, below the buy block. The story used to
-              sit beside this in a second disclosure; it now runs in the open
-              above, so this is the only one left. */}
-          <div className="mt-10">
-            <Disclosure title="Fragrance Notes" defaultOpen>
-              <dl className="space-y-3">
-                {noteRows(s.pyramid).map((row) => (
-                  <div
-                    key={row.label ?? "summary"}
-                    className="sm:flex sm:gap-4"
-                  >
-                    {row.label ? (
-                      <dt className="label-engraved shrink-0 pt-1 text-charcoal/50 sm:w-20">
-                        {row.label}
-                      </dt>
-                    ) : null}
-                    <dd className="text-sm leading-relaxed text-charcoal/75">
-                      {row.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </Disclosure>
+          The provider spans BOTH columns because the size selector in the right
+          one drives which photograph the gallery in the left one shows. It is a
+          client boundary wrapping server-rendered children, so nothing below it
+          is pulled into the browser bundle by being inside it — only the two
+          components that actually read the size are interactive. `initial` uses
+          the same preferredSize() the selector does, so the gallery opens on
+          the tin that opens selected even when the 30 ml is sold out. */}
+      <SelectedSizeProvider initial={preferredSize(variants)}>
+        <div className="mx-auto grid w-full max-w-5xl gap-10 px-5 pb-16 pt-8 md:grid-cols-2 md:gap-14 md:px-6 md:pt-12">
+          {/* min-w-0: a grid item defaults to min-width:auto, which lets the
+              gallery's swipe track size itself from its slides and push the
+              whole page wider than the viewport. */}
+          <div className="min-w-0 md:sticky md:top-24 md:self-start">
+            <ProductGallery images={images} productName={s.name} />
           </div>
 
-          <Link
-            href={`/product/${otherId}`}
-            className="mt-8 inline-block text-xs uppercase tracking-[0.25em] text-charcoal/55 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
-          >
-            Or try {other.name} →
-          </Link>
+          <div>
+            {/* Eyebrow doubles as the way back up to the collection the shopper
+                came down from. */}
+            <Link
+              href={`/collections/${collection.id}`}
+              className="label-engraved text-charcoal/50 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
+            >
+              {collection.name}
+            </Link>
+            <h1 className="type-heading mt-3 text-charcoal">{productTitle(s)}</h1>
+            {/* Only Artemis carries a sub-name today ("Midnight Vanilla"). */}
+            {s.subtitle ? (
+              <p className="label-engraved mt-3 text-charcoal/55">
+                {s.subtitle}
+              </p>
+            ) : null}
+            <p className="mt-2 font-serif text-lg italic text-gold-deep">
+              {s.lead}
+            </p>
+            {/* BUY BLOCK — price, size, what that size buys, and the button, in
+                one contiguous run. Splitting the price from the selector would
+                leave a figure on screen that silently stops describing what is
+                about to be added to the cart. */}
+            <SizeSelector product={s.id} variants={variants} />
+
+            {/* PriceBadge renders nothing until PRICE_BADGE is configured.
+                PriceJustification used to sit here with the cost-per-day line;
+                the selector now shows a per-day figure PER SIZE, derived from the
+                size the shopper actually has selected rather than from the 30 ml
+                regardless — so this had become the same argument made twice, the
+                second time about a size that might not be chosen. */}
+            <PriceBadge pricing={defaultPricing} className="mt-3" />
+
+            <Guarantee className="mt-5" align="left" />
+
+            {/* Shipping is NOT restated here. It is the first rung of the gift
+                ladder in the buy block above, where it is arithmetic against the
+                selected size rather than a policy sentence — and stating the same
+                offer twice on one page teaches a shopper to skim both. */}
+            <p className="mt-4 text-xs leading-relaxed tracking-wide text-charcoal/50">
+              Returns accepted within {RETURN_WINDOW} of delivery.
+            </p>
+
+            {/* The story, in full and in the open — not behind a disclosure. It
+                is the one piece of copy that sells the scent, so it stays high:
+                directly under the buy block, which is where a shopper's eye
+                already is. It sat between the price and the button until sizes
+                arrived; a paragraph wedged between choosing a size and paying
+                for it is an interruption, so it moved below the CTA rather than
+                splitting the buy block in half. Set as body copy rather than the
+                display serif; a paragraph this long in italic 18px is a wall. */}
+            <p className="mt-8 text-sm leading-relaxed text-charcoal/75">
+              {s.inspiration}
+            </p>
+
+            {/* THE SPECS — six facts, one stroke weight, below the story. Carries
+                no offer content: free shipping and the free samples live in the
+                ladder above the fold, and no claim reaches this row without a
+                `verified` flag in PRODUCT_SPECS. */}
+            <SpecGrid className="mt-8" />
+
+            {/* THE DETAIL — the pyramid, below the buy block. The story used to
+                sit beside this in a second disclosure; it now runs in the open
+                above, so this is the only one left. */}
+            <div className="mt-10">
+              <Disclosure title="Fragrance Notes" defaultOpen>
+                <dl className="space-y-3">
+                  {noteRows(s.pyramid).map((row) => (
+                    <div
+                      key={row.label ?? "summary"}
+                      className="sm:flex sm:gap-4"
+                    >
+                      {row.label ? (
+                        <dt className="label-engraved shrink-0 pt-1 text-charcoal/50 sm:w-20">
+                          {row.label}
+                        </dt>
+                      ) : null}
+                      <dd className="text-sm leading-relaxed text-charcoal/75">
+                        {row.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </Disclosure>
+            </div>
+
+            <Link
+              href={`/product/${otherId}`}
+              className="mt-8 inline-block text-xs uppercase tracking-[0.25em] text-charcoal/55 underline-offset-8 transition-colors hover:text-gold-deep hover:underline"
+            >
+              Or try {other.name} →
+            </Link>
+          </div>
         </div>
-      </div>
+      </SelectedSizeProvider>
 
       {/* WHY $70 */}
       <div className="border-t border-charcoal/10">

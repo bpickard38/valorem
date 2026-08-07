@@ -8,6 +8,25 @@
   --stone: #ede8dc;
   --stone-deep: #ddd5c2;
 
+  /* The one non-palette hue on the site, and it earns its place by being the
+     only thing on a product page that has to mean "yes, this is included"
+     without being read: the gift ladder's tick.
+     Gold cannot do that job here — it is the brand's DECORATIVE colour and is
+     already on the selected size, the guarantee frame and the active gallery
+     ring, so a gold tick beside a grey cross reads as styling rather than as
+     state. These are deliberately desaturated moss rather than a UI green, so
+     they sit with the ivory instead of shouting over it, and --green-deep
+     clears 6:1 against --ivory for the text and glyph. Do not reach for these
+     for anything decorative.
+
+     Saturation is a deliberate second pass. The first values (#5f7d52 /
+     #46613e) were mixed to sit quietly beside the gold and did — so quietly
+     that a 14px tick on ivory read as grey, which is the ONE thing this colour
+     exists not to do. It has to say "unlocked" at a glance and at that size.
+     --green-deep still clears 5.3:1 against --ivory. */
+  --green: #4f8a5b;
+  --green-deep: #35704a;
+
   /* On-screen height of the whole film frame. Rewritten by syncFilmVars()
      (sequence/coverFit.ts) on every ScrollTrigger refresh; the DOM logo is
      sized against it so it lands on the film's silhouette rather than the
@@ -22,6 +41,8 @@
   --color-gold-deep: var(--gold-deep);
   --color-stone: var(--stone);
   --color-stone-deep: var(--stone-deep);
+  --color-green: var(--green);
+  --color-green-deep: var(--green-deep);
   --font-serif: var(--font-playfair), Georgia, serif;
   --font-sans: var(--font-inter), Arial, sans-serif;
 }

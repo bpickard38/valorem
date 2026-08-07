@@ -10,7 +10,18 @@ import {
 import type { Pricing } from "@/lib/shopify";
 
 /*
- * The cost-per-day line, under the price on the product page.
+ * The cost-per-day line.
+ *
+ * NO LONGER RENDERED ON THE PRODUCT PAGE (2026-08-07). The size selector now
+ * shows a per-day figure under each size, derived from the size the shopper has
+ * actually selected — which is strictly better than this component's compromise
+ * of always naming the 30 ml — so keeping both meant making the same argument
+ * twice, the second time about a size that might not be chosen.
+ *
+ * The file is kept rather than deleted because of the note directly below: it is
+ * the record of the owner's explicit override of the no-cost-per-wear rule, and
+ * that override is what makes the selector's per-day line publishable at all.
+ * Delete this and the reasoning behind a figure still on the page goes with it.
  *
  * NOTE A REVERSED DECISION, so nobody re-litigates it by accident:
  * ValueComparison.tsx holds the standing rule that the case for $70 is argued
@@ -55,12 +66,10 @@ export default function PriceJustification({
   const perDay = Math.ceil((pricing.amount / WEAR_DAYS_MIN) * 100) / 100;
 
   /* The samples clause is conditional on the promise still existing in SIZES.
-   * The size selector renders `gift` verbatim just above this line, so this
-   * paraphrases rather than repeats it — but a paraphrase can outlive the
-   * thing it paraphrases, and a hardcoded "ships with two free samples" would
-   * keep promising hand-packed product after the gift was dropped. Drop it
-   * from SIZES and this half-sentence disappears with it. */
-  const hasGift = sizeById("30ml").gift !== null;
+   * A hardcoded "ships with two free samples" would keep promising hand-packed
+   * product after the gift was dropped. Set `giftSamples` to 0 there and this
+   * half-sentence disappears with it. */
+  const hasGift = sizeById("30ml").giftSamples > 0;
 
   return (
     <p className={`text-sm leading-relaxed text-charcoal/60 ${className}`}>

@@ -28,6 +28,7 @@ export function formatMoney(amount: number, currency: string): string {
   }).format(amount);
 }
 
+
 export const PRICE = "$70";
 export const PRICE_AMOUNT = 70; // numeric twin of PRICE for ad/event tracking
 export const CURRENCY = "USD";
@@ -101,43 +102,71 @@ export const WEAR_DAYS_MIN = 180;
  * listed here with no matching Shopify variant simply doesn't render, which
  * is what lets the selector degrade to a single option rather than break.
  *
- * `gift` is a FULFILMENT PROMISE, not a cart mechanism. Nothing in Shopify
- * adds these samples to the order — they are packed by hand. Say "included"
- * plainly, but do not build UI that implies a line item the cart will show,
- * because it won't. */
+ * `giftSamples` is a FULFILMENT PROMISE, not a cart mechanism. Nothing in
+ * Shopify adds these samples to the order — they are packed by hand. Say
+ * "included" plainly, but do not build UI that implies a line item the cart
+ * will show, because it won't.
+ *
+ * `ml` is the ARITHMETIC twin of `label`. The selector uses it to price a size
+ * against the same volume bought as 5 ml samples, and parsing that figure back
+ * out of the prose label is how a copy edit silently becomes a pricing bug.
+ * Keep the pair in step.
+ *
+ * ORDER IS THE DISPLAY ORDER, smallest first — the selector, the variant list
+ * from Shopify and the outage fallback all follow this array. It ran largest
+ * first until 2026-08-07. Ascending puts the cheapest option under the
+ * shopper's eye first and makes the row read as a ladder they climb, which is
+ * the same argument the gift block beneath it is making.
+ *
+ * NOTHING ABOUT THIS ORDER REACHES THE PHOTOGRAPHS. SIZE_IMAGE_INDEX is keyed
+ * by size id precisely so re-ordering here cannot start showing the wrong tin —
+ * see the note there. */
 /* The Shopify product option these values live under. One option, one name,
  * on all six products — change it in the admin and change it here. */
 export const SIZE_OPTION = "Size";
 
 export const SIZES = [
   {
-    id: "30ml",
-    option: "30 ml",
-    label: "30 ml",
-    name: "Full size",
-    wear: `about ${WEAR_ESTIMATE} of daily wear`,
-    gift: "Includes two free 5 ml samples of scents you haven't tried.",
+    id: "5ml",
+    option: "5 ml",
+    label: "5 ml",
+    name: "Sample",
+    ml: 5,
+    wear: "about a month of daily wear",
+    giftSamples: 0,
+    badge: null,
   },
-  /* These two scale linearly off the 30 ml figure — half the wax is half the
-   * wear, a sixth is a sixth. They read "six weeks" and "two weeks" when the
-   * full size was three months; they moved with it, because a 15 ml that lasts
-   * six weeks beside a 30 ml that lasts eight months is arithmetic a shopper
-   * can do and we can't. Change WEAR_ESTIMATE and change all three. */
+  /* The wear figures on these two scale linearly off the 30 ml — half the wax
+   * is half the wear, a sixth is a sixth. They read "six weeks" and "two weeks"
+   * when the full size was three months; they moved with it, because a 15 ml
+   * that lasts six weeks beside a 30 ml that lasts eight months is arithmetic a
+   * shopper can do and we can't. Change WEAR_ESTIMATE and change all three. */
   {
     id: "15ml",
     option: "15 ml",
     label: "15 ml",
     name: "Travel",
+    ml: 15,
     wear: "about three to four months of daily wear",
-    gift: "Includes one free 5 ml sample of a scent you haven't tried.",
+    giftSamples: 1,
+    /* NOT "Most popular". There is no order history to support it yet — it
+     * would be the one badge on this page asserting a fact about other
+     * customers, and inventing that is a different category of wrong from
+     * calling the 30 ml the best deal, which is arithmetic anyone can check. */
+    badge: null,
   },
   {
-    id: "5ml",
-    option: "5 ml",
-    label: "5 ml",
-    name: "Sample",
-    wear: "about a month of daily wear",
-    gift: null,
+    id: "30ml",
+    option: "30 ml",
+    label: "30 ml",
+    name: "Full size",
+    ml: 30,
+    wear: `about ${WEAR_ESTIMATE} of daily wear`,
+    giftSamples: 2,
+    /* Checkable, not puffery: the 30 ml is the cheapest per millilitre of the
+     * three and the only one carrying both gifts. It is a claim about this
+     * price list and nothing else, which is why it can be stated flatly. */
+    badge: "Best deal",
   },
 ] as const;
 
@@ -157,14 +186,125 @@ export function sizeById(id: SizeId) {
   return SIZES.find((s) => s.id === id)!;
 }
 
+/* Which size opens selected, given what Shopify says is actually buyable.
+ * DEFAULT_SIZE when it is in stock, else the first size that is — opening on a
+ * disabled option leaves the Add to Cart button dead on arrival.
+ *
+ * Structurally typed rather than taking a SizeVariant[] so this stays importable
+ * from a client component: shopify.ts is server-only, and pulling it into the
+ * browser bundle to reach one pure function would ship the Storefront token
+ * handling with it. The product page and the size selector both call this, and
+ * they MUST agree — the page seeds the gallery's opening photo from it. */
+export function preferredSize(
+  variants: readonly { size: SizeId; availableForSale: boolean }[],
+): SizeId {
+  return (
+    variants.find((v) => v.size === DEFAULT_SIZE && v.availableForSale)?.size ??
+    variants.find((v) => v.availableForSale)?.size ??
+    /* Nothing buyable at all — an outage, or a genuinely sold-out product. Fall
+     * back to the flagship BY ID rather than to variants[0], which since the
+     * 2026-08-07 reorder is the 5 ml. Opening a dead page on the sample would
+     * anchor a shopper at $16 for no reason. */
+    variants.find((v) => v.size === DEFAULT_SIZE)?.size ??
+    variants[0]?.size ??
+    DEFAULT_SIZE
+  );
+}
+
+/* ---- Size → photograph -------------------------------------------------
+ * Which image in the Shopify gallery shows which size, so picking a size on the
+ * product page brings that tin to the front.
+ *
+ * KEYED BY SIZE ID, NOT BY POSITION IN `SIZES`. The two happen to agree today
+ * (SIZES runs 30/15/5 and so does the admin), and that coincidence is exactly
+ * the trap: reorder SIZES to lead with the sample and an index-follows-index
+ * mapping would silently start showing the 30 ml tin for a 5 ml selection.
+ * Nothing about the display order of the selector should be able to reach the
+ * photographs, so the mapping is written out.
+ *
+ * Zero-based, against the order the images are arranged in the Shopify admin —
+ * admin position 1 is index 0. Re-arrange the photos there and this must be
+ * re-arranged to match; it is the one place the site assumes anything about
+ * which photo is which.
+ *
+ * A size whose index is past the end of the uploaded photos is skipped rather
+ * than clamped, so a product with only one photo simply doesn't sync. */
+export const SIZE_IMAGE_INDEX: Record<SizeId, number> = {
+  "30ml": 0,
+  "15ml": 1,
+  "5ml": 2,
+};
+
 /* The entry size — what answers "you can't smell a website" now that the
  * Discovery Set is gone. The PRICE comes from Shopify via lowestPricing();
  * only the size label lives here. */
 export const SAMPLE_SIZE = sizeById("5ml").label;
 
-/* The two free samples packed with a full size. The strongest thing in the
- * offer, and it appeared nowhere on the site — it lives in SIZES[].gift, which
- * only the product page's size selector was reading.
+/* ---- The sample gift --------------------------------------------------
+ * THE SAMPLES ARE DRAWN AT RANDOM (owner's decision, 2026-08-07). A "your
+ * choice of scent" version of this shipped briefly and was reverted: nothing in
+ * Shopify collects a customer's choice, so honouring it meant reading a note by
+ * hand on every order.
+ *
+ * WHAT THE COPY THEREFORE MUST NOT DO: claim a choice. `giftLabel` says only
+ * how many samples and what size, which is true whatever comes out of the
+ * bin — and deliberately says nothing about WHICH scent, because a promise
+ * about the scent is the one thing a random draw cannot keep.
+ *
+ * THE ONE OPERATIONAL RULE THIS LEAVES: draw from the scents the customer did
+ * NOT buy. It is not stated on the product page any more, so nothing breaks if
+ * packing gets it wrong — but SAMPLE_GIFT below still says "scents you didn't
+ * pick" on the home page and the quiz, and a shopper who opens a full size to
+ * find a second tin of what they already own has had a bad unboxing whether or
+ * not a page promised otherwise. Exclude the purchased scent from the draw. */
+
+/* Artwork slots on the gift cards. Photography goes in GIFT_IMAGES when it
+ * exists; a null falls back to the line art GiftLadder draws for each key —
+ * same contract as Collection.image, so a card renders a placeholder rather
+ * than a broken frame. */
+export type GiftArtKey = "shipping" | "sample" | "sample-extra";
+
+/* THE TWO KINDS OF GIFT IMAGE, and why `cutout` is not a styling preference.
+ *
+ * This is the same split galleryImageMode() draws for the product gallery, for
+ * the same physical reason:
+ *
+ *   cutout: true  — a background-free PNG/WebP. Letterboxes into the card
+ *     (object-contain) so the card's OWN fill shows around it, which is what
+ *     makes the green unlock tint visible behind the product. This is how the
+ *     reference pattern reads.
+ *   cutout: false — an opaque photograph carrying its own background. Must
+ *     bleed (object-cover), because contain would letterbox a scene that is
+ *     meant to fill, and a drop-shadow on an opaque image traces its RECTANGLE
+ *     and renders a shadowed grey box.
+ *
+ * Get this wrong in either direction and the card looks broken rather than
+ * merely different, which is why it travels with the path instead of being
+ * inferred at render time.
+ *
+ * Sources (added 2026-08-07): the tin is the owner's transparent product
+ * render, used once for the single-sample card and composited twice for the
+ * pair; the mailer arrived shot on white and was knocked out to match. All
+ * three are therefore cutouts, and the flag stays because the moment one
+ * lifestyle photograph joins them the distinction is load-bearing again.
+ *
+ * Regenerate with scripts/build-gift-images.mjs — it holds the background
+ * knockout, which is a flood fill and not a brightness threshold for a reason
+ * documented there. Output is 600px square; the card paints at about 120px, so
+ * that is 2x on the largest phone. */
+export interface GiftImage {
+  src: string;
+  cutout: boolean;
+}
+
+export const GIFT_IMAGES: Record<GiftArtKey, GiftImage | null> = {
+  shipping: { src: "/gifts/shipping.webp", cutout: true },
+  sample: { src: "/gifts/sample.webp", cutout: true },
+  "sample-extra": { src: "/gifts/sample-extra.webp", cutout: true },
+};
+
+/* The full sentence, for surfaces outside the product page that have no ladder
+ * to hang the qualifier under.
  *
  * Note what it is NOT: nothing in Shopify adds these to the cart, so this says
  * "ships with", never "add to bag". See the SIZES comment above.
@@ -173,6 +313,121 @@ export const SAMPLE_SIZE = sizeById("5ml").label;
  * its own route and needed the same sentence, and two copies of an offer
  * promise is how the two drift into saying different things. */
 export const SAMPLE_GIFT = `Every full size ships with two ${SAMPLE_SIZE} samples in scents you didn't pick. Find your second one on us.`;
+
+/* ---- The gift ladder ---------------------------------------------------
+ * What the selected size unlocks, as three rungs, for the progressive-unlock
+ * block under the size selector.
+ *
+ * EVERY RUNG IS DERIVED, none is configured. `unlocked` on the shipping rung is
+ * the actual threshold arithmetic against the live Shopify price, and the two
+ * sample rungs read the same `giftSamples` the fulfilment promise is written
+ * from. That is deliberate: a hand-written ladder is a table of claims that goes
+ * stale the moment a price or a threshold moves, and this one cannot — reprice
+ * the 15 ml below FREE_SHIPPING_THRESHOLD in the admin and its shipping rung
+ * goes dark on its own.
+ *
+ * It also gives the ladder its progressive shape for free. Sizes are priced and
+ * gifted monotonically, so a larger size unlocks a superset of a smaller one's
+ * rungs and nothing ever un-checks on the way up.
+ *
+ * ONE LINE PER RUNG. There was a second, smaller line under each — the shipping
+ * threshold, and the scent qualifier on the samples — and it was cut on
+ * 2026-08-07 along with the "your choice" promise it existed to carry. Three
+ * two-line rows made the block read as fine print, which is the opposite of
+ * what a block this far above the fold is for. The threshold still appears in
+ * the site footer, where a policy belongs.
+ *
+ * EACH RUNG IS A DISTINCT GIFT, AND THE THIRD ONE SAYS "1 MORE". This is the
+ * fix for a counting bug the first version shipped with. The rungs read "1 free
+ * sample" and "2 free samples", and because a ladder never un-checks a lower
+ * rung, the 30 ml lit BOTH — which reads as three samples. It gives two. The
+ * error was invisible while the cards were bare text and became a live
+ * misstatement the moment they started showing what each gift is worth, since
+ * the values sum. Rung three is therefore the SECOND sample, not a restatement
+ * of the pair, and `value` is per-card so the column adds up to what is
+ * actually packed.
+ *
+ * `value` is what the gift would cost if bought: the sample's own live Shopify
+ * price, and the flat shipping rate. Both are real prices charged on this site
+ * today — the sample is on sale three inches up this very page — which is what
+ * separates a struck-through figure here from the invented "was" price
+ * PRICE_BADGE refuses to build machinery for. Null renders no value at all. */
+export interface GiftRung {
+  key: string;
+  label: string;
+  art: GiftArtKey;
+  image: GiftImage | null;
+  value: number | null;
+  unlocked: boolean;
+}
+
+export function giftLadder(
+  amount: number,
+  samples: number,
+  /* The 5 ml's live price. Null when it isn't in the variant list, in which
+   * case the sample cards show no value rather than a stale constant. */
+  samplePrice: number | null,
+): GiftRung[] {
+  return [
+    {
+      key: "shipping",
+      label: "Free shipping",
+      art: "shipping",
+      image: GIFT_IMAGES.shipping,
+      value: FLAT_SHIPPING_RATE,
+      unlocked: amount >= FREE_SHIPPING_THRESHOLD,
+    },
+    {
+      key: "sample-1",
+      label: `1 free ${SAMPLE_SIZE} sample`,
+      art: "sample",
+      image: GIFT_IMAGES.sample,
+      value: samplePrice,
+      unlocked: samples >= 1,
+    },
+    {
+      key: "sample-2",
+      label: `1 more ${SAMPLE_SIZE} sample`,
+      art: "sample-extra",
+      image: GIFT_IMAGES["sample-extra"],
+      value: samplePrice,
+      unlocked: samples >= 2,
+    },
+  ];
+}
+
+/* ---- What sizing up saves ---------------------------------------------
+ * What this size would cost bought as 5 ml samples instead, minus what it
+ * actually costs. The 30 ml is 30 ml either way; six samples at $16 is $96
+ * against $70, so the full size saves $26.
+ *
+ * THIS IS NOT A FORMER PRICE, and must never be rendered as one. Valorem has
+ * never sold a 30 ml at $96 — $96 is what the same volume costs at the sample's
+ * own unit price, today, on this page. A struck-through $96 beside $70 would
+ * assert a markdown that never happened, which is the deceptive-pricing problem
+ * PRICE_BADGE documents at length and deliberately has no machinery for. Show
+ * it as a saving with its basis, never as a "was".
+ *
+ * It replaced a per-millilitre and a per-day line (both cut 2026-08-07). Those
+ * were honest and they were also flat: the 5 ml and the 15 ml cost the same per
+ * millilitre, so two of the three options quoted an identical figure and the
+ * ladder argument died in the middle. This one is only claimed where it is
+ * genuinely true — the 15 ml returns null, because three samples is $48 and so
+ * is the 15 ml.
+ *
+ * FLOORED, not rounded, and suppressed below a dollar: understating a saving
+ * costs nothing, and "Save $0" from a rounding artifact is worse than silence. */
+export function sampleEquivalentSaving(
+  amount: number,
+  ml: number,
+  samplePrice: number | null,
+  sampleMl: number,
+): number | null {
+  if (samplePrice === null || sampleMl <= 0 || ml <= 0) return null;
+  const asSamples = (ml / sampleMl) * samplePrice;
+  const saving = Math.floor(asSamples - amount);
+  return saving >= 1 ? saving : null;
+}
 
 /* ---- Product photography ----------------------------------------------
  * ONE SWITCH, FLIP IT WHEN THE CUTOUTS ARE UPLOADED.
@@ -315,6 +570,95 @@ export const VALUE_SPECS = [
   { label: "Concentration", value: `${FRAGRANCE_LOAD} fragrance load` },
   { label: "Daily wear", value: `About ${WEAR_ESTIMATE}` },
 ] as const;
+
+/* ---- Product spec row -------------------------------------------------
+ * The icon grid on the product page, below the story. Six facts about the
+ * product, each with a glyph, replacing the loose sentences that used to be
+ * scattered through the buy block.
+ *
+ * WHAT IS DELIBERATELY NOT IN HERE, because the pattern this was modelled on
+ * (Carpe's) leads with them and copying the shape must not mean copying the
+ * claims:
+ *
+ *   "Dermatologist tested" — no dermatologist has tested this product. It is a
+ *     testing claim, not an adjective, and it is the single most consequential
+ *     line an icon row can carry. It goes in when there is a report to point
+ *     at, and not before.
+ *   "Quick-drying / non-greasy" — the "conditioning, not greasy, and never
+ *     tacky" line in INGREDIENTS is a description of intent written for a
+ *     paragraph that can qualify itself. Compressed onto an icon it becomes a
+ *     performance claim with nothing behind it. TODO: a wear panel would make
+ *     this publishable.
+ *   Free shipping and the sample gift — these moved OUT of this row and into
+ *     the gift ladder above the fold. They are the offer, not the spec sheet,
+ *     and stating them twice on one page taught a shopper to skim both.
+ *
+ * Every row below is a number or a mechanism already established elsewhere in
+ * this file, and interpolates the constant rather than restating it — so the
+ * fragrance load or the wear estimate can only ever change in one place.
+ *
+ * `verified` is the same gate ComparisonTable uses: SpecGrid filters on it, so
+ * an unverified spec cannot reach the page on the strength of good copy alone.
+ * `note` says what the evidence is, not what the intention is. */
+export interface ProductSpec {
+  /* Selects the glyph in SpecGrid. A new value needs a new icon there. */
+  icon: "tin" | "load" | "wear" | "wax" | "solvent" | "solid";
+  label: string;
+  detail: string;
+  verified: boolean;
+  note: string;
+}
+
+export const PRODUCT_SPECS: ProductSpec[] = [
+  {
+    icon: "tin",
+    label: STICK_SIZE,
+    detail: "Twist-up tin, full size",
+    verified: true,
+    note:
+      "STICK_SIZE. The physical product; the 15 ml and 5 ml are the same tin at other volumes.",
+  },
+  {
+    icon: "load",
+    label: `${FRAGRANCE_LOAD} fragrance load`,
+    detail: "Batch 6, the batch that ships",
+    verified: true,
+    note:
+      "FRAGRANCE_LOAD, confirmed by the owner 2026-08-03. Batch 5 at 16% never reaches a customer, so there is no window in which this overstates the tin.",
+  },
+  {
+    icon: "wear",
+    label: `${WEAR_ESTIMATE_SHORT} of daily wear`,
+    detail: "One application a day, full size",
+    verified: true,
+    note:
+      "WEAR_ESTIMATE_SHORT, confirmed verified by the owner 2026-08-03. Names the basis, because this is the per-tin figure and not the four-to-six hours a single application lasts on skin — the two get confused and the FAQ handles the other one.",
+  },
+  {
+    icon: "wax",
+    label: "Wax base, not a solvent",
+    detail: "Carnauba, candelilla and beeswax",
+    verified: true,
+    note:
+      "Mechanical, and the first INGREDIENTS card verbatim. The three waxes are the largest single group in the formulation sheet.",
+  },
+  {
+    icon: "solvent",
+    label: "No denatured alcohol",
+    detail: "Nothing in it flashes off",
+    verified: true,
+    note:
+      "The narrow claim ALCOHOL_NOTE exists to protect. Cetyl alcohol IS in the formula and is disclosed in the ingredient list; this row must never be read as, or reworded into, a claim that the product contains no alcohol.",
+  },
+  {
+    icon: "solid",
+    label: "Not a liquid",
+    detail: "Travels in a pocket",
+    verified: true,
+    note:
+      "A property of the format, needing no citation. Deliberately not a claim about carry-on rules: the TSA row in COMPARISON was rewritten off regulation for the same reason, since the rule has a number in its name and keeps moving.",
+  },
+];
 
 
 /* ---- Ingredients ------------------------------------------------------

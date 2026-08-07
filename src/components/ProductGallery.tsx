@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { ProductImage } from "@/lib/shopify";
-import { galleryImageMode } from "@/lib/site";
+import { useSelectedSize } from "@/components/SelectedSizeProvider";
+import { SIZE_IMAGE_INDEX, galleryImageMode } from "@/lib/site";
 
 /* Exactly five thumbnails per row, edge to edge — never a sliver of a sixth,
  * which reads as a rendering fault rather than an invitation to scroll.
@@ -75,11 +76,35 @@ export default function ProductGallery({
   const stripRef = useRef<HTMLDivElement>(null);
   const settleRef = useRef<number | undefined>(undefined);
 
-  // Index into `images`, never into the cloned slide list.
-  const [active, setActive] = useState(0);
-
   const count = images.length;
   const loop = count > 1;
+
+  /* The size the buy block currently has selected, when this gallery is inside
+   * a SelectedSizeProvider. Null on any page that renders the gallery on its
+   * own, in which case none of the sync below does anything. */
+  const sizeSync = useSelectedSize();
+
+  /* Which photo shows a given size. Out-of-range indexes are dropped rather
+   * than clamped: a product with two photos should leave the gallery alone when
+   * the 5 ml is picked, not swap to whatever happens to be last. */
+  const imageForSize = useCallback(
+    (size: string | undefined): number | null => {
+      if (!size) return null;
+      const index = SIZE_IMAGE_INDEX[size as keyof typeof SIZE_IMAGE_INDEX];
+      return index !== undefined && index < count ? index : null;
+    },
+    [count],
+  );
+
+  /* The index the gallery opens on, resolved once. The phone track positions
+   * itself in track-widths on mount and has to land on the photo of the size
+   * that opens selected — not on photo 1, which is only the same thing while
+   * the 30 ml is in stock. Held in state rather than a ref so it can be read
+   * during render (it decides which image gets `priority`). */
+  const [openedOn] = useState(() => imageForSize(sizeSync?.selected) ?? 0);
+
+  // Index into `images`, never into the cloned slide list.
+  const [active, setActive] = useState(openedOn);
 
   /* Phone slides. The real photos sit at 1..count, so a real index maps to a
    * slide index by adding one. */
@@ -89,12 +114,13 @@ export default function ProductGallery({
     [loop],
   );
 
-  /* Open on the first real photo rather than the leading clone. */
+  /* Open on the photo of the selected size rather than on the leading clone —
+   * `openedOn + 1` is that photo's slide index once the clones are counted. */
   useEffect(() => {
     const track = trackRef.current;
     if (!track || !loop) return;
-    track.scrollLeft = track.clientWidth;
-  }, [loop]);
+    track.scrollLeft = (openedOn + 1) * track.clientWidth;
+  }, [loop, openedOn]);
 
   /* Phone track scroll → active index, plus the teleport that closes the loop.
    * On desktop the track is display:none, so clientWidth is 0 and this bails
@@ -163,6 +189,26 @@ export default function ProductGallery({
     [slideIndexOf],
   );
 
+  /* Picking a size brings that size's tin to the front — on both presentations
+   * at once, since goTo drives the phone track and the desktop ring off the
+   * same `active`. The thumbnail strip follows through the effect below, which
+   * already scrolls whatever is active into view, so there is nothing extra to
+   * do for it here.
+   *
+   * Subscribed to the SELECTION EVENT, not to the selected value: see the long
+   * note in SelectedSizeProvider. The effect only registers the listener, so it
+   * runs once — the gallery moves inside the shopper's click, and a later
+   * re-render cannot re-run it and undo a swipe. */
+  const subscribe = sizeSync?.subscribe;
+  useEffect(() => {
+    if (!subscribe) return;
+    return subscribe((size) => {
+      const index = imageForSize(size);
+      if (index === null) return;
+      goTo(index);
+    });
+  }, [subscribe, imageForSize, goTo]);
+
   /* Keep the active thumbnail fully on screen, flush to whichever edge it ran
    * past — never parked halfway, so the row always shows whole thumbnails.
    *
@@ -225,7 +271,7 @@ export default function ProductGallery({
                 alt={altFor(image, real)}
                 fill
                 sizes="100vw"
-                priority={i === slideIndexOf(0)}
+                priority={i === slideIndexOf(openedOn)}
                 className={mode.image}
               />
             </div>
@@ -276,7 +322,7 @@ export default function ProductGallery({
                 alt={isCentre ? altFor(image, i) : ""}
                 fill
                 sizes="300px"
-                priority={i === 0}
+                priority={i === openedOn}
                 className={galleryImageMode(i).image}
               />
             </button>
