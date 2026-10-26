@@ -19,10 +19,7 @@ export default function FadeIn({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(true);
-      return;
-    }
+    // Reduced motion is handled in CSS (.fade-in in globals.css).
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -39,7 +36,7 @@ export default function FadeIn({
   return (
     <div
       ref={ref}
-      className={className}
+      className={`fade-in ${className}`}
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "none" : "translateY(14px)",

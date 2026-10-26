@@ -55,6 +55,14 @@ html {
   html {
     scroll-behavior: auto;
   }
+
+  /* FadeIn sets its hidden state inline; reduced motion shows content at once.
+   * !important is required to beat the inline style. */
+  .fade-in {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 body {

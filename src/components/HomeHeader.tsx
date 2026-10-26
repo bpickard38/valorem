@@ -42,6 +42,7 @@ export default function HomeHeader() {
           <MobileNav items={NAV_ITEMS} />
           {/* Plain anchor (not next/link) so clicking the wordmark always does
            * a full reload back to the top of the home page, from any route. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- intentional full reload, see above */}
           <a
             href="/"
             className="font-serif text-sm uppercase tracking-[0.4em] text-charcoal transition-colors hover:text-gold-deep"

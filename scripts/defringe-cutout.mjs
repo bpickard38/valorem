@@ -13,7 +13,6 @@
  *      pixels are never touched, so the cream wax and silver label are safe.
  */
 import sharp from "sharp";
-import { fileURLToPath } from "node:url";
 
 const [, , inPath, outPath] = process.argv;
 if (!inPath || !outPath) {

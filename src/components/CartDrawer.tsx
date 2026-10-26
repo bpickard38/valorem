@@ -118,8 +118,10 @@ export default function CartDrawer() {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         style={drag ? { transform: `translateX(${drag}px)`, transition: "none" } : undefined}
-        className={`fixed inset-y-0 right-0 z-[61] flex w-[92%] max-w-sm flex-col bg-ivory shadow-2xl transition-transform duration-300 ease-out sm:w-full ${
-          open ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-y-0 right-0 z-[61] flex w-[92%] max-w-sm flex-col bg-ivory transition-transform duration-300 ease-out sm:w-full ${
+          // Shadow only while open: parked off-canvas, it would bleed a grey
+          // band onto the right edge of every page.
+          open ? "translate-x-0 shadow-2xl" : "translate-x-full"
         }`}
       >
         {/* Header */}

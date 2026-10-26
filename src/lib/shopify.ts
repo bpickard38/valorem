@@ -1,7 +1,7 @@
 /*
  * Shopify API clients. Server-side only — tokens must never reach the browser,
  * so import this file only from route handlers / server components.
- * Credentials live in .env.local (see .env.local.example).
+ * Credentials live in .env.local (see .env.example).
  *
  * Ported verbatim from ../valorem/src/lib/shopify.ts — keep in sync.
  */
